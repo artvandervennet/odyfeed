@@ -13,12 +13,24 @@
     "@inrupt/solid-client": "^3.0.0",
     "@inrupt/solid-client-authn-browser": "^3.1.1",
     "@nuxt/eslint": "1.12.1",
+    "@nuxt/ui": "^4.3.0",
+    "@pinia/colada": "^0.20.0",
+    "@pinia/nuxt": "^0.11.3",
     "@types/n3": "^1.26.1",
+    "@vueuse/core": "^14.1.0",
     "eslint": "^9.39.2",
     "fs-extra": "^11.3.3",
     "n3": "^1.26.0",
     "nuxt": "^4.2.2",
+    "openai": "^6.15.0",
+    "pinia": "^3.0.4",
+    "tailwind": "^4.0.0",
+    "tailwindcss": "^4.1.18",
     "vue": "^3.5.26",
     "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@iconify-json/heroicons": "^1.2.3",
+    "@iconify-json/lucide": "^1.2.82"
   }
 }
