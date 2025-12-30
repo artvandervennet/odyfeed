@@ -11,6 +11,8 @@ import {
   getUrlAll,
   saveSolidDatasetAt,
   setThing,
+  getSourceUrl,
+  type SolidDataset,
 } from '@inrupt/solid-client';
 import {NAMESPACES} from '~~/shared/constants';
 
@@ -84,40 +86,67 @@ export function usePodSetup() {
       // Determine which document to update.
       // We prefer any alternative profile document if it exists, as it's more likely to be writable than the WebID itself.
       let targetUrl = webId;
-      let dataset = profiles.webIdProfile;
+      let dataset: SolidDataset = profiles.webIdProfile;
 
-      // Manually find alternative profile documents to supplement getProfileAll
-      const altProfiles = new Set([...profiles.altProfileAll]);
-      if (webIdThing) {
-        getUrlAll(webIdThing, NAMESPACES.FOAF + "isPrimaryTopicOf").forEach(url => altProfiles.add(url));
-        getUrlAll(webIdThing, NAMESPACES.RDFS + "seeAlso").forEach(url => altProfiles.add(url));
-      }
+      // Create a list of candidate documents to try
+      const candidates: { url: string; dataset?: SolidDataset }[] = [];
       
-      // Remove webId from alts to avoid circularity/infinite loops if it's there
-      altProfiles.delete(webId);
-
-      if (altProfiles.size > 0) {
-        // Try each alternative profile until we find one that is reachable or potentially writable
-        for (const altUrl of altProfiles) {
-          try {
-            dataset = await getSolidDataset(altUrl, {fetch: auth.session.fetch});
-            targetUrl = altUrl;
-            console.log(`Using existing alternative profile document for update: ${targetUrl}`);
-            break; 
-          } catch (e: any) {
-            // If it's a 404, we can still use it as a target! We'll just start with an empty dataset.
-            if (e.statusCode === 404) {
-              dataset = createSolidDataset();
-              targetUrl = altUrl;
-              console.log(`Using new alternative profile document for update: ${targetUrl}`);
-              break;
-            }
-            console.warn(`Could not fetch alternative profile document ${altUrl}, trying next`, e);
+      // 1. Existing alternative profiles (already fetched)
+      profiles.altProfileAll.forEach(ds => {
+        const url = getSourceUrl(ds);
+        if (url && url !== webId) {
+          candidates.push({ url, dataset: ds });
+        }
+      });
+      
+      // 2. Discovered alternative profile URLs
+      if (webIdThing) {
+        const discoveredUrls = new Set<string>();
+        getUrlAll(webIdThing, NAMESPACES.FOAF + "isPrimaryTopicOf").forEach(url => discoveredUrls.add(url));
+        getUrlAll(webIdThing, NAMESPACES.RDFS + "seeAlso").forEach(url => discoveredUrls.add(url));
+        
+        discoveredUrls.forEach(url => {
+          if (url !== webId && !candidates.some(c => c.url === url)) {
+            candidates.push({ url });
           }
+        });
+      }
+
+      for (const candidate of candidates) {
+        try {
+          if (candidate.dataset) {
+            dataset = candidate.dataset;
+          } else {
+            dataset = await getSolidDataset(candidate.url, { fetch: auth.session.fetch });
+          }
+          targetUrl = candidate.url;
+          console.log(`Using alternative profile document for update: ${targetUrl}`);
+          break; 
+        } catch (e: any) {
+          // If it's a 404 and we don't have a dataset yet, we can use it as a target with an empty dataset
+          if (e.statusCode === 404 && !candidate.dataset) {
+            dataset = createSolidDataset();
+            targetUrl = candidate.url;
+            console.log(`Using new alternative profile document for update: ${targetUrl}`);
+            break;
+          }
+          console.warn(`Could not use alternative profile document ${candidate.url}, trying next`, e);
         }
       }
 
+      // Try to find the thing for the WebID, or common variations (with fragment)
       let profileThing = getThing(dataset, webId);
+      if (!profileThing) {
+        // Try with common fragments if not found
+        const variations = [webId + "#me", webId + "#id", webId + "#main"];
+        for (const v of variations) {
+          profileThing = getThing(dataset, v);
+          if (profileThing) {
+            console.log(`Found profile thing with variation: ${v}`);
+            break;
+          }
+        }
+      }
 
       if (!profileThing) {
         profileThing = buildThing({ url: webId }).build();
