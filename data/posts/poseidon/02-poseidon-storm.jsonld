@@ -1,0 +1,17 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    {
+      "myth": "https://odyfeed.artvandervennet.ikdoeict.be/vocab#"
+    }
+  ],
+  "id": "http://localhost:3000/actors/poseidon/statuses/02-poseidon-storm",
+  "type": "Note",
+  "published": "2025-12-30T16:21:28.675Z",
+  "attributedTo": "http://localhost:3000/actors/poseidon",
+  "content": "🌊 De toorn van de zee is aangebroken! ⚡️ Odysseus, jouw arrogantie kent geen grenzen. Aan het einde van jouw reis wacht de woedende golven! Voel mijn kracht en laat geen schip veilig zijn. #ToornVanDeZee #Poseidon",
+  "to": [
+    "https://www.w3.org/ns/activitystreams#Public"
+  ],
+  "myth:aboutEvent": "http://localhost:3000/events/02-poseidon-storm"
+}

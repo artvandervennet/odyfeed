@@ -1,0 +1,6 @@
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "type": "Like",
+  "actor": "https://example.com/users/tester",
+  "object": "http://localhost:3000/actors/odysseus/statuses/01-trojan-horse"
+}

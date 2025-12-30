@@ -1,0 +1,17 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    {
+      "myth": "https://odyfeed.artvandervennet.ikdoeict.be/vocab#"
+    }
+  ],
+  "id": "http://localhost:3000/actors/odysseus/statuses/04-underworld",
+  "type": "Note",
+  "published": "2025-12-30T16:21:37.165Z",
+  "attributedTo": "http://localhost:3000/actors/odysseus",
+  "content": "Vandaag begin ik aan een nieuwe queeste: de afdaling in Hades. 🏺🗝️ De schimmige geheimen van de onderwereld wachten op mij, en ik moet wijsheid vergaren voor mijn terugreis. Met elk risico dat ik neem, hoop ik het lot te tarten. #Odysseus #Onderwereld #RaadZoeken",
+  "to": [
+    "https://www.w3.org/ns/activitystreams#Public"
+  ],
+  "myth:aboutEvent": "http://localhost:3000/events/04-underworld"
+}

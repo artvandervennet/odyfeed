@@ -1,0 +1,17 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    {
+      "myth": "https://odyfeed.artvandervennet.ikdoeict.be/vocab#"
+    }
+  ],
+  "id": "http://localhost:3000/actors/athena/statuses/01-trojan-horse",
+  "type": "Note",
+  "published": "2025-12-30T16:21:26.328Z",
+  "attributedTo": "http://localhost:3000/actors/athena",
+  "content": "Vandaag markeert de geniale strategie die de val van Troje bezegelt. Met een houten paard en slimme gedachten hebben we de vijand verrast. Dit is wat happens als men de wijsheid van de goden negeert. Laat dit een les zijn in nederigheid en respect voor de strategie. #Oorlog #StrategischOverwinning",
+  "to": [
+    "https://www.w3.org/ns/activitystreams#Public"
+  ],
+  "myth:aboutEvent": "http://localhost:3000/events/01-trojan-horse"
+}
