@@ -13,5 +13,13 @@
   "to": [
     "https://www.w3.org/ns/activitystreams#Public"
   ],
-  "myth:aboutEvent": "http://localhost:3000/events/03-circe"
+  "myth:aboutEvent": "http://localhost:3000/events/03-circe",
+  "likes": {
+    "id": "http://localhost:3000/actors/athena/statuses/03-circe/likes",
+    "type": "Collection",
+    "totalItems": 1,
+    "items": [
+      "https://id.inrupt.com/artvandervennet"
+    ]
+  }
 }

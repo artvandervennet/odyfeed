@@ -2,11 +2,9 @@
 import { onMounted, computed } from "vue";
 import { useAuthStore } from "~/stores/auth";
 import { useTimelineStore } from "~/stores/timeline";
-import { useActivityPub } from "~/composables/useActivityPub";
 
 const auth = useAuthStore();
 const timelineStore = useTimelineStore();
-const { likePost } = useActivityPub();
 
 const timeline = computed(() => timelineStore.timeline);
 const isLoading = computed(() => timelineStore.isLoading);
@@ -39,7 +37,6 @@ onMounted(async () => {
           v-for="post in timeline.orderedItems" 
           :key="post.id" 
           :post="post" 
-          @like="likePost"
         />
       </div>
 

@@ -7,6 +7,7 @@ export default defineNuxtConfig({
 		'@nuxt/ui',
 		'@pinia/nuxt',
 		'@nuxt/icon',
+		'@pinia/colada-nuxt'
 	],
 	icon: {
 		clientBundle: {

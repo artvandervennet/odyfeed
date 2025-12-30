@@ -29,7 +29,7 @@ export interface ASNote extends ASObject {
   content: string;
   to: string[];
   cc?: string[];
-  likes?: ASCollection<string>;
+  likes?: string[] | ASCollection<string>;
   "myth:aboutEvent"?: string;
 }
 

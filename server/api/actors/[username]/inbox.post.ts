@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
-import type { ASActivity, ASNote } from "~~/shared/types/activitypub";
+import type { ASActivity, ASNote, ASObject } from "~~/shared/types/activitypub";
 import { ACTIVITY_TYPES, DATA_PATHS } from "~~/shared/constants";
 
 export default defineEventHandler(async (event) => {
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 
   // Verwerk Like activiteit
   if (body.type === ACTIVITY_TYPES.LIKE) {
-    const targetId = typeof body.object === 'string' ? body.object : (body.object as any)?.id; // De URL van de post die geliked wordt
+    const targetId = typeof body.object === 'string' ? body.object : (body.object as ASObject).id; // De URL van de post die geliked wordt
     if (targetId && typeof targetId === 'string') {
       // Extraheer de actor en post ID uit de URL
       // Bijvoorbeeld: http://localhost:3000/actors/odysseus/statuses/01-trojan-horse
@@ -53,8 +53,8 @@ export default defineEventHandler(async (event) => {
 
               // Support both simple array and Collection object for backward compatibility or flexibility
               if (Array.isArray(post.likes)) {
-                if (!(post.likes as any).includes(actorWebId)) {
-                  (post.likes as any).push(actorWebId);
+                if (!post.likes.includes(actorWebId)) {
+                  post.likes.push(actorWebId);
                 }
               } else if (post.likes?.items && !post.likes.items.includes(actorWebId)) {
                 post.likes.items.push(actorWebId);
@@ -67,6 +67,43 @@ export default defineEventHandler(async (event) => {
         }
       } catch (e) {
         console.error("Error processing like target URL:", e);
+      }
+    }
+  }
+
+  // Verwerk Undo activiteit
+  if (body.type === 'Undo') {
+    const objectToUndo = body.object;
+    if (objectToUndo && typeof objectToUndo === 'object' && (objectToUndo as ASActivity).type === ACTIVITY_TYPES.LIKE) {
+      const activityToUndo = objectToUndo as ASActivity;
+      const targetId = typeof activityToUndo.object === 'string' ? activityToUndo.object : (activityToUndo.object as ASObject).id;
+      if (targetId) {
+        try {
+          const url = new URL(targetId);
+          const parts = url.pathname.split('/');
+          const targetActor = parts[2];
+          const postId = parts[4];
+
+          if (targetActor && postId) {
+            const postPath = resolve(process.cwd(), `${DATA_PATHS.POSTS}/${targetActor}/${postId}.jsonld`);
+            if (existsSync(postPath)) {
+              const post = JSON.parse(readFileSync(postPath, 'utf-8')) as ASNote;
+              const actorWebId = body.actor;
+
+              if (actorWebId && typeof actorWebId === 'string') {
+                if (Array.isArray(post.likes)) {
+                  post.likes = post.likes.filter((id: string) => id !== actorWebId);
+                } else if (post.likes?.items) {
+                  post.likes.items = post.likes.items.filter(id => id !== actorWebId);
+                  post.likes.totalItems = post.likes.items.length;
+                }
+                writeFileSync(postPath, JSON.stringify(post, null, 2));
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error processing undo like target URL:", e);
+        }
       }
     }
   }

@@ -2,11 +2,9 @@
 import { useQuery } from '@pinia/colada';
 import { computed } from 'vue';
 import { useRoute } from '#app';
-import { useActivityPub } from '~/composables/useActivityPub';
 
 const route = useRoute();
 const username = route.params.username;
-const { likePost } = useActivityPub();
 console.log('username', username)
 
 const { data: actor } = useQuery({
@@ -66,7 +64,6 @@ const actorPosts = computed(() => {
           v-for="post in actorPosts" 
           :key="post.id" 
           :post="post"
-          @like="likePost"
         />
         <UCard v-if="actorPosts.length === 0" class="text-center py-10 italic text-gray-500">
           No posts from this actor yet.

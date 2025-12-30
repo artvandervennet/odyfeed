@@ -16,9 +16,7 @@
   "myth:aboutEvent": "http://localhost:3000/events/05-ithaca",
   "likes": {
     "type": "Collection",
-    "totalItems": 1,
-    "items": [
-      "https://id.inrupt.com/artvandervennet"
-    ]
+    "totalItems": 0,
+    "items": []
   }
 }

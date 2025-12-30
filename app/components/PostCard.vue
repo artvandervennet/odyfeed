@@ -1,4 +1,7 @@
 <script setup>
+import { useAuthStore } from '~/stores/auth';
+import { useActivityPub } from '~/composables/useActivityPub';
+
 const props = defineProps({
   post: {
     type: Object,
@@ -6,10 +9,30 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['like'])
+const auth = useAuthStore()
+const { likePost, undoLikePost } = useActivityPub()
 
 const actor = computed(() => props.post.actor)
 const published = computed(() => new Date(props.post.published).toLocaleString())
+
+const isLiked = computed(() => {
+  if (!auth.isLoggedIn || !auth.user?.webId) return false;
+  const webId = auth.user.webId;
+  
+  const likes = props.post.likes;
+  if (!likes) return false;
+  
+  if (Array.isArray(likes)) {
+    return likes.includes(webId);
+  }
+  
+  if (likes.items) {
+    return likes.items.includes(webId);
+  }
+  
+  return false;
+});
+
 const likesCount = computed(() => {
   if (Array.isArray(props.post.likes)) return props.post.likes.length
   return props.post.likes?.totalItems || 0
@@ -20,6 +43,14 @@ const actorProfileUrl = computed(() => {
   const username = actor.value.preferredUsername || actor.value.id.split('/').pop()
   return `/actors/${username}`
 })
+
+async function handleLike() {
+  if (isLiked.value) {
+    await undoLikePost(props.post);
+  } else {
+    await likePost(props.post);
+  }
+}
 </script>
 
 <template>
@@ -28,7 +59,7 @@ const actorProfileUrl = computed(() => {
       <div class="flex items-center justify-between">
         <NuxtLink :to="actorProfileUrl" class="flex items-center gap-3 group">
           <UAvatar
-            :src="actor?.icon?.url"
+            :src="actor?.icon?.url || actor?.avatar"
             :alt="actor?.name"
             size="sm"
           />
@@ -52,11 +83,11 @@ const actorProfileUrl = computed(() => {
         <time class="text-xs text-gray-400">{{ published }}</time>
         <div class="flex gap-2">
           <UButton
-            icon="i-heroicons-heart"
+            :icon="isLiked ? 'i-heroicons-heart-20-solid' : 'i-heroicons-heart'"
             size="xs"
-            color="gray"
+            :color="isLiked ? 'primary' : 'gray'"
             variant="ghost"
-            @click="emit('like', post)"
+            @click="handleLike"
           >
             {{ likesCount }}
           </UButton>

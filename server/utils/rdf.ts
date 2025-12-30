@@ -23,14 +23,14 @@ export function parseActors(): MythActor[] {
 	return actorsData.map((a: any) => {
 		const username = a["@id"].split('/').pop();
 		return {
-			id: `${baseUrl}/actors/${username}`,
+			id: `${baseUrl}/api/actors/${username}`,
 			preferredUsername: username,
 			name: a["foaf:name"],
 			summary: a["as:summary"] || "",
 			tone: a["myth:tone"],
 			avatar: a["myth:avatar"] || "",
-			inbox: `${baseUrl}/actors/${username}/inbox`,
-			outbox: `${baseUrl}/actors/${username}/outbox`
+			inbox: `${baseUrl}/api/actors/${username}/inbox`,
+			outbox: `${baseUrl}/api/actors/${username}/outbox`
 		} as MythActor;
 	});
 }
