@@ -1,9 +1,15 @@
 import { login, handleIncomingRedirect, getDefaultSession } from "@inrupt/solid-client-authn-browser";
 
 export function useSolidAuth() {
+	const session = getDefaultSession();
+	const isLoggedIn = ref(false);
+
 	async function solidLogin() {
+		const issuer = prompt("Enter your Pod provider (e.g., https://activitypods.org or https://login.inrupt.com)", "https://activitypods.org");
+		if (!issuer) return;
+
 		await login({
-			oidcIssuer: "https://login.inrupt.com",
+			oidcIssuer: issuer,
 			redirectUrl: window.location.href,
 			clientName: "OdyFeed"
 		});
@@ -11,9 +17,9 @@ export function useSolidAuth() {
 
 	async function handleRedirect() {
 		await handleIncomingRedirect();
-		const session = getDefaultSession();
-		return session.info.isLoggedIn;
+		isLoggedIn.value = session.info.isLoggedIn;
+		return isLoggedIn.value;
 	}
 
-	return { solidLogin, handleRedirect };
+	return { solidLogin, handleRedirect, isLoggedIn, session };
 }

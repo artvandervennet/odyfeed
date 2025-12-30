@@ -8,5 +8,9 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'node-server' // kan ook serverless zijn
   },
-
+  runtimeConfig: {
+    public: {
+      baseUrl: process.env.ODYSSEY_BASE_URL
+    }
+  },
 })
