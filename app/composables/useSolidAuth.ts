@@ -5,7 +5,7 @@ export function useSolidAuth() {
 	const isLoggedIn = ref(false);
 
 	async function solidLogin() {
-		const issuer = prompt("Enter your Pod provider (e.g., https://activitypods.org or https://login.inrupt.com)", "https://activitypods.org");
+		const issuer = prompt("Enter your Pod provider (e.g., https://activitypods.org or https://login.inrupt.com)", "https://login.inrupt.com");
 		if (!issuer) return;
 
 		await login({
