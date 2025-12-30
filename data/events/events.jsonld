@@ -1,0 +1,63 @@
+{
+  "@context": {
+    "myth": "./vocab#",
+    "dct": "http://purl.org/dc/terms/",
+    "as": "https://www.w3.org/ns/activitystreams#"
+  },
+  "@graph": [
+    {
+      "@id": "./events/01-trojan-horse",
+      "@type": "myth:Event",
+      "dct:title": "De list van het paard",
+      "myth:sequence": 1,
+      "myth:description": "Met een houten paard mislukt Troje definitief.",
+      "myth:involvesActor": [
+        "./actors/odysseus",
+        "./actors/athena"
+      ]
+    },
+    {
+      "@id": "./events/02-poseidon-storm",
+      "@type": "myth:Event",
+      "dct:title": "De toorn van de zee",
+      "myth:sequence": 2,
+      "myth:description": "Poseidon ontketent een storm die Odysseus van koers doet raken.",
+      "myth:involvesActor": [
+        "./actors/poseidon",
+        "./actors/odysseus"
+      ]
+    },
+    {
+      "@id": "./events/03-circe",
+      "@type": "myth:Event",
+      "dct:title": "De betovering van Circe",
+      "myth:sequence": 3,
+      "myth:description": "Circe verandert mannen in dieren; Odysseus weerstaat haar magie.",
+      "myth:involvesActor": [
+        "./actors/odysseus",
+        "./actors/athena"
+      ]
+    },
+    {
+      "@id": "./events/04-underworld",
+      "@type": "myth:Event",
+      "dct:title": "De afdaling in Hades",
+      "myth:sequence": 4,
+      "myth:description": "Odysseus daalt af naar de onderwereld om raad te zoeken.",
+      "myth:involvesActor": [
+        "./actors/odysseus"
+      ]
+    },
+    {
+      "@id": "./events/05-ithaca",
+      "@type": "myth:Event",
+      "dct:title": "De terugkeer naar Ithaka",
+      "myth:sequence": 5,
+      "myth:description": "Odysseus keert terug en herwint zijn troon.",
+      "myth:involvesActor": [
+        "./actors/odysseus",
+        "./actors/athena"
+      ]
+    }
+  ]
+}

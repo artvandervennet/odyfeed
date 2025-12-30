@@ -1,0 +1,27 @@
+{
+  "@context": {
+    "myth": "./vocab#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "as": "https://www.w3.org/ns/activitystreams#"
+  },
+  "@graph": [
+    {
+      "@id": "./actors/odysseus",
+      "@type": "myth:Actor",
+      "foaf:name": "Odysseus",
+      "myth:tone": "slim, berekend, volhardend"
+    },
+    {
+      "@id": "./actors/poseidon",
+      "@type": "myth:Actor",
+      "foaf:name": "Poseidon",
+      "myth:tone": "wraakzuchtig, almachtig"
+    },
+    {
+      "@id": "./actors/athena",
+      "@type": "myth:Actor",
+      "foaf:name": "Athena",
+      "myth:tone": "beschermend, strategisch"
+    }
+  ]
+}
