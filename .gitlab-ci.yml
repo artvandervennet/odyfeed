@@ -37,28 +37,6 @@ plesk:
 
     - ssh -o StrictHostKeyChecking=no $SSH_USERNAME@cloudplesk.ikdoeict.be "rm -rf $PLESK_DIRECTORY/*"
     - scp -o StrictHostKeyChecking=no -r .output/. $SSH_USERNAME@cloudplesk.ikdoeict.be:$PLESK_DIRECTORY
-
-    - |
-      ssh -o StrictHostKeyChecking=no $SSH_USERNAME@cloudplesk.ikdoeict.be "cat > $PLESK_DIRECTORY/ecosystem.config.cjs" << 'EOF'
-      module.exports = {
-        apps: [{
-          name: 'yourspace',
-          script: './server/index.mjs',
-          cwd: process.env.PLESK_DIRECTORY || '/var/www/vhosts/yourspace',
-          instances: 1,
-          exec_mode: 'cluster',
-          env: {
-            NODE_ENV: 'production',
-            NITRO_PORT: process.env.PORT || 3000,
-            NITRO_HOST: '0.0.0.0',
-            DOMAIN: process.env.DOMAIN || 'localhost:3000',
-            PROTOCOL: process.env.PROTOCOL || 'http'
-          }
-        }]
-      }
-      EOF
-
-    - ssh -o StrictHostKeyChecking=no $SSH_USERNAME@cloudplesk.ikdoeict.be "cd $PLESK_DIRECTORY && node server/index.mjs &"
   only:
     - main
 
