@@ -1,0 +1,64 @@
+image: node:22
+
+stages:
+  - deploy
+
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - node_modules/
+    - .pnpm-store
+
+before_script:
+  - corepack enable
+  - corepack prepare pnpm@latest-8 --activate
+  - pnpm config set store-dir .pnpm-store
+  - pnpm install
+
+plesk:
+  stage: deploy
+  script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H cloudplesk.ikdoeict.be >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "Username is $SSH_USERNAME"
+    - echo "$SSH_PRIVATE_KEY"
+    - echo "$SSH_USERNAME"
+    - chmod 400 "$SSH_PRIVATE_KEY"
+    - ssh-add "$SSH_PRIVATE_KEY"
+
+    - pnpm build
+
+    - ssh -o StrictHostKeyChecking=no $SSH_USERNAME@cloudplesk.ikdoeict.be "rm -rf $PLESK_DIRECTORY/*"
+    - scp -o StrictHostKeyChecking=no -r .output/. $SSH_USERNAME@cloudplesk.ikdoeict.be:$PLESK_DIRECTORY
+
+    - |
+      ssh -o StrictHostKeyChecking=no $SSH_USERNAME@cloudplesk.ikdoeict.be "cat > $PLESK_DIRECTORY/ecosystem.config.cjs" << 'EOF'
+      module.exports = {
+        apps: [{
+          name: 'yourspace',
+          script: './server/index.mjs',
+          cwd: process.env.PLESK_DIRECTORY || '/var/www/vhosts/yourspace',
+          instances: 1,
+          exec_mode: 'cluster',
+          env: {
+            NODE_ENV: 'production',
+            NITRO_PORT: process.env.PORT || 3000,
+            NITRO_HOST: '0.0.0.0',
+            DOMAIN: process.env.DOMAIN || 'localhost:3000',
+            PROTOCOL: process.env.PROTOCOL || 'http'
+          }
+        }]
+      }
+      EOF
+
+    - ssh -o StrictHostKeyChecking=no $SSH_USERNAME@cloudplesk.ikdoeict.be "cd $PLESK_DIRECTORY && node server/index.mjs &"
+  only:
+    - main
+
