@@ -1,7 +1,7 @@
 import {defineStore} from 'pinia';
 import {useSolidAuth} from '~/composables/useSolidAuth';
 import {ref, computed} from 'vue';
-import {getProfileAll, getThing, getUrl, getUrlAll, getStringNoLocale, getSolidDataset} from '@inrupt/solid-client';
+import {getProfileAll, getThing, getUrl, getUrlAll, getStringNoLocale, getSolidDataset, getSourceUrl} from '@inrupt/solid-client';
 import {NAMESPACES} from '~~/shared/constants';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -20,10 +20,15 @@ export const useAuthStore = defineStore('auth', () => {
 			// Combine info from all profile documents
 			const profileData: any = {id: webId};
 
-			const datasets = [profiles.webIdProfile];
+			const datasets = [profiles.webIdProfile, ...profiles.altProfileAll];
+			const processedUrls = new Set<string>();
+			datasets.forEach(ds => {
+				const url = getSourceUrl(ds);
+				if (url) processedUrls.add(url);
+			});
 
 			// Manually find alternative profile documents to supplement getProfileAll
-			const altUrls = new Set([...profiles.altProfileAll]);
+			const altUrls = new Set<string>();
 			const webIdThing = getThing(profiles.webIdProfile, webId);
 			if (webIdThing) {
 				getUrlAll(webIdThing, NAMESPACES.FOAF + "isPrimaryTopicOf").forEach(url => altUrls.add(url));
@@ -32,22 +37,34 @@ export const useAuthStore = defineStore('auth', () => {
 
 			// Fetch alternative profiles discovered (like from seeAlso or isPrimaryTopicOf)
 			for (const altUrl of altUrls) {
-				if (altUrl === webId) continue;
+				if (altUrl === webId || processedUrls.has(altUrl)) continue;
 				try {
 					const altDataset = await getSolidDataset(altUrl, {fetch: session.fetch});
 					datasets.push(altDataset);
+					processedUrls.add(altUrl);
 				} catch (e) {
 					console.warn(`Could not fetch alternative profile at ${altUrl}:`, e);
 				}
 			}
 
 			for (const dataset of datasets) {
-				const thing = getThing(dataset, webId);
+				// Try to find the thing for the WebID, or common variations (with fragment)
+				let thing = getThing(dataset, webId);
+				if (!thing) {
+					// Try with common fragments if not found
+					const variations = [webId + "#me", webId + "#id", webId + "#main"];
+					for (const v of variations) {
+						thing = getThing(dataset, v);
+						if (thing) break;
+					}
+				}
+				
 				if (!thing) continue;
 
 				// Extract properties using multiple possible namespaces/formats
 				const inbox = getUrl(thing, NAMESPACES.ACTIVITYSTREAMS + "#inbox") ||
-					getUrl(thing, NAMESPACES.ACTIVITYSTREAMS + "/inbox");
+					getUrl(thing, NAMESPACES.ACTIVITYSTREAMS + "/inbox") ||
+					getUrl(thing, "http://www.w3.org/ns/ldp#inbox");
 				if (inbox) profileData.inbox = inbox;
 
 				const outbox = getUrl(thing, NAMESPACES.ACTIVITYSTREAMS + "#outbox") ||
@@ -55,12 +72,14 @@ export const useAuthStore = defineStore('auth', () => {
 				if (outbox) profileData.outbox = outbox;
 
 				const preferredUsername = getStringNoLocale(thing, NAMESPACES.ACTIVITYSTREAMS + "#preferredUsername") ||
-					getStringNoLocale(thing, NAMESPACES.ACTIVITYSTREAMS + "/preferredUsername");
+					getStringNoLocale(thing, NAMESPACES.ACTIVITYSTREAMS + "/preferredUsername") ||
+					getStringNoLocale(thing, "http://xmlns.com/foaf/0.1/nick");
 				if (preferredUsername) profileData.preferredUsername = preferredUsername;
 
 				const name = getStringNoLocale(thing, NAMESPACES.ACTIVITYSTREAMS + "#name") ||
 					getStringNoLocale(thing, NAMESPACES.ACTIVITYSTREAMS + "/name") ||
-					getStringNoLocale(thing, NAMESPACES.FOAF + "name");
+					getStringNoLocale(thing, NAMESPACES.FOAF + "name") ||
+					getStringNoLocale(thing, "http://www.w3.org/2000/01/rdf-schema#label");
 				if (name) profileData.name = name;
 
 				const icon = getUrl(thing, NAMESPACES.ACTIVITYSTREAMS + "#icon") ||
