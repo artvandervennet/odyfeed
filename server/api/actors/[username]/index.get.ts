@@ -1,9 +1,11 @@
 import { parseActors } from "~~/server/utils/rdf";
+import type { ASActor } from "~~/shared/types/activitypub";
+import { NAMESPACES, ACTIVITY_TYPES } from "~~/shared/constants";
 
-export default defineEventHandler((event) => {
-  const actorId = event.context.params?.id;
+export default defineEventHandler((event): ASActor => {
+  const username = event.context.params?.username;
   const actors = parseActors();
-  const actor = actors.find(a => a.id.endsWith(`/${actorId}`));
+  const actor = actors.find(a => a.preferredUsername === username);
 
   if (!actor) {
     throw createError({
@@ -14,16 +16,16 @@ export default defineEventHandler((event) => {
 
   return {
     "@context": [
-      "https://www.w3.org/ns/activitystreams",
-      "https://w3id.org/security/v1"
+      NAMESPACES.ACTIVITYSTREAMS,
+      NAMESPACES.SECURITY
     ],
     id: actor.id,
-    type: "Service",
+    type: ACTIVITY_TYPES.SERVICE,
     preferredUsername: actor.preferredUsername,
     name: actor.name,
     summary: actor.summary,
     icon: actor.avatar ? {
-      type: "Image",
+      type: ACTIVITY_TYPES.IMAGE,
       url: actor.avatar
     } : undefined,
     inbox: actor.inbox,
