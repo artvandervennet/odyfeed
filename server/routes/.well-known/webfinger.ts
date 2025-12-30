@@ -1,4 +1,6 @@
 import { parseActors } from "~~/server/utils/rdf";
+import type { MythActor } from "~~/shared/types/activitypub";
+import { DEFAULTS } from "~~/shared/constants";
 
 export default defineEventHandler((event) => {
   const query = getQuery(event);
@@ -11,11 +13,15 @@ export default defineEventHandler((event) => {
     });
   }
 
-  const actors = parseActors();
+  const config = useRuntimeConfig();
+  const baseUrl = config.public.baseUrl || DEFAULTS.BASE_URL;
+  const domain = new URL(baseUrl).host;
+
+  const actors: MythActor[] = parseActors();
   
   // Try to find the actor by acct: URI or by their full ID URL
   const actor = actors.find(a => {
-    const acct = `acct:${a.preferredUsername}@odyfeed.artvandervennet.ikdoeict.be`;
+    const acct = `acct:${a.preferredUsername}@${domain}`;
     return resource === acct || resource === a.id;
   });
 
@@ -27,7 +33,7 @@ export default defineEventHandler((event) => {
   }
 
   return {
-    subject: resource.startsWith('acct:') ? resource : `acct:${actor.preferredUsername}@odyfeed.artvandervennet.ikdoeict.be`,
+    subject: resource.startsWith('acct:') ? resource : `acct:${actor.preferredUsername}@${domain}`,
     links: [
       {
         rel: 'self',
