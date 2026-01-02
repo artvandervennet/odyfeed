@@ -17,7 +17,7 @@ export default defineNuxtConfig({
 	css: ['~/assets/css/main.css'],
 	ssr: true,
 	nitro: {
-		preset: 'node-server', // kan ook serverless zijn
+		preset: 'netlify',
 	},
 	runtimeConfig: {
 		openaiApiKey: process.env.OPENAI_API_KEY,
