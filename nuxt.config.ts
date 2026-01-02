@@ -17,11 +17,7 @@ export default defineNuxtConfig({
 	css: ['~/assets/css/main.css'],
 	ssr: true,
 	nitro: {
-		preset: 'netlify',
-	},
-	routeRules: {
-		'/api/**': { cors: true },
-		// Don't add catch-all rules that might override pages
+		preset: 'cloudflare-pages',
 	},
 	runtimeConfig: {
 		openaiApiKey: process.env.OPENAI_API_KEY,

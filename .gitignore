@@ -24,3 +24,4 @@ logs
 !.env.example
 /data/inbox/
 /data/posts/
+/.netlify/
