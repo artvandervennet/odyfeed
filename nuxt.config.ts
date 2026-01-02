@@ -19,6 +19,10 @@ export default defineNuxtConfig({
 	nitro: {
 		preset: 'netlify',
 	},
+	routeRules: {
+		'/api/**': { cors: true },
+		// Don't add catch-all rules that might override pages
+	},
 	runtimeConfig: {
 		openaiApiKey: process.env.OPENAI_API_KEY,
 		public: {
