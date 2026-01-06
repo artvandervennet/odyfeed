@@ -2,6 +2,12 @@
 export default defineNuxtConfig({
 	compatibilityDate: '2025-07-15',
 	devtools: {enabled: true},
+	nitro: {
+		prerender: {
+			crawlLinks: true,
+			routes: ['/sitemap.xml'],
+		},
+	},
 	modules: [
 		'@nuxt/eslint',
 		'@nuxt/ui',
@@ -16,9 +22,6 @@ export default defineNuxtConfig({
 	},
 	css: ['~/assets/css/main.css'],
 	ssr: true,
-	nitro: {
-		preset: 'cloudflare-pages',
-	},
 	runtimeConfig: {
 		openaiApiKey: process.env.OPENAI_API_KEY,
 		public: {

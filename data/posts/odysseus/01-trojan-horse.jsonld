@@ -13,5 +13,11 @@
   "to": [
     "https://www.w3.org/ns/activitystreams#Public"
   ],
-  "myth:aboutEvent": "http://localhost:3000/events/01-trojan-horse"
+  "myth:aboutEvent": "http://localhost:3000/events/01-trojan-horse",
+  "likes": {
+    "id": "http://localhost:3000/actors/odysseus/statuses/01-trojan-horse/likes",
+    "type": "Collection",
+    "totalItems": 0,
+    "items": []
+  }
 }

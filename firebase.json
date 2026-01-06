@@ -1,0 +1,22 @@
+{
+  "appHosting": {
+    "servingConfig": {
+      "regions": ["us-central1"]
+    }
+  },
+  "hosting": {
+    "public": ".nuxt/dist/public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "function": "nuxtServer"
+      }
+    ]
+  }
+}
+
