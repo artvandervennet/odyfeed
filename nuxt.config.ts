@@ -2,12 +2,6 @@
 export default defineNuxtConfig({
 	compatibilityDate: '2025-07-15',
 	devtools: {enabled: true},
-	nitro: {
-		prerender: {
-			crawlLinks: true,
-			routes: ['/sitemap.xml'],
-		},
-	},
 	modules: [
 		'@nuxt/eslint',
 		'@nuxt/ui',
