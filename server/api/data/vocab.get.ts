@@ -8,7 +8,7 @@ export default defineEventHandler((event) => {
   const path = resolve(process.cwd(), DATA_PATHS.VOCAB);
   const raw = readFileSync(path, "utf-8");
   
-  // Replace the hardcoded base URL with the dynamic one
+  // Note: Vocabulary is kept file-based as it's static. Can be migrated to Firestore if needed.
   const jsonld = raw.replace(/\.\//g, baseUrl);
 
   setResponseHeader(event, "Content-Type", "application/ld+json");

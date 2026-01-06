@@ -4,6 +4,10 @@
       "regions": ["us-central1"]
     }
   },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
   "hosting": {
     "public": ".nuxt/dist/public",
     "ignore": [

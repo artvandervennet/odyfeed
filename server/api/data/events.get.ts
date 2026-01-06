@@ -1,16 +1,27 @@
-import { readFileSync } from "fs";
-import { resolve } from "path";
-import { DATA_PATHS, DEFAULTS } from "~~/shared/constants";
+import { getAllEvents } from "~~/server/utils/firestore";
+import { DEFAULTS } from "~~/shared/constants";
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const baseUrl = config.public.baseUrl || DEFAULTS.BASE_URL;
-  const path = resolve(process.cwd(), DATA_PATHS.EVENTS);
-  const raw = readFileSync(path, "utf-8");
-  
-  // Resolve relative IRIs starting with ./ to absolute IRIs
-  const jsonld = raw.replace(/\.\//g, `${baseUrl}/`);
+
+  const events = await getAllEvents();
 
   setResponseHeader(event, "Content-Type", "application/ld+json");
-  return JSON.parse(jsonld);
+
+  return {
+    "@context": {
+      "myth": `${baseUrl}/vocab#`,
+      "dct": "http://purl.org/dc/terms/",
+      "as": "https://www.w3.org/ns/activitystreams#"
+    },
+    "@graph": events.map(event => ({
+      "@id": `${baseUrl}/events/${event.id.split('/').pop()}`,
+      "@type": "myth:Event",
+      "dct:title": event.title,
+      "myth:sequence": event.sequence,
+      "myth:description": event.description,
+      "myth:involvesActor": event.actors.map(a => `${baseUrl}/actors/${a.preferredUsername}`)
+    }))
+  };
 });

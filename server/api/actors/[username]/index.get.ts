@@ -1,11 +1,11 @@
 import { parseActors } from "~~/server/utils/rdf";
 import type { ASActor } from "~~/shared/types/activitypub";
 import { NAMESPACES, ACTIVITY_TYPES } from "~~/shared/constants";
+import {getActor} from "~~/server/utils/firestore";
 
-export default defineEventHandler((event): ASActor => {
+export default defineEventHandler(async (event): Promise<ASActor> => {
   const username = event.context.params?.username;
-  const actors = parseActors();
-  const actor = actors.find(a => a.preferredUsername === username);
+  const actor = await getActor(username ?? "")
 
   if (!actor) {
     throw createError({

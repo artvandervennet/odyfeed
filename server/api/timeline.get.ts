@@ -1,40 +1,11 @@
-import { existsSync, readdirSync, readFileSync } from "fs";
-import { resolve } from "path";
-import { parseActors } from "~~/server/utils/rdf";
+import { getAllPosts } from "~~/server/utils/firestore";
 import type { ASCollection, EnrichedPost } from "~~/shared/types/activitypub";
-import { NAMESPACES, ACTIVITY_TYPES, DATA_PATHS } from "~~/shared/constants";
+import { NAMESPACES, ACTIVITY_TYPES } from "~~/shared/constants";
 
-export default defineEventHandler((event): ASCollection<EnrichedPost> => {
-  const postsBaseDir = resolve(process.cwd(), DATA_PATHS.POSTS);
-  const allPosts: EnrichedPost[] = [];
-  const actors = parseActors();
+export default defineEventHandler(async (event): Promise<ASCollection<EnrichedPost>> => {
+  const allPosts = await getAllPosts(100);
 
-  if (existsSync(postsBaseDir)) {
-    const actorDirs = readdirSync(postsBaseDir);
-    for (const actorDir of actorDirs) {
-      const actorPath = resolve(postsBaseDir, actorDir);
-      if (existsSync(actorPath)) {
-        const files = readdirSync(actorPath).filter(f => f.endsWith('.json') || f.endsWith('.jsonld'));
-        const actor = actors.find(a => a.preferredUsername === actorDir);
-
-        for (const file of files) {
-          try {
-            const content = JSON.parse(readFileSync(resolve(actorPath, file), 'utf-8')) as EnrichedPost;
-            // Enrich with actor info if available
-            if (actor) {
-              content.actor = actor;
-            }
-
-            allPosts.push(content);
-          } catch (e) {
-            console.error(`Error parsing post file ${file} in ${actorDir}:`, e);
-          }
-        }
-      }
-    }
-  }
-
-  // Sort by published date descending
+  // Sort by published date descending (should already be sorted from Firestore)
   allPosts.sort((a, b) => {
     const dateA = a.published ? new Date(a.published).getTime() : 0;
     const dateB = b.published ? new Date(b.published).getTime() : 0;
@@ -42,6 +13,7 @@ export default defineEventHandler((event): ASCollection<EnrichedPost> => {
   });
 
   return {
+    id: "",
     "@context": NAMESPACES.ACTIVITYSTREAMS,
     type: ACTIVITY_TYPES.ORDERED_COLLECTION,
     totalItems: allPosts.length,

@@ -1,16 +1,27 @@
-import { readFileSync } from "fs";
-import { resolve } from "path";
-import { DATA_PATHS, DEFAULTS } from "~~/shared/constants";
+import { getAllActors } from "~~/server/utils/firestore";
+import { DEFAULTS, NAMESPACES } from "~~/shared/constants";
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const baseUrl = config.public.baseUrl || DEFAULTS.BASE_URL;
-  const path = resolve(process.cwd(), DATA_PATHS.ACTORS);
-  const raw = readFileSync(path, "utf-8");
-  
-  // Resolve relative IRIs starting with ./ to absolute IRIs
-  const jsonld = raw.replace(/\.\//g, `${baseUrl}/`);
+
+  const actors = await getAllActors();
 
   setResponseHeader(event, "Content-Type", "application/ld+json");
-  return JSON.parse(jsonld);
+
+  return {
+    "@context": {
+      "myth": `${baseUrl}/vocab#`,
+      "foaf": "http://xmlns.com/foaf/0.1/",
+      "as": "https://www.w3.org/ns/activitystreams#"
+    },
+    "@graph": actors.map(actor => ({
+      "@id": `${baseUrl}/actors/${actor.preferredUsername}`,
+      "@type": "myth:Actor",
+      "foaf:name": actor.name,
+      "myth:tone": actor.tone,
+      ...(actor.summary && { "as:summary": actor.summary }),
+      ...(actor.avatar && { "myth:avatar": actor.avatar })
+    }))
+  };
 });

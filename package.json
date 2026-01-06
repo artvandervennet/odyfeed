@@ -20,6 +20,8 @@
     "@types/n3": "^1.26.1",
     "@vueuse/core": "^14.1.0",
     "eslint": "^9.39.2",
+    "firebase": "^11.1.0",
+    "firebase-admin": "^13.0.0",
     "fs-extra": "^11.3.3",
     "n3": "^1.26.0",
     "nuxt": "^4.2.2",
@@ -32,6 +34,7 @@
   "devDependencies": {
     "@iconify-json/heroicons": "^1.2.3",
     "@iconify-json/lucide": "^1.2.82",
+    "@types/fs-extra": "^11.0.4",
     "nitropack": "^2.12.9"
   }
 }

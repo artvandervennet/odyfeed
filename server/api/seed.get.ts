@@ -1,9 +1,8 @@
 import {OpenAI} from "openai";
-import {parseEvents} from "~~/server/utils/rdf";
-import {existsSync, mkdirSync, writeFileSync} from "fs";
-import {resolve} from "path";
+import {parseEvents, parseActors} from "~~/server/utils/rdf";
+import { createPost, postExists } from "~~/server/utils/firestore";
 import type { ASNote } from "~~/shared/types/activitypub";
-import { NAMESPACES, ACTIVITY_TYPES, DATA_PATHS, DEFAULTS } from "~~/shared/constants";
+import { NAMESPACES, ACTIVITY_TYPES, DEFAULTS } from "~~/shared/constants";
 
 export default defineEventHandler(async (event) => {
 	const config = useRuntimeConfig();
@@ -15,28 +14,21 @@ export default defineEventHandler(async (event) => {
 	}
 
 	const openai = new OpenAI({apiKey: config.openaiApiKey});
-	const events = parseEvents();
+	const events = await parseEvents();
 	const results = [];
 
 	for (const eventObj of events) {
 		const eventId = eventObj.id.split('/').pop();
 		for (const actor of eventObj.actors) {
 			const actorName = actor.preferredUsername;
-			const postDir = resolve(process.cwd(), `${DATA_PATHS.POSTS}/${actorName}`);
 			const postId = `${eventId}`;
-			const jsonPath = resolve(postDir, `${postId}.jsonld`);
 
-			// Idempotentie check
-			if (existsSync(jsonPath)) {
+			const exists = await postExists(postId, actorName);
+			if (exists) {
 				results.push({event: eventId, actor: actorName, status: "skipped (already exists)"});
 				continue;
 			}
 
-			if (!existsSync(postDir)) {
-				mkdirSync(postDir, {recursive: true});
-			}
-
-			// Generate content via ChatGPT
 			const prompt = `
         Schrijf een korte, sociale media post (ActivityPub stijl) vanuit het perspectief van de Griekse mythologische figuur ${actor.name}.
         Het event is: "${eventObj.title}".
@@ -55,7 +47,6 @@ export default defineEventHandler(async (event) => {
 			const baseUrl = config.public.baseUrl || DEFAULTS.BASE_URL;
 			const postUrl = `${baseUrl}/actors/${actorName}/statuses/${postId}`;
 
-			// 1. Opslaan als ActivityStreams Note (JSON-LD)
 			const activityNote: ASNote = {
 				"@context": [
 					NAMESPACES.ACTIVITYSTREAMS,
@@ -72,8 +63,17 @@ export default defineEventHandler(async (event) => {
 				"myth:aboutEvent": eventObj.id,
 			};
 
-			writeFileSync(jsonPath, JSON.stringify(activityNote, null, 2));
-
+			try {
+				const docId = await createPost({
+					...activityNote,
+					postId: postId,
+					attributedTo: actorName,
+					likes: []
+				});
+				results.push({event: eventId, actor: actorName, status: "created", docId});
+			} catch (error) {
+				results.push({event: eventId, actor: actorName, status: "error", error: (error as Error).message});
+			}
 		}
 	}
 

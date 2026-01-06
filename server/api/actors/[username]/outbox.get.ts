@@ -3,11 +3,11 @@ import { resolve } from "path";
 import { parseActors } from "~~/server/utils/rdf";
 import type { ASCollection, ASNote } from "~~/shared/types/activitypub";
 import { NAMESPACES, ACTIVITY_TYPES, DATA_PATHS } from "~~/shared/constants";
+import {getActor} from "~~/server/utils/firestore";
 
-export default defineEventHandler((event): ASCollection<ASNote> => {
+export default defineEventHandler(async (event): Promise<ASCollection<ASNote>> => {
   const username = event.context.params?.username;
-  const actors = parseActors();
-  const actor = actors.find(a => a.preferredUsername === username);
+  const actor = await getActor(username ?? "")
 
   if (!actor) {
     throw createError({

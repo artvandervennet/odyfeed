@@ -1,0 +1,40 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "posts",
+      "queryScope": "Collection",
+      "fields": [
+        {
+          "fieldPath": "attributedTo",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "published",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "posts",
+      "queryScope": "Collection",
+      "fields": [
+        {
+          "fieldPath": "published",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "events",
+      "queryScope": "Collection",
+      "fields": [
+        {
+          "fieldPath": "sequence",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
+
