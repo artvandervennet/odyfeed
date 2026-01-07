@@ -1,35 +1,21 @@
-import { parseActors } from "~~/server/utils/rdf";
-import type { ASActor } from "~~/shared/types/activitypub";
-import { NAMESPACES, ACTIVITY_TYPES } from "~~/shared/constants";
+import {createDataStorage} from "~~/server/utils/fileStorage";
+import {parseActors} from "~~/server/utils/rdf";
+import type {ASActor} from "~~/shared/types/activitypub";
+import {NAMESPACES, FILE_PATHS, ENDPOINT_PATHS, DEFAULTS, ACTOR_TYPES} from "~~/shared/constants";
 
 export default defineEventHandler((event): ASActor => {
-  const username = event.context.params?.username;
-  const actors = parseActors();
-  const actor = actors.find(a => a.preferredUsername === username);
+	const params = getRouterParams(event);
+	const username = params.username as string;
+	const storage = createDataStorage();
 
-  if (!actor) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: "Actor not found"
-    });
-  }
+	const actorFilePath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/profile.jsonld`;
 
-  return {
-    "@context": [
-      NAMESPACES.ACTIVITYSTREAMS,
-      NAMESPACES.SECURITY
-    ],
-    id: actor.id,
-    type: ACTIVITY_TYPES.SERVICE,
-    preferredUsername: actor.preferredUsername,
-    name: actor.name,
-    summary: actor.summary,
-    icon: actor.avatar ? {
-      type: ACTIVITY_TYPES.IMAGE,
-      url: actor.avatar
-    } : undefined,
-    inbox: actor.inbox,
-    outbox: actor.outbox,
-    url: actor.id
-  };
+	if (!storage.exists(actorFilePath)) {
+		throw createError({
+			statusCode: 404,
+			statusMessage: "Actor not found",
+		});
+	}
+
+	return storage.read<ASActor>(actorFilePath);
 });

@@ -60,11 +60,11 @@ async function handleLike() {
         <NuxtLink :to="actorProfileUrl" class="flex items-center gap-3 group">
           <UAvatar
             :src="actor?.icon?.url || actor?.avatar"
-            :alt="actor?.name"
+            :alt="actor?.preferredUsername"
             size="sm"
           />
           <div class="flex flex-col">
-            <span class="font-bold group-hover:text-primary-500 transition-colors">{{ actor?.name || 'Unknown' }}</span>
+            <span class="font-bold group-hover:text-primary-500 transition-colors">{{ actor?.preferredUsername || 'Unknown' }}</span>
             <span class="text-xs text-gray-500">@{{ actor?.preferredUsername }}</span>
           </div>
         </NuxtLink>

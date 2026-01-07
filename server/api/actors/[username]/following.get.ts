@@ -1,6 +1,6 @@
-import { createDataStorage } from "~~/server/utils/fileStorage";
 import type { ASCollection } from "~~/shared/types/activitypub";
-import { NAMESPACES, ACTIVITY_TYPES, FILE_PATHS, ENDPOINT_PATHS, DEFAULTS } from "~~/shared/constants";
+import { NAMESPACES, ACTIVITY_TYPES, ENDPOINT_PATHS, DEFAULTS, FILE_PATHS } from "~~/shared/constants";
+import { createDataStorage } from "~~/server/utils/fileStorage";
 
 export default defineEventHandler((event): ASCollection<string> => {
 	const params = getRouterParams(event);
@@ -18,19 +18,11 @@ export default defineEventHandler((event): ASCollection<string> => {
 		});
 	}
 
-	const postsDir = `${FILE_PATHS.POSTS_DIR}/${username}`;
-	const postFiles = storage.listFiles(postsDir, ".jsonld");
-
-	const statusUrls = postFiles.map((file) => {
-		const postId = file.replace(".jsonld", "");
-		return `${baseUrl}${ENDPOINT_PATHS.ACTOR_STATUS(username, postId)}`;
-	});
-
 	return {
 		"@context": NAMESPACES.ACTIVITYSTREAMS,
-		id: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(username)}`,
+		id: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(username)}`,
 		type: ACTIVITY_TYPES.ORDERED_COLLECTION,
-		totalItems: statusUrls.length,
-		orderedItems: statusUrls,
+		totalItems: 0,
+		orderedItems: [],
 	};
 });
