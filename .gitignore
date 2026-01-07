@@ -28,3 +28,4 @@ logs
 # Firebase
 .firebase/
 .firebaserc
+/data/

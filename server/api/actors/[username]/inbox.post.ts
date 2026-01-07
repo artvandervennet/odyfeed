@@ -1,112 +1,178 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { resolve } from "path";
+import { createDataStorage } from "~~/server/utils/fileStorage";
 import type { ASActivity, ASNote, ASObject } from "~~/shared/types/activitypub";
-import { ACTIVITY_TYPES, DATA_PATHS } from "~~/shared/constants";
+import { ACTIVITY_TYPES, FILE_PATHS } from "~~/shared/constants";
+
+interface LikesCollection {
+	id: string;
+	type: "Collection" | "OrderedCollection";
+	totalItems: number;
+	items: string[];
+}
 
 export default defineEventHandler(async (event) => {
-  const username = event.context.params?.username;
-  const body = await readBody<ASActivity>(event);
+	const params = getRouterParams(event);
+	const username = params.username as string;
+	const body = await readBody<ASActivity>(event);
+	const storage = createDataStorage();
 
-  if (!body || !body.type) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid activity",
-    });
-  }
+	if (!body || !body.type) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid activity",
+		});
+	}
 
-  // Sla de ruwe activiteit op in de inbox
-  const inboxDir = resolve(process.cwd(), `data/inbox/${username}`);
-  if (!existsSync(inboxDir)) {
-    mkdirSync(inboxDir, { recursive: true });
-  }
-  const filename = `${Date.now()}-${body.type.toLowerCase()}.jsonld`;
-  writeFileSync(resolve(inboxDir, filename), JSON.stringify(body, null, 2));
+	// Store raw activity in inbox
+	const inboxPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/inbox/${Date.now()}-${body.type.toLowerCase()}.jsonld`;
+	storage.write(inboxPath, body, { pretty: true });
 
-  // Verwerk Like activiteit
-  if (body.type === ACTIVITY_TYPES.LIKE) {
-    const targetId = typeof body.object === 'string' ? body.object : (body.object as ASObject).id; // De URL van de post die geliked wordt
-    if (targetId && typeof targetId === 'string') {
-      // Extraheer de actor en post ID uit de URL
-      // Bijvoorbeeld: http://localhost:3000/actors/odysseus/statuses/01-trojan-horse
-      try {
-        const url = new URL(targetId);
-        const parts = url.pathname.split('/');
-        // /actors/{username}/statuses/{id}
-        const targetActor = parts[2];
-        const postId = parts[4];
+	// Process Like activity
+	if (body.type === ACTIVITY_TYPES.LIKE) {
+		processLike(body, storage);
+	}
 
-        if (targetActor && postId) {
-          const postPath = resolve(process.cwd(), `${DATA_PATHS.POSTS}/${targetActor}/${postId}.jsonld`);
-          if (existsSync(postPath)) {
-            const post = JSON.parse(readFileSync(postPath, 'utf-8')) as ASNote;
-            const actorWebId = body.actor;
+	// Process Undo activity
+	if (body.type === ACTIVITY_TYPES.UNDO) {
+		processUndo(body, storage);
+	}
 
-            if (actorWebId && typeof actorWebId === 'string') {
-              if (!post.likes) {
-                post.likes = {
-                  id: `${post.id}/likes`,
-                  type: ACTIVITY_TYPES.COLLECTION,
-                  totalItems: 0,
-                  items: []
-                };
-              }
-
-              // Support both simple array and Collection object for backward compatibility or flexibility
-              if (Array.isArray(post.likes)) {
-                if (!post.likes.includes(actorWebId)) {
-                  post.likes.push(actorWebId);
-                }
-              } else if (post.likes?.items && !post.likes.items.includes(actorWebId)) {
-                post.likes.items.push(actorWebId);
-                post.likes.totalItems = post.likes.items.length;
-              }
-              
-              writeFileSync(postPath, JSON.stringify(post, null, 2));
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Error processing like target URL:", e);
-      }
-    }
-  }
-
-  // Verwerk Undo activiteit
-  if (body.type === 'Undo') {
-    const objectToUndo = body.object;
-    if (objectToUndo && typeof objectToUndo === 'object' && (objectToUndo as ASActivity).type === ACTIVITY_TYPES.LIKE) {
-      const activityToUndo = objectToUndo as ASActivity;
-      const targetId = typeof activityToUndo.object === 'string' ? activityToUndo.object : (activityToUndo.object as ASObject).id;
-      if (targetId) {
-        try {
-          const url = new URL(targetId);
-          const parts = url.pathname.split('/');
-          const targetActor = parts[2];
-          const postId = parts[4];
-
-          if (targetActor && postId) {
-            const postPath = resolve(process.cwd(), `${DATA_PATHS.POSTS}/${targetActor}/${postId}.jsonld`);
-            if (existsSync(postPath)) {
-              const post = JSON.parse(readFileSync(postPath, 'utf-8')) as ASNote;
-              const actorWebId = body.actor;
-
-              if (actorWebId && typeof actorWebId === 'string') {
-                if (Array.isArray(post.likes)) {
-                  post.likes = post.likes.filter((id: string) => id !== actorWebId);
-                } else if (post.likes?.items) {
-                  post.likes.items = post.likes.items.filter(id => id !== actorWebId);
-                  post.likes.totalItems = post.likes.items.length;
-                }
-                writeFileSync(postPath, JSON.stringify(post, null, 2));
-              }
-            }
-          }
-        } catch (e) {
-          console.error("Error processing undo like target URL:", e);
-        }
-      }
-    }
-  }
-
-  return setResponseStatus(event, 202);
+	return setResponseStatus(event, 202);
 });
+
+/**
+ * Process incoming Like activity
+ * Adds the actor to the post's likes collection
+ */
+function processLike(activity: ASActivity, storage: ReturnType<typeof createDataStorage>): void {
+	const targetId = typeof activity.object === "string"
+		? activity.object
+		: (activity.object as ASObject).id;
+
+	if (!targetId) {
+		return;
+	}
+
+	const postPath = extractPostPath(targetId);
+	if (!postPath) {
+		return;
+	}
+
+	const post = storage.read<ASNote>(postPath);
+	if (!post.id) {
+		return;
+	}
+
+	const actorId = activity.actor;
+	if (!actorId) {
+		return;
+	}
+
+	// Initialize likes collection if it doesn't exist
+	if (!post.likes) {
+		post.likes = {
+			id: `${post.id}/likes`,
+			type: ACTIVITY_TYPES.COLLECTION,
+			totalItems: 0,
+			items: [],
+		} as LikesCollection;
+	}
+
+	// Support both array and Collection object
+	if (Array.isArray(post.likes)) {
+		if (!post.likes.includes(actorId)) {
+			post.likes.push(actorId);
+		}
+	} else if ((post.likes as LikesCollection).items) {
+		const likesCollection = post.likes as LikesCollection;
+		if (!likesCollection.items.includes(actorId)) {
+			likesCollection.items.push(actorId);
+			likesCollection.totalItems = likesCollection.items.length;
+		}
+	}
+
+	storage.write(postPath, post, { pretty: true });
+}
+
+/**
+ * Process incoming Undo activity
+ * Removes the actor from the post's likes collection
+ */
+function processUndo(activity: ASActivity, storage: ReturnType<typeof createDataStorage>): void {
+	const objectToUndo = activity.object;
+	if (!objectToUndo || typeof objectToUndo !== "object") {
+		return;
+	}
+
+	const activityToUndo = objectToUndo as ASActivity;
+	if (activityToUndo.type !== ACTIVITY_TYPES.LIKE) {
+		return;
+	}
+
+	const targetId = typeof activityToUndo.object === "string"
+		? activityToUndo.object
+		: (activityToUndo.object as ASObject).id;
+
+	if (!targetId) {
+		return;
+	}
+
+	const postPath = extractPostPath(targetId);
+	if (!postPath) {
+		return;
+	}
+
+	const post = storage.read<ASNote>(postPath);
+	if (!post.id) {
+		return;
+	}
+
+	const actorId = activity.actor;
+	if (!actorId) {
+		return;
+	}
+
+	// Remove actor from likes
+	if (Array.isArray(post.likes)) {
+		post.likes = post.likes.filter((id: string) => id !== actorId);
+	} else if ((post.likes as LikesCollection).items) {
+		const likesCollection = post.likes as LikesCollection;
+		likesCollection.items = likesCollection.items.filter((id) => id !== actorId);
+		likesCollection.totalItems = likesCollection.items.length;
+	}
+
+	storage.write(postPath, post, { pretty: true });
+}
+
+/**
+ * Extract post file path from ActivityPub status URL
+ * Example: https://domain.com/api/actors/odysseus/statuses/01-trojan-horse
+ * Returns: posts/odysseus/01-trojan-horse.jsonld
+ */
+function extractPostPath(targetUrl: string): string | null {
+	try {
+		const url = new URL(targetUrl);
+		const parts = url.pathname.split("/").filter(Boolean);
+
+		// Expected structure: /api/actors/{username}/statuses/{statusId}
+		const apiIndex = parts.indexOf("api");
+		if (apiIndex === -1) {
+			return null;
+		}
+
+		const usernameIndex = parts.indexOf("actors", apiIndex) + 1;
+		const statusesIndex = parts.indexOf("statuses", usernameIndex);
+
+		if (usernameIndex < 0 || statusesIndex < 0 || statusesIndex + 1 >= parts.length) {
+			return null;
+		}
+
+		const username = parts[usernameIndex];
+		const statusId = parts[statusesIndex + 1];
+
+		return `${FILE_PATHS.POSTS_DIR}/${username}/${statusId}.jsonld`;
+	} catch (error) {
+		console.error("Error parsing post URL:", error);
+		return null;
+	}
+}
+

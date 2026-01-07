@@ -1,0 +1,46 @@
+@prefix myth: <https://odyfeed.artvandervennet.ikdoeict.be/vocab#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix as: <https://www.w3.org/ns/activitystreams#> .
+@base <https://odyfeed.artvandervennet.ikdoeict.be/vocab> .
+
+<#>
+    a rdfs:Class ;
+    rdfs:label "Mythology Vocabulary" .
+
+myth:Actor
+    a rdfs:Class ;
+    rdfs:comment "An actor in the mythological world." .
+
+myth:Event
+    a rdfs:Class ;
+    rdfs:comment "A mythological event." .
+
+myth:Post
+    a rdfs:Class ;
+    rdfs:comment "A post about a mythological event." .
+
+myth:tone
+    a rdfs:Property ;
+    rdfs:label "tone" ;
+    rdfs:comment "The personality tone of an actor." .
+
+myth:sequence
+    a rdfs:Property ;
+    rdfs:label "sequence" ;
+    rdfs:comment "The sequence number of an event." .
+
+myth:description
+    a rdfs:Property ;
+    rdfs:label "description" ;
+    rdfs:comment "A description of an event or actor." .
+
+myth:involvesActor
+    a rdfs:Property ;
+    rdfs:label "involves actor" ;
+    rdfs:comment "References an actor involved in an event." .
+
+myth:aboutEvent
+    a rdfs:Property ;
+    rdfs:label "about event" ;
+    rdfs:comment "References an event that a post is about." .
+

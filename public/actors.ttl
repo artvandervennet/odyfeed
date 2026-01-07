@@ -1,0 +1,20 @@
+@prefix myth: <https://odyfeed.artvandervennet.ikdoeict.be/vocab#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix as: <https://www.w3.org/ns/activitystreams#> .
+@base <https://odyfeed.artvandervennet.ikdoeict.be/> .
+
+<actors/odysseus>
+    a myth:Actor ;
+    foaf:name "Odysseus" ;
+    myth:tone "slim, berekend, volhardend" .
+
+<actors/poseidon>
+    a myth:Actor ;
+    foaf:name "Poseidon" ;
+    myth:tone "wraakzuchtig, almachtig" .
+
+<actors/athena>
+    a myth:Actor ;
+    foaf:name "Athena" ;
+    myth:tone "beschermend, strategisch" .
+

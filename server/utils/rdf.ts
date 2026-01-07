@@ -1,7 +1,8 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import { Parser } from "n3";
 import type { MythActor, MythEvent } from "~~/shared/types/activitypub";
-import { DATA_PATHS, DEFAULTS } from "~~/shared/constants";
+import { FILE_PATHS, ENDPOINT_PATHS, DEFAULTS } from "~~/shared/constants";
 
 export type { MythActor as Actor, MythEvent as Event };
 
@@ -10,58 +11,98 @@ function getBaseUrl() {
 	return config.public.baseUrl || DEFAULTS.BASE_URL;
 }
 
-export function parseActors(): MythActor[] {
-	const path = resolve(process.cwd(), DATA_PATHS.ACTORS);
-	const raw = readFileSync(path, "utf-8");
-	const baseUrl = getBaseUrl();
-	
-	// Resolve relative IRIs for internal parsing
-	const jsonld = JSON.parse(raw.replace(/\.\//g, `${baseUrl}/`));
-	
-	const actorsData = jsonld["@graph"] || [jsonld];
+function parseTurtleFile(filename: string): Map<string, Map<string, any>> {
+	const path = resolve(process.cwd(), "public", filename);
+	const fileContent = readFileSync(path, "utf-8");
+	const parser = new Parser();
+	const quads = parser.parse(fileContent);
+	const resources = new Map<string, Map<string, any>>();
 
-	return actorsData.map((a: any) => {
-		const username = a["@id"].split('/').pop();
-		return {
-			id: `${baseUrl}/api/actors/${username}`,
+	for (const quad of quads) {
+		const subject = quad.subject.value;
+		if (!resources.has(subject)) {
+			resources.set(subject, new Map());
+		}
+		const resource = resources.get(subject)!;
+		const predicateKey = quad.predicate.value.split("#").pop() || quad.predicate.value;
+		const objectValue = quad.object.termType === "Literal"
+			? quad.object.value
+			: quad.object.value;
+
+		if (resource.has(predicateKey)) {
+			const existing = resource.get(predicateKey);
+			if (Array.isArray(existing)) {
+				existing.push(objectValue);
+			} else {
+				resource.set(predicateKey, [existing, objectValue]);
+			}
+		} else {
+			resource.set(predicateKey, objectValue);
+		}
+	}
+
+	return resources;
+}
+
+export function parseActors(): MythActor[] {
+	const resources = parseTurtleFile(FILE_PATHS.ACTORS);
+	const baseUrl = getBaseUrl();
+	const actors: MythActor[] = [];
+
+	for (const [subject, predicates] of resources.entries()) {
+		const username = subject.split("/").pop() || subject;
+		const name = predicates.get("name") as string;
+		const tone = predicates.get("tone") as string;
+		const avatar = predicates.get("avatar") as string;
+
+		actors.push({
+			id: `${baseUrl}${ENDPOINT_PATHS.ACTORS_PROFILE(username)}`,
 			preferredUsername: username,
-			name: a["foaf:name"],
-			summary: a["as:summary"] || "",
-			tone: a["myth:tone"],
-			avatar: a["myth:avatar"] || "",
-			inbox: `${baseUrl}/api/actors/${username}/inbox`,
-			outbox: `${baseUrl}/api/actors/${username}/outbox`
-		} as MythActor;
-	});
+			name,
+			summary: "",
+			tone,
+			avatar: avatar || "",
+			inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(username)}`,
+			outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(username)}`,
+		} as MythActor);
+	}
+
+	return actors;
 }
 
 export function parseEvents(): MythEvent[] {
-	const path = resolve(process.cwd(), DATA_PATHS.EVENTS);
-	const raw = readFileSync(path, "utf-8");
+	const eventResources = parseTurtleFile(FILE_PATHS.EVENTS);
 	const baseUrl = getBaseUrl();
 	const actors = parseActors();
+	const events: MythEvent[] = [];
 
-	// Resolve relative IRIs for internal parsing
-	const jsonld = JSON.parse(raw.replace(/\.\//g, `${baseUrl}/`));
+	for (const [subject, predicates] of eventResources.entries()) {
+		const eventId = subject.split("/").pop() || subject;
+		const title = predicates.get("title") as string;
+		const description = predicates.get("description") as string;
+		const sequence = parseInt(predicates.get("sequence") as string, 10);
+		const involvedActorRefs = predicates.get("involvesActor");
 
-	const eventsData = jsonld["@graph"] || [jsonld];
+		const involvedActors = Array.isArray(involvedActorRefs)
+			? involvedActorRefs
+			: involvedActorRefs ? [involvedActorRefs] : [];
 
-	return eventsData.map((event: any) => {
-		const eventId = event["@id"].split('/').pop();
-		const involvedActors = Array.isArray(event["myth:involvesActor"]) 
-			? event["myth:involvesActor"] 
-			: [event["myth:involvesActor"]];
-
-		return {
-			id: `${baseUrl}/events/${eventId}`,
-			title: event["dct:title"],
-			description: event["myth:description"],
-			sequence: event["myth:sequence"],
-			published: event["as:published"] || new Date().toISOString(),
-			actors: involvedActors.map((actorUrl: string) => {
-				const username = actorUrl.split('/').pop();
+		const eventActors = involvedActors
+			.map((actorRef: string) => {
+				const username = actorRef.split("/").pop();
 				return actors.find(a => a.preferredUsername === username);
-			}).filter((a): a is MythActor => !!a)
-		} as MythEvent;
-	}).sort((a: MythEvent, b: MythEvent) => a.sequence - b.sequence);
+			})
+			.filter((a): a is MythActor => !!a);
+
+		events.push({
+			id: `${baseUrl}/events/${eventId}`,
+			title,
+			description,
+			sequence,
+			published: new Date().toISOString(),
+			actors: eventActors,
+		} as MythEvent);
+	}
+
+	return events.sort((a, b) => a.sequence - b.sequence);
 }

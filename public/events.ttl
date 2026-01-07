@@ -1,0 +1,39 @@
+@prefix myth: <https://odyfeed.artvandervennet.ikdoeict.be/vocab#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix as: <https://www.w3.org/ns/activitystreams#> .
+@base <https://odyfeed.artvandervennet.ikdoeict.be/> .
+
+<events/01-trojan-horse>
+    a myth:Event ;
+    dct:title "De list van het paard" ;
+    myth:sequence 1 ;
+    myth:description "Met een houten paard mislukt Troje definitief." ;
+    myth:involvesActor <actors/odysseus>, <actors/athena> .
+
+<events/02-poseidon-storm>
+    a myth:Event ;
+    dct:title "De toorn van de zee" ;
+    myth:sequence 2 ;
+    myth:description "Poseidon ontketent een storm die Odysseus van koers doet raken." ;
+    myth:involvesActor <actors/poseidon>, <actors/odysseus> .
+
+<events/03-circe>
+    a myth:Event ;
+    dct:title "De betovering van Circe" ;
+    myth:sequence 3 ;
+    myth:description "Circe verandert mannen in dieren; Odysseus weerstaat haar magie." ;
+    myth:involvesActor <actors/odysseus>, <actors/athena> .
+
+<events/04-underworld>
+    a myth:Event ;
+    dct:title "De afdaling in Hades" ;
+    myth:sequence 4 ;
+    myth:description "Odysseus daalt af naar de onderwereld om raad te zoeken." ;
+    myth:involvesActor <actors/odysseus> .
+
+<events/05-ithaca>
+    a myth:Event ;
+    dct:title "De terugkeer naar Ithaka" ;
+    myth:sequence 5 ;
+    myth:description "Odysseus keert terug en herwint zijn troon." ;
+    myth:involvesActor <actors/odysseus>, <actors/athena> .
