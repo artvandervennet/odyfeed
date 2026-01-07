@@ -1,6 +1,0 @@
-{
-  "@context": "https://www.w3.org/ns/activitystreams",
-  "type": "Like",
-  "actor": "https://id.inrupt.com/artvandervennet",
-  "object": "https://odyfeed.artvandervennet.ikdoeict.be/actors/athena/statuses/01-trojan-horse"
-}

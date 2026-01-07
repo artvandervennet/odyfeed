@@ -21,7 +21,8 @@ export const DATA_PATHS = {
   ACTORS: "data/actors/actors.jsonld",
   EVENTS: "data/events/events.jsonld",
   VOCAB: "data/vocab/myth.jsonld",
-  POSTS: "data/posts"
+  POSTS: "data/posts",
+  INBOX: "data/inbox"
 };
 
 export const DEFAULTS = {

@@ -1,15 +1,24 @@
-// @ts-ignore - firebase-admin is only available at runtime on server
-import * as admin from 'firebase-admin'
+import admin from 'firebase-admin'
 
 let initialized = false
-let firestoreInstance: any
+let firestoreInstance: admin.firestore.Firestore | null = null
 
 export function initializeFirebase() {
 	if (initialized && firestoreInstance) {
 		return firestoreInstance
 	}
 
-	if (admin.apps.length === 0) {
+	try {
+		// Check if Firebase Admin SDK is already initialized
+		const existingApp = admin.apps?.length ? admin.apps[0] : null
+
+		if (existingApp) {
+			firestoreInstance = admin.firestore(existingApp)
+			initialized = true
+			return firestoreInstance
+		}
+
+		// Get service account key from environment
 		const serviceAccountKeyJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
 
 		if (!serviceAccountKeyJson) {
@@ -18,17 +27,20 @@ export function initializeFirebase() {
 
 		const serviceAccountKey = JSON.parse(serviceAccountKeyJson)
 
-		admin.initializeApp({
+		const app = admin.initializeApp({
 			credential: admin.credential.cert(serviceAccountKey),
 		})
-	}
 
-	firestoreInstance = admin.firestore()
-	initialized = true
-	return firestoreInstance
+		firestoreInstance = admin.firestore(app)
+		initialized = true
+		return firestoreInstance
+	} catch (error) {
+		console.error('Failed to initialize Firebase:', error)
+		throw error
+	}
 }
 
-export function getFirestore() {
-	return initializeFirebase()
+export function getFirestore(): admin.firestore.Firestore {
+	return initializeFirebase()!
 }
 
