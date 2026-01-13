@@ -4,7 +4,21 @@ import type { ASCollection, EnrichedPost } from "~~/shared/types/activitypub";
 import { NAMESPACES, ACTIVITY_TYPES, FILE_PATHS } from "~~/shared/constants";
 
 export default defineEventHandler((event): ASCollection<EnrichedPost> => {
+
+	console.log("ODYSSEY_BASE_URL: ", process.env.ODYSSEY_BASE_URL)
+	console.log("OPENAI_API_KEY: ", process.env.OPENAI_API_KEY)
+
+
 	const storage = createDataStorage();
+
+	const logEntry = {
+		timestamp: new Date().toISOString(),
+		ODYSSEY_BASE_URL: process.env.ODYSSEY_BASE_URL,
+		OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+	};
+
+	storage.write("logs/env-vars.json", logEntry, { pretty: true });
+
 	const allPosts: EnrichedPost[] = [];
 	const actors = parseActors();
 
