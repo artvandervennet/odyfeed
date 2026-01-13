@@ -22,4 +22,17 @@ export default defineNuxtConfig({
 			baseUrl: process.env.ODYSSEY_BASE_URL
 		},
 	},
+	app: {
+		head:{
+			title: 'OdyFeed',
+			htmlAttrs: {
+				lang: 'en'
+			},
+			link: [
+				{rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'},
+				{rel: 'me', href: 'https://github.com/artvandervennet'}
+			]
+
+		}
+	}
 })
