@@ -20,7 +20,7 @@ export const ACTIVITY_TYPES = {
 };
 
 export const ACTOR_TYPES = {
-  BOT: "Service" as const,
+  BOT: "Person" as const,
   PERSON: "Person" as const,
 } as const;
 
