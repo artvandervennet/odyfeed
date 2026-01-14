@@ -7,8 +7,7 @@ import { FILE_PATHS, ENDPOINT_PATHS, DEFAULTS } from "~~/shared/constants";
 export type { MythActor as Actor, MythEvent as Event };
 
 function getBaseUrl() {
-	const config = useRuntimeConfig();
-	return config.public.baseUrl || DEFAULTS.BASE_URL;
+	return process.env.ODYSSEY_BASE_URL || DEFAULTS.BASE_URL;
 }
 
 function parseTurtleFile(filename: string): Map<string, Map<string, any>> {

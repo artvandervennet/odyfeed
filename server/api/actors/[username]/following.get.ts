@@ -5,8 +5,7 @@ import { createDataStorage } from "~~/server/utils/fileStorage";
 export default defineEventHandler((event): ASCollection<string> => {
 	const params = getRouterParams(event);
 	const username = params.username as string;
-	const config = useRuntimeConfig();
-	const baseUrl = config.public.baseUrl || DEFAULTS.BASE_URL;
+	const baseUrl = process.env.ODYSSEY_BASE_URL || DEFAULTS.BASE_URL;
 	const storage = createDataStorage();
 
 	// Check if actor exists

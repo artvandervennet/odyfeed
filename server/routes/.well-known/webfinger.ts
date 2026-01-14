@@ -13,8 +13,7 @@ export default defineEventHandler((event) => {
     });
   }
 
-  const config = useRuntimeConfig();
-  const baseUrl = config.public.baseUrl || DEFAULTS.BASE_URL;
+  const baseUrl = process.env.ODYSSEY_BASE_URL || DEFAULTS.BASE_URL;
   const domain = new URL(baseUrl).host;
 
   const actors: MythActor[] = parseActors();

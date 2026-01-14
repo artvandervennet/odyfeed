@@ -13,16 +13,15 @@ import {
 
 export default defineEventHandler(async (event) => {
 	try{
-		const config = useRuntimeConfig();
-		if (!config.openaiApiKey) {
+		if (!process.env.OPENAI_API_KEY) {
 			throw createError({
 				statusCode: 500,
 				statusMessage: "OpenAI API Key not configured",
 			});
 		}
 
-		const openai = new OpenAI({ apiKey: config.openaiApiKey });
-		const baseUrl = config.public.baseUrl || DEFAULTS.BASE_URL;
+		const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+		const baseUrl = process.env.ODYSSEY_BASE_URL || DEFAULTS.BASE_URL;
 		const storage = createDataStorage();
 		const events = parseEvents();
 		const actors = parseActors();
