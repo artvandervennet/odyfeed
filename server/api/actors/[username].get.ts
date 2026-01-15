@@ -1,21 +1,19 @@
-import { createDataStorage } from "~~/server/utils/fileStorage";
-import { parseActors } from "~~/server/utils/rdf";
-import type { ASActor } from "~~/shared/types/activitypub";
-import { FILE_PATHS, ENDPOINT_PATHS, DEFAULTS, ACTOR_TYPES, NAMESPACES } from "~~/shared/constants";
+import { parseActors } from "~~/server/utils/rdf"
+import type { MythActor } from "~~/shared/types/activitypub"
 
-export default defineEventHandler((event): ASActor | null => {
-	const params = getRouterParams(event);
-	const username = params.username as string;
-	const storage = createDataStorage();
+export default defineEventHandler((event): MythActor | null => {
+	const params = getRouterParams(event)
+	const username = params.username as string
+	const actors = parseActors()
 
-	const actorFilePath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/profile.jsonld`;
+	const actor = actors.find((a) => a.preferredUsername === username)
 
-	if (!storage.exists(actorFilePath)) {
+	if (!actor) {
 		throw createError({
 			statusCode: 404,
 			statusMessage: "Actor not found",
-		});
+		})
 	}
 
-	return storage.read<ASActor>(actorFilePath);
-});
+	return actor
+})

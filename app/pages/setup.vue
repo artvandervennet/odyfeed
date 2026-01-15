@@ -1,100 +1,93 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useAuthStore } from '~/stores/auth';
-import { usePodSetup } from '~/composables/usePodSetup';
+import { ref, computed, onMounted } from 'vue';
+import { useAuthStore } from '~/stores/authStore';
 
 const auth = useAuthStore();
-const { setupPod, isSettingUp, error } = usePodSetup();
 
-const name = ref('');
-const handle = ref('');
+const showLoginModal = ref(false);
+const validationError = ref<string | null>(null);
 
-onMounted(async () => {
-  await auth.handleRedirect();
-  if (!auth.isLoggedIn) {
-    navigateTo('/');
-    return;
-  }
-  
-  await auth.fetchProfile();
-  
-  // Pre-fill if some data exists
-  name.value = auth.name || '';
-  handle.value = auth.preferredUsername || '';
-  
-  if (!handle.value && auth.user?.webId) {
-    // Try to guess a handle from WebID
-    const url = new URL(auth.user.webId);
-    const parts = url.pathname.split('/').filter(Boolean);
-    if (parts.length > 0) {
-      let last = parts.pop();
-      // Common Solid filenames to ignore
-      if ((last === 'card' || last === 'profile' || last === 'index') && parts.length > 0) {
-        last = parts.pop();
-      }
-      handle.value = last || '';
-    }
-  }
+const showLoginPrompt = computed(() => !auth.isLoggedIn);
+
+onMounted(() => {
+	const urlParams = new URLSearchParams(window.location.search);
+	const errorParam = urlParams.get('error');
+	if (errorParam) {
+		validationError.value = decodeURIComponent(errorParam);
+	}
 });
-
-async function handleSetup() {
-  const success = await setupPod({
-    name: name.value,
-    handle: handle.value
-  });
-  
-  if (success) {
-    await auth.fetchProfile();
-    navigateTo('/');
-  }
-}
 </script>
 
 <template>
-  <UContainer>
-    <div class="max-w-md mx-auto py-12">
-      <UCard>
-        <template #header>
-          <div class="flex items-center gap-2">
-            <UIcon name="i-heroicons-sparkles" class="w-6 h-6 text-primary-500" />
-            <h1 class="text-xl font-bold">Complete your Profile</h1>
-          </div>
-          <p class="text-sm text-gray-500 mt-1">
-            Your Pod is almost ready. We need to set up an inbox, outbox and profile to get you started.
-          </p>
-        </template>
+	<div>
+		<UContainer>
+			<div class="max-w-lg mx-auto py-12">
+				<UAlert
+					v-if="validationError"
+					icon="i-heroicons-exclamation-triangle"
+					color="red"
+					variant="soft"
+					:title="validationError"
+					:description="validationError.includes('not supported') ? 'This application requires an ActivityPods provider with ActivityStreams support. Generic Solid Pods are not supported.' : ''"
+					class="mb-6"
+					:actions="[{
+						label: 'Try Again',
+						color: 'red',
+						variant: 'soft',
+						click: () => { validationError = null; showLoginModal = true; }
+					}]"
+				/>
 
-        <form @submit.prevent="handleSetup" class="space-y-4">
-          <UFormField label="Display Name" name="name" required>
-            <UInput v-model="name" placeholder="e.g. John Doe" icon="i-heroicons-user" />
-          </UFormField>
+				<UCard v-if="showLoginPrompt">
+					<div class="text-center py-8">
+						<UIcon name="i-heroicons-lock-closed" class="w-12 h-12 mx-auto text-gray-400 mb-4" />
+						<h2 class="text-xl font-semibold mb-2">Login Required</h2>
+						<p class="text-gray-500 dark:text-gray-400 mb-4">
+							You need to be logged in with an ActivityPods provider.
+						</p>
+						<p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
+							<strong>Note:</strong> Only ActivityPods providers are supported. Generic Solid Pods will be rejected.
+						</p>
+						<div class="flex gap-3 justify-center">
+							<UButton to="/" variant="ghost" color="neutral">
+								Go Back
+							</UButton>
+							<UButton icon="i-heroicons-arrow-right-on-rectangle" @click="showLoginModal = true">
+								Login with ActivityPods
+							</UButton>
+						</div>
+					</div>
+				</UCard>
 
-          <UFormField label="Username / Handle" name="handle" required help="This will be your identifier in the Odysee.">
-            <UInput v-model="handle" placeholder="e.g. johndoe" icon="i-heroicons-at-symbol" />
-          </UFormField>
+				<UCard v-else>
+					<div class="text-center py-8">
+						<UIcon name="i-heroicons-check-circle" class="w-12 h-12 mx-auto text-green-500 mb-4" />
+						<h2 class="text-xl font-semibold mb-2">You're all set!</h2>
+						<p class="text-gray-500 dark:text-gray-400 mb-4">
+							Your ActivityPods account is connected and ready to use.
+						</p>
+						<div class="space-y-2 text-sm text-left mb-6 max-w-sm mx-auto">
+							<div class="flex items-center gap-2">
+								<UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
+								<span>WebID: <code class="text-xs">{{ auth.webId }}</code></span>
+							</div>
+							<div v-if="auth.inbox" class="flex items-center gap-2">
+								<UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
+								<span>Inbox configured</span>
+							</div>
+							<div v-if="auth.outbox" class="flex items-center gap-2">
+								<UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500" />
+								<span>Outbox configured</span>
+							</div>
+						</div>
+						<UButton to="/" color="primary">
+							Go to Timeline
+						</UButton>
+					</div>
+				</UCard>
+			</div>
+		</UContainer>
 
-          <div v-if="error" class="p-3 text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-md flex items-center gap-2">
-            <UIcon name="i-heroicons-exclamation-circle" />
-            <span>{{ error }}</span>
-          </div>
-
-          <UButton
-            type="submit"
-            color="primary"
-            block
-            :loading="isSettingUp"
-            :disabled="!name || !handle || isSettingUp"
-          >
-            {{ isSettingUp ? 'Setting up Pod...' : 'Initialize my Pod' }}
-          </UButton>
-        </form>
-
-        <template #footer>
-          <p class="text-xs text-center text-gray-400">
-            This will create containers on your Pod and update your WebID to point to them.
-          </p>
-        </template>
-      </UCard>
-    </div>
-  </UContainer>
+		<LoginModal v-model="showLoginModal" />
+	</div>
 </template>

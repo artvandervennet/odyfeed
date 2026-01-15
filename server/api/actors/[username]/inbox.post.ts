@@ -1,13 +1,7 @@
-import { createDataStorage } from "~~/server/utils/fileStorage";
-import type { ASActivity, ASNote, ASObject } from "~~/shared/types/activitypub";
-import { ACTIVITY_TYPES, FILE_PATHS } from "~~/shared/constants";
+import {createDataStorage} from "~~/server/utils/fileStorage";
+import type {ASActivity, ASNote, ASObject, ASCollection} from "~~/shared/types/activitypub";
+import {ACTIVITY_TYPES, FILE_PATHS} from "~~/shared/constants";
 
-interface LikesCollection {
-	id: string;
-	type: "Collection" | "OrderedCollection";
-	totalItems: number;
-	items: string[];
-}
 
 export default defineEventHandler(async (event) => {
 	const params = getRouterParams(event);
@@ -24,7 +18,7 @@ export default defineEventHandler(async (event) => {
 
 	// Store raw activity in inbox
 	const inboxPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/inbox/${Date.now()}-${body.type.toLowerCase()}.jsonld`;
-	storage.write(inboxPath, body, { pretty: true });
+	storage.write(inboxPath, body, {pretty: true});
 
 	// Process Like activity
 	if (body.type === ACTIVITY_TYPES.LIKE) {
@@ -34,6 +28,11 @@ export default defineEventHandler(async (event) => {
 	// Process Undo activity
 	if (body.type === ACTIVITY_TYPES.UNDO) {
 		processUndo(body, storage);
+	}
+
+	// Process Create activity (for replies)
+	if (body.type === ACTIVITY_TYPES.CREATE) {
+		processCreate(body, storage);
 	}
 
 	return setResponseStatus(event, 202);
@@ -67,30 +66,24 @@ function processLike(activity: ASActivity, storage: ReturnType<typeof createData
 		return;
 	}
 
-	// Initialize likes collection if it doesn't exist
 	if (!post.likes) {
 		post.likes = {
 			id: `${post.id}/likes`,
-			type: ACTIVITY_TYPES.COLLECTION,
+			type: ACTIVITY_TYPES.ORDERED_COLLECTION,
 			totalItems: 0,
-			items: [],
-		} as LikesCollection;
+			orderedItems: [],
+		};
 	}
 
-	// Support both array and Collection object
-	if (Array.isArray(post.likes)) {
-		if (!post.likes.includes(actorId)) {
-			post.likes.push(actorId);
-		}
-	} else if ((post.likes as LikesCollection).items) {
-		const likesCollection = post.likes as LikesCollection;
-		if (!likesCollection.items.includes(actorId)) {
-			likesCollection.items.push(actorId);
-			likesCollection.totalItems = likesCollection.items.length;
-		}
+	const likesCollection = (post.likes as ASCollection<string>);
+	const people = likesCollection.orderedItems || [];
+
+	if (!people.includes(actorId)) {
+		people.push(actorId);
+		likesCollection.totalItems = people.length;
 	}
 
-	storage.write(postPath, post, { pretty: true });
+	storage.write(postPath, post, {pretty: true});
 }
 
 /**
@@ -131,16 +124,17 @@ function processUndo(activity: ASActivity, storage: ReturnType<typeof createData
 		return;
 	}
 
-	// Remove actor from likes
-	if (Array.isArray(post.likes)) {
-		post.likes = post.likes.filter((id: string) => id !== actorId);
-	} else if ((post.likes as LikesCollection).items) {
-		const likesCollection = post.likes as LikesCollection;
-		likesCollection.items = likesCollection.items.filter((id) => id !== actorId);
-		likesCollection.totalItems = likesCollection.items.length;
+	if (!post.likes) {
+		return;
 	}
 
-	storage.write(postPath, post, { pretty: true });
+	const likesCollection = post.likes as ASCollection<string>;
+	let likes = likesCollection.orderedItems || [];
+	likes = likes.filter((id) => id !== actorId);
+	likesCollection.totalItems = likes.length;
+
+
+storage.write(postPath, post, {pretty: true});
 }
 
 /**
@@ -160,14 +154,14 @@ function extractPostPath(targetUrl: string): string | null {
 		}
 
 		const usernameIndex = parts.indexOf("actors", apiIndex) + 1;
-		const statusesIndex = parts.indexOf("statuses", usernameIndex);
+		const statusesIndex = parts.indexOf("statuses", usernameIndex) + 1;
 
-		if (usernameIndex < 0 || statusesIndex < 0 || statusesIndex + 1 >= parts.length) {
+		if (usernameIndex < 0 || statusesIndex < 0 || statusesIndex >= parts.length) {
 			return null;
 		}
 
 		const username = parts[usernameIndex];
-		const statusId = parts[statusesIndex + 1];
+		const statusId = parts[statusesIndex];
 
 		return `${FILE_PATHS.POSTS_DIR}/${username}/${statusId}.jsonld`;
 	} catch (error) {
@@ -175,4 +169,63 @@ function extractPostPath(targetUrl: string): string | null {
 		return null;
 	}
 }
+
+/**
+ * Process incoming Create activity (for replies)
+ * Validates the reply and adds the reply ID to parent post's replies collection
+ */
+function processCreate(activity: ASActivity, storage: ReturnType<typeof createDataStorage>): void {
+	const objectData = activity.object;
+	if (!objectData || typeof objectData === "string") {
+		return;
+	}
+
+	const note = objectData as ASNote;
+
+	// Validate it's a Note and has a valid inReplyTo
+	if (note.type !== ACTIVITY_TYPES.NOTE || !note.inReplyTo) {
+		return;
+	}
+
+	// Validate the reply has required fields
+	if (!note.id || !note.content || !note.attributedTo) {
+		return;
+	}
+
+	const parentPostPath = extractPostPath(note.inReplyTo);
+	if (!parentPostPath) {
+		return;
+	}
+
+	const parentPost = storage.read<ASNote>(parentPostPath);
+	if (!parentPost.id) {
+		return;
+	}
+
+	// Initialize replies collection if it doesn't exist
+	if (!parentPost.replies) {
+		parentPost.replies = {
+			id: `${parentPost.id}/replies`,
+			type: ACTIVITY_TYPES.ORDERED_COLLECTION,
+			totalItems: 0,
+			orderedItems: [],
+		};
+	}
+
+	// Add reply ID to the collection (reply is stored on user's server)
+	const repliesCollection = parentPost.replies as ASCollection<string>;
+	const items = repliesCollection.orderedItems || repliesCollection.items || [];
+
+	if (!items.includes(note.id)) {
+		if (repliesCollection.orderedItems) {
+			repliesCollection.orderedItems.push(note.id);
+		} else if (repliesCollection.items) {
+			repliesCollection.items.push(note.id);
+		}
+		repliesCollection.totalItems = items.length + 1;
+	}
+
+	storage.write(parentPostPath, parentPost, {pretty: true});
+}
+
 

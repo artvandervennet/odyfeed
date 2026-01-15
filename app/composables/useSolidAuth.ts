@@ -1,25 +1,37 @@
-import { login, handleIncomingRedirect, getDefaultSession } from "@inrupt/solid-client-authn-browser";
-
-export function useSolidAuth() {
-	const session = getDefaultSession();
-	const isLoggedIn = ref(false);
-
-	async function solidLogin() {
-		const issuer = prompt("Enter your Pod provider (e.g., https://activitypods.org or https://login.inrupt.com)", "https://login.inrupt.com");
-		if (!issuer) return;
-
-		await login({
-			oidcIssuer: issuer,
-			redirectUrl: window.location.href,
-			clientName: "OdyFeed"
-		});
-	}
-
-	async function handleRedirect() {
-		await handleIncomingRedirect();
-		isLoggedIn.value = session.info.isLoggedIn;
-		return isLoggedIn.value;
-	}
-
-	return { solidLogin, handleRedirect, isLoggedIn, session };
-}
+// import { login, handleIncomingRedirect, getDefaultSession, logout } from "@inrupt/solid-client-authn-browser";
+//
+// export function useSolidAuth() {
+// 	let session = getDefaultSession();
+// 	const isLoggedIn = computed(() => session.info.isLoggedIn);
+//
+// 	async function solidLogin(issuer: string) {
+// 		if (!issuer) return;
+//
+// 		await login({
+// 			oidcIssuer: issuer,
+// 			redirectUrl: window.location.origin,
+// 			clientName: "OdyFeed",
+//
+// 		});
+// 	}
+//
+// 	async function handleRedirect() {
+// 		try {
+// 			await handleIncomingRedirect({
+// 				restorePreviousSession: true,
+// 			});
+// 			session = getDefaultSession();
+// 			console.log('Redirect handled', session);
+// 			return session.info.isLoggedIn;
+// 		} catch (error) {
+// 			console.error('Error handling redirect:', error);
+// 			return false;
+// 		}
+// 	}
+//
+// 	async function solidLogout() {
+// 		await logout();
+// 	}
+//
+// 	return { solidLogin, handleRedirect, solidLogout, isLoggedIn, session };
+// }

@@ -17,6 +17,7 @@ export const ACTIVITY_TYPES = {
   COLLECTION: "Collection" as const,
   LIKE: "Like" as const,
   UNDO: "Undo" as const,
+  CREATE: "Create" as const,
 };
 
 export const ACTOR_TYPES = {
@@ -40,7 +41,7 @@ export const ENDPOINT_PATHS = {
   ACTORS_OUTBOX: (username: string) => `/api/actors/${username}/outbox`,
   ACTORS_FOLLOWERS: (username: string) => `/api/actors/${username}/followers`,
   ACTORS_FOLLOWING: (username: string) => `/api/actors/${username}/following`,
-  ACTOR_STATUS: (username: string, statusId: string) => `/api/actors/${username}/statuses/${statusId}`,
+  ACTOR_STATUS: (username: string, statusId: string) => `/api/actors/${username}/status/${statusId}`,
 } as const;
 
 export const DEFAULTS = {

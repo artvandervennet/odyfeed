@@ -1,40 +1,54 @@
-<script setup>
+<script setup lang="ts">
 import { useQuery } from '@pinia/colada';
 import { computed } from 'vue';
 import { useRoute } from '#app';
+import { fetchActor, fetchActorOutbox, fetchNoteByUrl } from '~/api/actors';
+import type { ASNote, EnrichedPost } from '~~/shared/types/activitypub';
 
 const route = useRoute();
-const username = route.params.username;
-console.log('username', username)
+const username = route.params.username as string;
 
 const { data: actor } = useQuery({
   key: ['actors', username],
-  query: () => $fetch(`/api/actors/${username}`)
+  query: () => fetchActor(username)
 });
 
-const { data: timeline } = useQuery({
-  key: ['timeline', username],
-  query: () => $fetch('/api/timeline')
+const { data: outbox } = useQuery({
+  key: ['outbox', username],
+  query: () => fetchActorOutbox(username)
 });
 
-const actorPosts = computed(() => {
-  if (!timeline.value?.orderedItems || !actor.value) return [];
-  return timeline.value.orderedItems.filter((post) => 
-    post.actor?.id === actor.value.id || post.attributedTo === actor.value.id
-  );
+const { data: actorPosts, isLoading: postsLoading } = useQuery({
+  key: ['actor-posts', username],
+  query: async () => {
+    const outboxData = await fetchActorOutbox(username);
+    if (!outboxData?.orderedItems) return [];
+
+    const posts = await Promise.all(
+      outboxData.orderedItems.map(url => fetchNoteByUrl(url))
+    );
+
+    return posts.filter(post => post.type === 'Note') as EnrichedPost[];
+  },
+  staleTime: 1000 * 60 * 5,
+});
+
+const enrichedPosts = computed(() => {
+  if (!actorPosts.value || !actor.value) return [];
+  return actorPosts.value.map(post => ({
+    ...post,
+    actor: actor.value
+  })) as EnrichedPost[];
 });
 </script>
 
 <template>
-  <UContainer>
     <div v-if="actor" class="max-w-2xl mx-auto">
       <UCard class="mb-8">
         <div class="flex items-start gap-6">
-          <UAvatar
-            :src="actor.icon?.url"
-            :alt="actor.name"
-            size="xl"
-            class="ring-4 ring-primary-500/20"
+          <ActorAvatar
+              :avatar-url="actor.icon?.url || actor.avatar"
+              :username="actor.preferredUsername"
           />
           <div class="flex-1">
             <div class="flex items-center justify-between mb-2">
@@ -47,10 +61,10 @@ const actorPosts = computed(() => {
             <p v-if="actor.summary" class="text-sm dark:text-gray-300">
               {{ actor.summary }}
             </p>
-            
+
             <div class="flex gap-4 mt-6 text-sm">
               <div>
-                <span class="font-bold">{{ actorPosts.length }}</span>
+                <span class="font-bold">{{ enrichedPosts?.length || 0 }}</span>
                 <span class="text-gray-500 ml-1">Posts</span>
               </div>
             </div>
@@ -60,14 +74,19 @@ const actorPosts = computed(() => {
 
       <div class="space-y-4">
         <h2 class="text-xl font-bold mb-4 px-1">Posts</h2>
-        <PostCard 
-          v-for="post in actorPosts" 
-          :key="post.id" 
-          :post="post"
-        />
-        <UCard v-if="actorPosts.length === 0" class="text-center py-10 italic text-gray-500">
-          No posts from this actor yet.
-        </UCard>
+        <template v-if="postsLoading">
+          <USkeleton v-for="i in 3" :key="i" class="h-32 w-full" />
+        </template>
+        <template v-else>
+          <PostCard
+            v-for="post in enrichedPosts"
+            :key="post.id"
+            :post="post"
+          />
+          <UCard v-if="enrichedPosts.length === 0" class="text-center py-10 italic text-gray-500">
+            No posts from this actor yet.
+          </UCard>
+        </template>
       </div>
     </div>
     <div v-else-if="actor === null" class="text-center py-20">
@@ -79,5 +98,5 @@ const actorPosts = computed(() => {
       <USkeleton class="h-40 w-full" />
       <USkeleton v-for="i in 3" :key="i" class="h-32 w-full" />
     </div>
-  </UContainer>
 </template>
+

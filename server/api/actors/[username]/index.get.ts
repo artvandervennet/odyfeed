@@ -1,9 +1,8 @@
 import {createDataStorage} from "~~/server/utils/fileStorage";
-import {parseActors} from "~~/server/utils/rdf";
 import type {ASActor} from "~~/shared/types/activitypub";
-import {NAMESPACES, FILE_PATHS, ENDPOINT_PATHS, DEFAULTS, ACTOR_TYPES} from "~~/shared/constants";
+import {FILE_PATHS} from "~~/shared/constants";
 
-export default defineEventHandler((event): ASActor => {
+export default defineEventHandler((event): ASActor | void => {
 	const params = getRouterParams(event);
 	const username = params.username as string;
 	const storage = createDataStorage();
@@ -17,5 +16,6 @@ export default defineEventHandler((event): ASActor => {
 		});
 	}
 
+	setHeader(event, 'Content-Type', 'application/activity+json');
 	return storage.read<ASActor>(actorFilePath);
 });

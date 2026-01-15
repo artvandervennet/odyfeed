@@ -25,6 +25,8 @@ export default defineEventHandler((event): ASCollection<string> => {
 		return `${baseUrl}${ENDPOINT_PATHS.ACTOR_STATUS(username, postId)}`;
 	});
 
+	setHeader(event, 'Content-Type', 'application/activity+json');
+
 	return {
 		"@context": NAMESPACES.ACTIVITYSTREAMS,
 		id: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(username)}`,

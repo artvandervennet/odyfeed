@@ -9,13 +9,9 @@ export default defineNuxtConfig({
 		'@nuxt/icon',
 		'@pinia/colada-nuxt'
 	],
-	icon: {
-		clientBundle: {
-			scan: true,
-		},
-	},
 	css: ['~/assets/css/main.css'],
-	ssr: true,
+	ssr: false,
+
 	runtimeConfig: {
 		openaiApiKey: process.env.OPENAI_API_KEY,
 		public: {

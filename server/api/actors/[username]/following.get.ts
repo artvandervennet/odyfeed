@@ -17,6 +17,8 @@ export default defineEventHandler((event): ASCollection<string> => {
 		});
 	}
 
+	setHeader(event, 'Content-Type', 'application/activity+json');
+
 	return {
 		"@context": NAMESPACES.ACTIVITYSTREAMS,
 		id: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(username)}`,

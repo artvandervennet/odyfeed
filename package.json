@@ -17,6 +17,7 @@
     "@pinia/colada": "^0.20.0",
     "@pinia/colada-nuxt": "^0.3.0",
     "@pinia/nuxt": "^0.11.3",
+    "@semapps/semantic-data-provider": "1.1.0-patch.1",
     "@types/n3": "^1.26.1",
     "@vueuse/core": "^14.1.0",
     "eslint": "^9.39.2",

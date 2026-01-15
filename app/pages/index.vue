@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, computed } from "vue";
-import { useAuthStore } from "~/stores/auth";
+import { useAuthStore } from "~/stores/authStore.ts";
 import { useTimelineStore } from "~/stores/timeline";
 
 const auth = useAuthStore();
@@ -9,15 +9,7 @@ const timelineStore = useTimelineStore();
 const timeline = computed(() => timelineStore.timeline);
 const isLoading = computed(() => timelineStore.isLoading);
 
-onMounted(async () => {
-  await auth.handleRedirect();
-  if (auth.isLoggedIn) {
-    await auth.fetchProfile();
-    if (!auth.inbox || !auth.outbox) {
-      navigateTo('/setup');
-    }
-  }
-});
+
 </script>
 
 <template>
@@ -33,10 +25,10 @@ onMounted(async () => {
       </div>
 
       <div v-else-if="timeline?.orderedItems" class="space-y-4">
-        <PostCard 
-          v-for="post in timeline.orderedItems" 
-          :key="post.id" 
-          :post="post" 
+        <PostCard
+            v-for="post in timeline.orderedItems"
+            :key="post.id"
+            :post="post"
         />
       </div>
 
