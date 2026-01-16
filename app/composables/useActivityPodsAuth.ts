@@ -7,7 +7,8 @@ const ISSUER_STORAGE_KEY = 'activitypods_issuer';
 
 export const useActivityPodsAuth = function () {
 	const config = useRuntimeConfig();
-	const baseUrl = config.public.baseUrl || 'http://localhost:3000';
+	// const baseUrl = config.public.baseUrl || 'http://localhost:3000';
+	const baseUrl = import.meta.baseURL || 'baseurl'
 
 	const clientId = `${baseUrl}/clientid.json`;
 	const redirectUri = `${baseUrl}/callback`;
