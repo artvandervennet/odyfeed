@@ -1,75 +1,130 @@
-# Nuxt Minimal Starter
+# OdyFeed
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A Nuxt-based ActivityPub/Solid-compatible social feed application with ActivityPods authentication.
 
-## Setup
+## Features
 
-Make sure to install dependencies:
+- 🔐 **ActivityPods Authentication** - Native OIDC with PKCE flow
+- 🌐 **ActivityStreams Support** - Full ActivityPub compatibility
+- 📦 **Solid Pod Integration** - Read/write to Solid pods
+- 🔄 **Token Refresh** - Automatic session management
+- 🎨 **Modern UI** - Built with Nuxt UI and Tailwind CSS
+
+## Quick Start
+
+### 1. Install Dependencies
 
 ```bash
-# npm
-npm install
-
-# pnpm
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+### 2. Configure Environment
 
-Start the development server on `http://localhost:3000`:
+Create a `.env` file:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+cp .env.example .env
 ```
+
+Edit `.env` and set your base URL:
+
+```env
+BASE_URL=http://localhost:3000
+```
+
+### 3. Update Client Configuration
+
+For production, edit `/public/clientid.json` with your domain:
+
+```json
+{
+  "client_id": "https://your-domain.com/clientid.json",
+  "redirect_uris": ["https://your-domain.com/callback"],
+  "post_logout_redirect_uris": ["https://your-domain.com"]
+}
+```
+
+### 4. Start Development Server
+
+```bash
+pnpm dev
+```
+
+Visit `http://localhost:3000` to see the app.
+
+## Authentication
+
+This app uses ActivityPods-compatible OIDC authentication. For detailed information:
+
+📖 **[See ACTIVITYPODS_AUTH.md](./ACTIVITYPODS_AUTH.md)** for complete authentication documentation.
+
+### Supported Providers
+
+- ✅ **ActivityPods** (`https://mypod.store`) - Full ActivityStreams support
+- ⚠️ **Generic Solid Pods** - Limited support (no ActivityStreams)
 
 ## Production
 
 Build the application for production:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
 pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
 ```
 
-Locally preview production build:
+**Important for Production:**
+
+1. Update `BASE_URL` in `.env` to your production domain
+2. Update URLs in `/public/clientid.json` to match your domain
+3. Ensure `clientid.json` is publicly accessible at `https://your-domain.com/clientid.json`
+4. Deploy with SSR disabled (already configured in `nuxt.config.ts`)
+
+Preview production build locally:
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
 pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Project Structure
+
+```
+OdyFeed/
+├── app/
+│   ├── composables/
+│   │   ├── useActivityPodsAuth.ts   # ActivityPods OIDC authentication
+│   │   └── useActivityPub.ts        # ActivityPub utilities
+│   ├── stores/
+│   │   └── authStore.ts             # Authentication state management
+│   ├── types/
+│   │   └── oidc.ts                  # OIDC TypeScript types
+│   ├── utils/
+│   │   └── oidc.ts                  # PKCE & JWT utilities
+│   ├── pages/
+│   │   ├── callback.vue             # OAuth callback handler
+│   │   └── index.vue                # Main feed page
+│   └── components/
+│       └── LoginModal.vue           # Authentication UI
+├── public/
+│   └── clientid.json                # OIDC client registration
+└── shared/
+    └── types/
+        └── activitypub.ts           # ActivityPub types
+```
+
+## Technologies
+
+- **Nuxt 4** - Vue.js framework
+- **Pinia** - State management
+- **Pinia Colada** - Data fetching and caching
+- **Nuxt UI** - Component library
+- **Tailwind CSS 4** - Styling
+- **TypeScript** - Type safety
+
+## Documentation
+
+- [ActivityPods Authentication](./ACTIVITYPODS_AUTH.md) - Detailed auth documentation
+- [Nuxt Documentation](https://nuxt.com/docs)
+- [ActivityPods](https://activitypods.org/)
+
+## License
+
+MIT

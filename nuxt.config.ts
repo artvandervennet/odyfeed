@@ -15,7 +15,7 @@ export default defineNuxtConfig({
 	runtimeConfig: {
 		openaiApiKey: process.env.OPENAI_API_KEY,
 		public: {
-			baseUrl: process.env.ODYSSEY_BASE_URL
+			baseUrl: process.env.BASE_URL || 'http://localhost:3000'
 		},
 	},
 	app: {

@@ -1,32 +1,23 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import {
-	login,
-	handleIncomingRedirect,
-	getDefaultSession,
-	logout,
-	type Session
-} from "@inrupt/solid-client-authn-browser";
-import { getThing, getUrl } from "@inrupt/solid-client";
+import type { AuthSession } from '~/types/oidc';
+import { useActivityPodsAuth } from '~/composables/useActivityPodsAuth';
 
 export const useAuthStore = defineStore('auth', () => {
-	const session = ref<Session | undefined>(undefined);
-	const isLoggedIn = computed<boolean>(() => session.value?.info.isLoggedIn || false);
-	const webId = computed<string>(() => session.value?.info.webId || "");
+	const session = ref<AuthSession | null>(null);
+	const isLoggedIn = computed<boolean>(() => !!session.value);
+	const webId = computed<string>(() => session.value?.webId || "");
 	const outbox = ref<string | undefined>(undefined);
 	const inbox = ref<string | undefined>(undefined);
 
 	const validatePodCapabilities = async function () {
-		if (!session.value?.info.isLoggedIn || !session.value?.info.webId) {
+		if (!session.value?.webId) {
 			throw new Error('No authenticated session found');
 		}
 
 		try {
-			const response = await session.value.fetch(session.value.info.webId, {
-				headers: {
-					'Accept': 'application/ld+json, application/json'
-				}
-			});
+			const { fetchWithAuth } = useActivityPodsAuth();
+			const response = await fetchWithAuth(session.value, session.value.webId);
 
 			if (!response.ok) {
 				console.warn('Failed to fetch WebID profile, continuing anyway');
@@ -60,13 +51,35 @@ export const useAuthStore = defineStore('auth', () => {
 	};
 
 	const initSession = async function () {
-		await handleIncomingRedirect({
-			url: window.location.href,
-			restorePreviousSession: true
-		});
-		session.value = getDefaultSession();
+		const { getStoredSession, handleCallback, refreshSession } = useActivityPodsAuth();
 
-		if (session.value?.info.isLoggedIn) {
+		const urlParams = new URLSearchParams(window.location.search);
+		if (urlParams.has('code')) {
+			try {
+				const newSession = await handleCallback();
+				if (newSession) {
+					session.value = newSession;
+					await validatePodCapabilities();
+				}
+			} catch (error) {
+				console.error('Failed to handle callback:', error);
+			}
+			return;
+		}
+
+		const storedSession = getStoredSession();
+		if (storedSession) {
+			if (storedSession.expiresAt < Date.now() + 60000) {
+				const refreshedSession = await refreshSession(storedSession);
+				if (refreshedSession) {
+					session.value = refreshedSession;
+				} else {
+					session.value = storedSession;
+				}
+			} else {
+				session.value = storedSession;
+			}
+
 			try {
 				await validatePodCapabilities();
 			} catch (error) {
@@ -76,20 +89,19 @@ export const useAuthStore = defineStore('auth', () => {
 	};
 
 	const startLogin = async function (provider: string) {
-		const redirectUrl = window.location.href;
-		console.log('Redirecting to login page:', redirectUrl);
-		await login({
-			oidcIssuer: provider,
-			redirectUrl: redirectUrl,
-			clientName: "OdyFeed",
-		});
+		const { startLoginFlow } = useActivityPodsAuth();
+		await startLoginFlow(provider);
 	};
 
 	const startLogout = async function () {
-		await logout();
+		if (!session.value) return;
+
+		const { logout } = useActivityPodsAuth();
+		await logout(session.value);
+
 		outbox.value = undefined;
 		inbox.value = undefined;
-		session.value = getDefaultSession();
+		session.value = null;
 	};
 
 	return {

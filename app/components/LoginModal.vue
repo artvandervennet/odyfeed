@@ -3,39 +3,65 @@ import {useAuthStore} from '~/stores/authStore';
 
 const auth = useAuthStore();
 
-const issuer = ref('https://login.inrupt.com');
-const customIssuer = ref('https://vandervennet.art');
+const issuer = ref('https://mypod.store');
+const customIssuer = ref('');
 const useCustom = ref(false);
 const isLoggingIn = ref(false);
+const errorMessage = ref('');
 
 const providers = [
   {
-    name: 'Inrupt',
-    url: 'https://login.inrupt.com',
-    description: 'Community Pod provider by Inrupt',
-    icon: 'i-heroicons-shield-check',
-  },
-  {
-    name: 'Solidcommunity.net',
-    url: 'https://solidcommunity.net',
-    description: 'Community-run Pod provider',
-    icon: 'i-heroicons-users',
-  },
-  {
     name: 'ActivityPods',
-    url: 'https://activitypods.org',
+    url: 'https://mypod.store',
     description: 'ActivityPub-enabled Solid pods',
     icon: 'i-heroicons-sparkles',
   },
+  {
+    name: 'Inrupt PodSpaces',
+    url: 'https://login.inrupt.com',
+    description: 'Enterprise Solid pods by Inrupt',
+    icon: 'i-heroicons-building-office',
+  },
 ];
+
+const validateProvider = async function (providerUrl: string): Promise<boolean> {
+  try {
+    const { discoverOIDCConfiguration } = await import('~/utils/oidc');
+    await discoverOIDCConfiguration(providerUrl);
+    return true;
+  } catch (error) {
+    console.error('Provider validation failed:', error);
+    return false;
+  }
+};
 
 const handleLogin = async function () {
   isLoggingIn.value = true;
+  errorMessage.value = '';
+
   try {
     const selectedIssuer = useCustom.value ? customIssuer.value : issuer.value;
+
+    if (!selectedIssuer) {
+      errorMessage.value = 'Please enter a provider URL';
+      isLoggingIn.value = false;
+      return;
+    }
+
+    console.log(selectedIssuer)
+    const isValid = await validateProvider(selectedIssuer);
+    console.log(isValid)
+    if (!isValid) {
+      errorMessage.value = 'Unable to connect to this provider. Please check the URL and try again.';
+      isLoggingIn.value = false;
+      return;
+    }
+
+
     await auth.login(selectedIssuer);
   } catch (error) {
     console.error('Login error:', error);
+    errorMessage.value = 'Login failed. Please try again.';
     isLoggingIn.value = false;
   }
 };
@@ -124,18 +150,28 @@ const handleLogin = async function () {
     </template>
 
     <template #footer>
-      <div class="flex items-center justify-between gap-3">
-        <p class="text-xs text-gray-500 dark:text-gray-400">
-          New to Solid? <a href="https://solidproject.org/users/get-a-pod" target="_blank" class="text-primary-500 hover:text-primary-600 underline">Get a Pod</a>
-        </p>
-        <UButton
-            label="Continue"
-            icon="i-heroicons-arrow-right"
-            trailing
-            :loading="isLoggingIn"
-            :disabled="isLoggingIn || (useCustom && !customIssuer)"
-            @click="handleLogin"
+      <div class="space-y-3">
+        <UAlert
+            v-if="errorMessage"
+            color="error"
+            variant="soft"
+            :title="errorMessage"
+            :close="{ color: 'error', variant: 'link' }"
+            @close="errorMessage = ''"
         />
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            New to Solid? <a href="https://solidproject.org/users/get-a-pod" target="_blank" class="text-primary-500 hover:text-primary-600 underline">Get a Pod</a>
+          </p>
+          <UButton
+              label="Continue"
+              icon="i-heroicons-arrow-right"
+              trailing
+              :loading="isLoggingIn"
+              :disabled="isLoggingIn || (useCustom && !customIssuer)"
+              @click="handleLogin"
+          />
+        </div>
       </div>
     </template>
 
