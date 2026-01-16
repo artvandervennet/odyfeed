@@ -32,19 +32,9 @@ Edit `.env` and set your base URL:
 BASE_URL=http://localhost:3000
 ```
 
-### 3. Update Client Configuration
+**Note:** The `clientid.json` is automatically generated from `BASE_URL` - no manual editing needed!
 
-For production, edit `/public/clientid.json` with your domain:
-
-```json
-{
-  "client_id": "https://your-domain.com/clientid.json",
-  "redirect_uris": ["https://your-domain.com/callback"],
-  "post_logout_redirect_uris": ["https://your-domain.com"]
-}
-```
-
-### 4. Start Development Server
+### 3. Start Development Server
 
 ```bash
 pnpm dev
@@ -71,12 +61,15 @@ Build the application for production:
 pnpm build
 ```
 
-**Important for Production:**
+**📦 Easy Deployment:**
 
-1. Update `BASE_URL` in `.env` to your production domain
-2. Update URLs in `/public/clientid.json` to match your domain
-3. Ensure `clientid.json` is publicly accessible at `https://your-domain.com/clientid.json`
-4. Deploy with SSR disabled (already configured in `nuxt.config.ts`)
+See **[EASY_DEPLOY.md](./EASY_DEPLOY.md)** for the simplified deployment guide.
+
+**TL;DR:** Just set `BASE_URL=https://your-domain.com` as an environment variable and deploy!
+
+The `clientid.json` is automatically generated from your `BASE_URL` - no manual configuration needed.
+
+For detailed checklist: **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)**
 
 Preview production build locally:
 

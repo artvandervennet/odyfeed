@@ -8,5 +8,6 @@
   "application_type": "web",
   "response_types": ["code"],
   "grant_types": ["authorization_code", "refresh_token"],
-  "scope": "openid offline_access webid"
+  "scope": "openid offline_access webid",
+  "_comment": "This file is dynamically served by server/routes/clientid.json.ts based on BASE_URL environment variable"
 }

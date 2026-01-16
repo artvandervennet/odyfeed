@@ -6,9 +6,9 @@ const PKCE_STORAGE_KEY = 'activitypods_pkce';
 const ISSUER_STORAGE_KEY = 'activitypods_issuer';
 
 export const useActivityPodsAuth = function () {
-	const config = useRuntimeConfig();
-	// const baseUrl = config.public.baseUrl || 'http://localhost:3000';
-	const baseUrl = import.meta.baseURL || 'baseurl'
+	const baseUrl = typeof window !== 'undefined'
+		? window.location.origin
+		: 'http://localhost:3000';
 
 	const clientId = `${baseUrl}/clientid.json`;
 	const redirectUri = `${baseUrl}/callback`;

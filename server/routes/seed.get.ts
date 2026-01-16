@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
 		}
 
 		const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-		const baseUrl = process.env.ODYSSEY_BASE_URL || DEFAULTS.BASE_URL;
+		const baseUrl = process.env.BASE_URL || DEFAULTS.BASE_URL;
 		const storage = createDataStorage();
 		const events = parseEvents();
 		const actors = parseActors();
@@ -141,7 +141,7 @@ export default defineEventHandler(async (event) => {
 
 		const logEntry = {
 			timestamp: new Date().toISOString(),
-			ODYSSEY_BASE_URL: process.env.ODYSSEY_BASE_URL,
+			BASE_URL: process.env.BASE_URL,
 			OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 			error: e
 		};
