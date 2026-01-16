@@ -88,7 +88,7 @@ Should show:
 
 ✅ **Core Changes:**
 - `app/composables/useActivityPodsAuth.ts` - Uses `window.location.origin`
-- `server/routes/clientid.json.ts` - New dynamic JSON endpoint
+- `nuxt.config.ts` - Added Nitro hook for build-time `clientid.json` generation
 
 ✅ **Server API Files (BASE_URL instead of ODYSSEY_BASE_URL):**
 - `server/utils/rdf.ts`

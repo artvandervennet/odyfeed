@@ -43,26 +43,26 @@ const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 - Reads from `BASE_URL` environment variable
 - Used for generating ActivityPub actor URLs and collections
 
-### Dynamic clientid.json
+### Build-time clientid.json Generation
 
-Location: `server/routes/clientid.json.ts`
+Location: `nuxt.config.ts` (Nitro compiled hook)
 
 ```typescript
-export default defineEventHandler((event) => {
-  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
-  
-  return {
-    "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
-    client_id: `${baseUrl}/clientid.json`,
-    redirect_uris: [`${baseUrl}/callback`],
-    // ...
-  };
-});
+nitro: {
+  hooks: {
+    'compiled': () => {
+      const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+      // Generate clientid.json in .output/public/
+      writeFileSync(outputPath, JSON.stringify(config, null, 2));
+    }
+  }
+}
 ```
 
-- Dynamically generates the JSON on each request
-- Includes CORS headers for Solid OIDC providers
-- Overrides the static file in `public/clientid.json`
+- Generates static `clientid.json` file during build
+- Reads from `BASE_URL` environment variable
+- Creates proper JSON file (no MIME type issues)
+- Automatically included in deployment
 
 ---
 
@@ -74,9 +74,9 @@ export default defineEventHandler((event) => {
    - Changed from `useRuntimeConfig()` to `window.location.origin`
    - Simpler and more reliable
 
-2. **`server/routes/clientid.json.ts`** (new file)
-   - Dynamic route that generates clientid.json
-   - Uses `process.env.BASE_URL` directly
+2. **`nuxt.config.ts`** (added Nitro hook)
+   - Build-time generation of `clientid.json`
+   - Uses `process.env.BASE_URL` to create static JSON file
 
 3. **Server API Files** (updated all)
    - `server/utils/rdf.ts`

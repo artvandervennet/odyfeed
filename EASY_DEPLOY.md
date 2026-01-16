@@ -172,20 +172,20 @@ BASE_URL=https://your-domain.com
 ### How It Works
 
 1. **Client-side:** `useActivityPodsAuth.ts` uses `window.location.origin` to get current domain
-2. **Server Route:** `server/routes/clientid.json.ts` dynamically generates JSON from `BASE_URL` env
-3. **CORS Headers:** Automatically added for Solid OIDC providers to fetch the config
+2. **Build Hook:** `nuxt.config.ts` Nitro hook generates static `clientid.json` from `BASE_URL` env
+3. **Static Serving:** The generated JSON file is served as a normal static file (proper MIME type)
 4. **Auto-detection:** Client always uses the correct domain without configuration
 
 ### Files Modified
 
-- ✅ `server/routes/clientid.json.ts` - Dynamic JSON generator
+- ✅ `nuxt.config.ts` - Added Nitro hook for build-time generation
 - ✅ `app/composables/useActivityPodsAuth.ts` - Uses `window.location.origin`
 - ✅ All server API files - Use `BASE_URL` instead of `ODYSSEY_BASE_URL`
 - ✅ `.env.example` - Single environment variable
 
-### Static File
+### Generated File
 
-The file `public/clientid.json` still exists for reference but is **overridden** by the server route. You can safely ignore it or delete it.
+The file `.output/public/clientid.json` is **automatically generated during build** with the correct URLs from your `BASE_URL` environment variable.
 
 ---
 

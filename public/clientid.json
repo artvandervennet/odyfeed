@@ -2,12 +2,20 @@
   "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
   "client_id": "http://localhost:3000/clientid.json",
   "client_name": "OdyFeed",
-  "redirect_uris": ["http://localhost:3000/callback"],
-  "post_logout_redirect_uris": ["http://localhost:3000"],
+  "redirect_uris": [
+    "http://localhost:3000/callback"
+  ],
+  "post_logout_redirect_uris": [
+    "http://localhost:3000"
+  ],
   "token_endpoint_auth_method": "none",
   "application_type": "web",
-  "response_types": ["code"],
-  "grant_types": ["authorization_code", "refresh_token"],
-  "scope": "openid offline_access webid",
-  "_comment": "This file is dynamically served by server/routes/clientid.json.ts based on BASE_URL environment variable"
+  "response_types": [
+    "code"
+  ],
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "scope": "openid offline_access webid"
 }
