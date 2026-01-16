@@ -1,19 +1,26 @@
 <script setup lang="ts">
 import type { EnrichedPost } from '~~/shared/types/activitypub'
-// import { useActivityPub } from '~/composables/useActivityPub'
-// import { useInteractions } from '~/composables/usePost'
+import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
+import { useInteractions } from '~/composables/usePost'
+import { useAuthStore } from '~/stores/authStore'
 
 const {reply, level} = defineProps<{
   reply: EnrichedPost
   level?: number
 }>()
 
-// const { likePost, undoLikePost } = useActivityPub()
-// const { isLiked, getLikesCount, getRepliesCount, getActorUsername, getPostId } = useInteractions()
+const auth = useAuthStore()
+const { isLiked } = useInteractions()
+const likeMutation = useLikeMutation()
+const undoLikeMutation = useUndoLikeMutation()
 
-const liked = computed(() => false)
+const liked = computed(() => isLiked(reply))
 const likesCount = computed(() => reply.likes?.totalItems || 0)
 const repliesCount = computed(() => reply.replies?.totalItems || 0)
+const isLoading = computed(() =>
+  likeMutation.status.value === 'pending' ||
+  undoLikeMutation.status.value === 'pending'
+)
 
 const postDetailUrl = computed(() => {
   const username = reply.actor?.preferredUsername
@@ -22,12 +29,25 @@ const postDetailUrl = computed(() => {
   return `/actors/${username}/status/${statusId}`
 })
 
-const handleLike = async function () {
-  // if (liked.value) {
-  //   await undoLikePost(props.reply)
-  // } else {
-  //   await likePost(props.reply)
-  // }
+const handleLike = async function (event: Event) {
+  event.stopPropagation()
+
+  if (!auth.isLoggedIn) {
+    console.warn('User must be logged in to like posts')
+    return
+  }
+
+  if (isLoading.value) return
+
+  if (liked.value) {
+    undoLikeMutation.mutate(reply)
+  } else {
+    likeMutation.mutate(reply)
+  }
+}
+
+const handleReply = function (event: Event) {
+  event.stopPropagation()
 }
 </script>
 
@@ -80,8 +100,9 @@ const handleLike = async function () {
             :likes-count="likesCount"
             :replies-count="repliesCount"
             :is-liked="liked"
-            @like="handleLike"
-            @reply="navigateTo(postDetailUrl)"
+            :is-loading="isLoading"
+            @like.stop="handleLike"
+            @reply.stop="handleReply"
           />
         </div>
       </div>

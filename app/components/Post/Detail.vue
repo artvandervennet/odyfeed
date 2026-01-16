@@ -1,37 +1,69 @@
 <script setup lang="ts">
-// import { useActivityPub } from '~/composables/useActivityPub'
-// import { useInteractions } from '~/composables/usePost'
-import {useRepliesQuery} from '~/queries/replies'
-import type {EnrichedPost} from '~~/shared/types/activitypub'
+import { useRepliesQuery } from '~/queries/replies'
+import type { EnrichedPost } from '~~/shared/types/activitypub'
+import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
+import { useReplyMutation } from '~/mutations/reply'
+import { useInteractions } from '~/composables/usePost'
+import { useAuthStore } from '~/stores/authStore'
 
 const {post} = defineProps<{
   post: EnrichedPost
 }>()
 
-// const { likePost, undoLikePost, replyToPost } = useActivityPub()
-// const { isLiked, getLikesCount, getRepliesCount } = useInteractions()
+const auth = useAuthStore()
+const { isLiked } = useInteractions()
+const likeMutation = useLikeMutation()
+const undoLikeMutation = useUndoLikeMutation()
+const replyMutation = useReplyMutation()
 
 const showReplyForm = ref(false)
 const replyContent = ref('')
 
-const liked = computed(() => false)
+const liked = computed(() => isLiked(post))
 const likesCount = computed(() => post.likes?.totalItems || 0)
 const repliesCount = computed(() => post.replies?.totalItems || 0)
+const isLoading = computed(() =>
+  likeMutation.status.value === 'pending' ||
+  undoLikeMutation.status.value === 'pending' ||
+  replyMutation.status.value === 'pending'
+)
 
 const {data: replies, isLoading: repliesLoading} = useRepliesQuery()(post)
 
 const handleLike = async function () {
+  if (!auth.isLoggedIn) {
+    console.warn('User must be logged in to like posts')
+    return
+  }
 
+  if (isLoading.value) return
+
+  if (liked.value) {
+    undoLikeMutation.mutate(post)
+  } else {
+    likeMutation.mutate(post)
+  }
 }
 
 const handleReply = async function () {
   if (!replyContent.value.trim()) return
 
+  if (!auth.isLoggedIn) {
+    console.warn('User must be logged in to reply')
+    return
+  }
+
+  replyMutation.mutate({ post, content: replyContent.value })
   replyContent.value = ''
   showReplyForm.value = false
 }
 
 const toggleReplyForm = function () {
+  if (!auth.isLoggedIn) {
+    console.warn('User must be logged in to reply')
+    return
+  }
+
   showReplyForm.value = !showReplyForm.value
   if (!showReplyForm.value) {
     replyContent.value = ''
@@ -84,6 +116,7 @@ const toggleReplyForm = function () {
             size="md"
             :color="liked ? 'error' : 'neutral'"
             variant="ghost"
+            :disabled="isLoading"
             @click="handleLike"
             class="flex-1"
         >
@@ -94,6 +127,7 @@ const toggleReplyForm = function () {
             size="md"
             color="neutral"
             variant="ghost"
+            :disabled="isLoading"
             @click="toggleReplyForm"
             class="flex-1"
         >

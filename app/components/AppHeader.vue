@@ -44,9 +44,10 @@ const logout = async function () {
             <UDropdownMenu
                 :items="[
                 [
-                  { label: auth.name || 'My Account', icon: 'i-heroicons-user', disabled: true }
+                  { label: auth.userProfile?.name || auth.userProfile?.preferredUsername || 'My Account', icon: 'i-heroicons-user', disabled: true }
                 ],
                 [
+                  { label: 'View Profile', icon: 'i-heroicons-user-circle', to: '/profile' },
                   { label: 'Setup Pod', icon: 'i-heroicons-cog-6-tooth', to: '/setup' }
                 ],
                 [
@@ -57,8 +58,8 @@ const logout = async function () {
               <UButton
               variant="ghost">
                 <UAvatar
-                    :src="auth.avatar || undefined"
-                    :alt="auth.name || 'User'"
+                    :src="auth.userProfile?.avatar || undefined"
+                    :alt="auth.userProfile?.name || auth.userProfile?.preferredUsername || 'User'"
                     size="sm"
                     class="cursor-pointer ring-1 ring-gray-200 dark:ring-gray-800 hover:ring-primary-500 transition-all"
                 />

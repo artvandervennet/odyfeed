@@ -10,6 +10,13 @@ export const useAuthStore = defineStore('auth', () => {
 	const outbox = ref<string | undefined>(undefined);
 	const inbox = ref<string | undefined>(undefined);
 
+	const userProfile = ref<{
+		preferredUsername?: string;
+		name?: string;
+		avatar?: string;
+		summary?: string;
+	}>({});
+
 	const validatePodCapabilities = async function () {
 		if (!session.value?.webId) {
 			throw new Error('No authenticated session found');
@@ -45,6 +52,26 @@ export const useAuthStore = defineStore('auth', () => {
 				inbox.value = typeof inboxUrl === 'string' ? inboxUrl : inboxUrl?.['@id'] || inboxUrl?.id;
 				console.log('ActivityPods inbox detected:', inbox.value);
 			}
+
+			userProfile.value = {
+				preferredUsername: profile.preferredUsername
+					|| profile['http://www.w3.org/ns/activitystreams#preferredUsername']
+					|| profile['as:preferredUsername'],
+				name: profile.name
+					|| profile['http://www.w3.org/ns/activitystreams#name']
+					|| profile['as:name']
+					|| profile['http://xmlns.com/foaf/0.1/name']
+					|| profile['foaf:name'],
+				avatar: profile.icon?.url
+					|| profile.icon
+					|| profile['http://www.w3.org/ns/activitystreams#icon']?.url
+					|| profile['as:icon']?.url,
+				summary: profile.summary
+					|| profile['http://www.w3.org/ns/activitystreams#summary']
+					|| profile['as:summary']
+			};
+
+			console.log('User profile loaded:', userProfile.value);
 		} catch (error) {
 			console.warn('Pod validation failed, continuing anyway:', error);
 		}
@@ -101,6 +128,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 		outbox.value = undefined;
 		inbox.value = undefined;
+		userProfile.value = {};
 		session.value = null;
 	};
 
@@ -110,6 +138,7 @@ export const useAuthStore = defineStore('auth', () => {
 		session,
 		outbox,
 		inbox,
+		userProfile,
 		login: startLogin,
 		logout: startLogout,
 		initSession,
