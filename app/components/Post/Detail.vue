@@ -22,11 +22,6 @@ const replyContent = ref('')
 const liked = computed(() => isLiked(post))
 const likesCount = computed(() => post.likes?.totalItems || 0)
 const repliesCount = computed(() => post.replies?.totalItems || 0)
-const isLoading = computed(() =>
-  likeMutation.status.value === 'pending' ||
-  undoLikeMutation.status.value === 'pending' ||
-  replyMutation.status.value === 'pending'
-)
 
 const {data: replies, isLoading: repliesLoading} = useRepliesQuery()(post)
 
@@ -36,7 +31,7 @@ const handleLike = async function () {
     return
   }
 
-  if (isLoading.value) return
+  if (likeMutation.isLoading.value) return
 
   if (liked.value) {
     undoLikeMutation.mutate(post)
@@ -116,8 +111,7 @@ const toggleReplyForm = function () {
             size="md"
             :color="liked ? 'error' : 'neutral'"
             variant="ghost"
-            :disabled="isLoading"
-            @click="handleLike"
+            @click.stop="handleLike"
             class="flex-1"
         >
           {{ liked ? 'Unlike' : 'Like' }}
@@ -127,8 +121,7 @@ const toggleReplyForm = function () {
             size="md"
             color="neutral"
             variant="ghost"
-            :disabled="isLoading"
-            @click="toggleReplyForm"
+            @click.stop="toggleReplyForm"
             class="flex-1"
         >
           Reply

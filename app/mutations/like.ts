@@ -1,26 +1,51 @@
-import { useMutation, useQueryCache } from '@pinia/colada';
-import { useAuthStore } from '~/stores/authStore';
-import { useActivityPodsAuth } from '~/composables/useActivityPodsAuth';
-import type { EnrichedPost } from '~~/shared/types/activitypub';
-import { NAMESPACES, ACTIVITY_TYPES } from '~~/shared/constants';
+import {defineMutation, useMutation, useQueryCache} from '@pinia/colada'
+import {useAuthStore} from '~/stores/authStore'
+import {sendLikeActivity, sendUndoActivity} from '~/api/activities'
+import type {EnrichedPost} from '~~/shared/types/activitypub'
+import {NAMESPACES, ACTIVITY_TYPES} from '~~/shared/constants'
 
-export const useLikeMutation = function () {
-	const auth = useAuthStore();
-	const queryCache = useQueryCache();
-	const { fetchWithAuth } = useActivityPodsAuth();
+export const useLikeMutation = defineMutation(() => {
+	const auth = useAuthStore()
+	const queryCache = useQueryCache()
 
 	return useMutation({
-		mutation: async (post: EnrichedPost) => {
+		onMutate: async (post: EnrichedPost) => {
+			console.log('[useLikeMutation] Starting like mutation for post:', post.id)
+
 			if (!auth.session || !auth.webId) {
-				throw new Error('Not authenticated');
+				console.error('[useLikeMutation] Not authenticated')
+				throw new Error('Not authenticated')
 			}
 
 			if (!auth.inbox || !auth.outbox) {
-				throw new Error('Inbox or outbox not configured');
+				console.error('[useLikeMutation] Inbox or outbox not configured')
+				throw new Error('Inbox or outbox not configured')
 			}
 
 			if (!post.actor?.inbox) {
-				throw new Error('Target actor inbox not found');
+				console.error('[useLikeMutation] Target actor inbox not found')
+				throw new Error('Target actor inbox not found')
+			}
+
+			await queryCache.cancelQueries({key: ['timeline']})
+			await queryCache.cancelQueries({key: ['post']})
+
+			const previousTimeline = queryCache.getQueryData(['timeline'])
+			const previousPost = queryCache.getQueryData(['post', post.actor.preferredUsername, post.id.split('/').pop() || ''])
+
+			console.log('[useLikeMutation] Setting optimistic like state')
+
+			return {previousTimeline, previousPost}
+		},
+		mutation: async (post: EnrichedPost) => {
+			console.log('[useLikeMutation] Executing mutation')
+
+			if (!auth.session || !auth.webId || !auth.outbox) {
+				throw new Error('Not authenticated')
+			}
+
+			if (!post.actor?.inbox) {
+				throw new Error('Target actor inbox not found')
 			}
 
 			const likeActivity = {
@@ -30,130 +55,128 @@ export const useLikeMutation = function () {
 				actor: auth.webId,
 				object: post.id,
 				to: [post.actor.id],
-			};
+			}
 
-			const targetInboxResponse = await fetchWithAuth(
+			console.log('[useLikeMutation] Sending like activity:', likeActivity)
+
+			await sendLikeActivity(
 				auth.session,
 				post.actor.inbox,
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/ld+json',
-					},
-					body: JSON.stringify(likeActivity),
-				}
-			);
-
-			if (!targetInboxResponse.ok) {
-				const errorText = await targetInboxResponse.text();
-				console.error('Failed to send like to target inbox:', errorText);
-				throw new Error('Failed to send like to target inbox');
-			}
-
-			const outboxResponse = await fetchWithAuth(
-				auth.session,
 				auth.outbox,
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/ld+json',
-					},
-					body: JSON.stringify(likeActivity),
-				}
-			);
+				likeActivity,
+			)
 
-			if (!outboxResponse.ok) {
-				console.warn('Failed to post to own outbox, but like was sent to target');
+			console.log('[useLikeMutation] Like activity sent successfully')
+			return likeActivity
+		},
+		onSuccess: async () => {
+			console.log('[useLikeMutation] Invalidating queries')
+			await queryCache.invalidateQueries({key: ['timeline']})
+			await queryCache.invalidateQueries({key: ['post']})
+			await queryCache.invalidateQueries({key: ['actor-posts']})
+		},
+		onError: (error, post, context) => {
+			console.error('[useLikeMutation] Failed to like post:', error)
+
+			if (context?.previousTimeline) {
+				queryCache.setQueryData(['timeline'], context.previousTimeline)
 			}
+			if (context?.previousPost) {
+				const postId = post.id.split('/').pop()
+				queryCache.setQueryData(['post', post.actor?.preferredUsername || '', postId || ''], context.previousPost)
+			}
+		},
+	})
+})
 
-			return likeActivity;
-		},
-		onSuccess: () => {
-			queryCache.invalidateQueries({ key: ['timeline'] });
-			queryCache.invalidateQueries({ key: ['post'] });
-			queryCache.invalidateQueries({ key: ['actor-posts'] });
-		},
-		onError: (error) => {
-			console.error('Failed to like post:', error);
-		},
-	});
-};
-
-export const useUndoLikeMutation = function () {
-	const auth = useAuthStore();
-	const queryCache = useQueryCache();
-	const { fetchWithAuth } = useActivityPodsAuth();
+export const useUndoLikeMutation = defineMutation(() => {
+	const auth = useAuthStore()
+	const queryCache = useQueryCache()
 
 	return useMutation({
-		mutation: async (post: EnrichedPost) => {
+		onMutate: async (post: EnrichedPost) => {
+			console.log('[useUndoLikeMutation] Starting undo like mutation for post:', post.id)
+
 			if (!auth.session || !auth.webId) {
-				throw new Error('Not authenticated');
+				console.error('[useUndoLikeMutation] Not authenticated')
+				throw new Error('Not authenticated')
 			}
 
 			if (!auth.inbox || !auth.outbox) {
-				throw new Error('Inbox or outbox not configured');
+				console.error('[useUndoLikeMutation] Inbox or outbox not configured')
+				throw new Error('Inbox or outbox not configured')
 			}
 
 			if (!post.actor?.inbox) {
-				throw new Error('Target actor inbox not found');
+				console.error('[useUndoLikeMutation] Target actor inbox not found')
+				throw new Error('Target actor inbox not found')
 			}
 
-			const undoActivity = {
-				'@context': NAMESPACES.ACTIVITYSTREAMS,
-				type: ACTIVITY_TYPES.UNDO,
-				id: `${auth.outbox}/${Date.now()}-undo`,
-				actor: auth.webId,
-				object: {
-					type: ACTIVITY_TYPES.LIKE,
-					actor: auth.webId,
-					object: post.id,
-				},
-				to: [post.actor.id],
-			};
+			await queryCache.cancelQueries({key: ['timeline']})
+			await queryCache.cancelQueries({key: ['post']})
 
-			const targetInboxResponse = await fetchWithAuth(
+			const previousTimeline = queryCache.getQueryData(['timeline'])
+			const previousPost = queryCache.getQueryData(['post', post.actor.preferredUsername, post.id.split('/').pop() || ''])
+
+			console.log('[useUndoLikeMutation] Setting optimistic unlike state')
+
+			return {previousTimeline, previousPost}
+		},
+		mutation: async (post: EnrichedPost) => {
+			console.log('[useUndoLikeMutation] Executing mutation')
+
+			if (!auth.session || !auth.webId || !auth.outbox) {
+				throw new Error('Not authenticated')
+			}
+
+			if (!post.actor?.inbox) {
+				throw new Error('Target actor inbox not found')
+			}
+
+		const timestamp = Date.now()
+		const undoActivity = {
+			'@context': NAMESPACES.ACTIVITYSTREAMS,
+			type: ACTIVITY_TYPES.UNDO,
+			id: `${auth.outbox}/${timestamp}-undo`,
+			actor: auth.webId,
+			object: {
+				type: ACTIVITY_TYPES.LIKE,
+				id: `${auth.outbox}/${timestamp}-like`,
+				actor: auth.webId,
+				object: post.id,
+			},
+			to: [post.actor.id],
+		}
+
+			console.log('[useUndoLikeMutation] Sending undo activity:', undoActivity)
+
+			await sendUndoActivity(
 				auth.session,
 				post.actor.inbox,
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/ld+json',
-					},
-					body: JSON.stringify(undoActivity),
-				}
-			);
-
-			if (!targetInboxResponse.ok) {
-				const errorText = await targetInboxResponse.text();
-				console.error('Failed to send undo to target inbox:', errorText);
-				throw new Error('Failed to send undo to target inbox');
-			}
-
-			const outboxResponse = await fetchWithAuth(
-				auth.session,
 				auth.outbox,
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/ld+json',
-					},
-					body: JSON.stringify(undoActivity),
-				}
-			);
+				undoActivity,
+			)
 
-			if (!outboxResponse.ok) {
-				console.warn('Failed to post to own outbox, but undo was sent to target');
+			console.log('[useUndoLikeMutation] Undo activity sent successfully')
+			return undoActivity
+		},
+		onSuccess: async () => {
+			console.log('[useUndoLikeMutation] Invalidating queries')
+			await queryCache.invalidateQueries({key: ['timeline']})
+			await queryCache.invalidateQueries({key: ['post']})
+			await queryCache.invalidateQueries({key: ['actor-posts']})
+		},
+		onError: (error, _post, context) => {
+			console.error('[useUndoLikeMutation] Failed to undo like:', error)
+
+			if (context?.previousTimeline) {
+				queryCache.setQueryData(['timeline'], context.previousTimeline)
 			}
+			if (context?.previousPost) {
+				const postId = _post.id.split('/').pop()
+				queryCache.setQueryData(['post', _post.actor?.preferredUsername || '', postId || ''], context.previousPost)
+			}
+		},
+	})
+})
 
-			return undoActivity;
-		},
-		onSuccess: () => {
-			queryCache.invalidateQueries({ key: ['timeline'] });
-			queryCache.invalidateQueries({ key: ['post'] });
-			queryCache.invalidateQueries({ key: ['actor-posts'] });
-		},
-		onError: (error) => {
-			console.error('Failed to undo like:', error);
-		},
-	});
-};

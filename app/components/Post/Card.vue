@@ -23,11 +23,6 @@ const replyContent = ref('')
 const liked = computed(() => isLiked(post))
 const likesCount = computed(() => post.likes?.totalItems || 0)
 const repliesCount = computed(() => post.replies?.totalItems || 0)
-const isLoading = computed(() =>
-    likeMutation.isLoading ||
-    undoLikeMutation.isLoading ||
-    replyMutation.isLoading
-)
 
 const postDetailUrl = computed(() => {
   const username = post.actor?.preferredUsername
@@ -39,16 +34,19 @@ const postDetailUrl = computed(() => {
 const handleLike = async function (event: Event) {
   event.stopPropagation()
 
+  console.log("liking")
   if (!auth.isLoggedIn) {
     console.warn('User must be logged in to like posts')
     return
   }
 
-  if (isLoading.value) return
+  if (likeMutation.isLoading.value) return
 
   if (liked.value) {
+    console.log("undo lik")
     undoLikeMutation.mutate(post)
   } else {
+    console.log("like")
     likeMutation.mutate(post)
   }
 }
@@ -115,7 +113,6 @@ const toggleReplyForm = function (event?: Event) {
           :likes-count="likesCount"
           :replies-count="repliesCount"
           :is-liked="liked"
-          :is-loading="isLoading.value"
           @like.stop="handleLike"
           @reply.stop="toggleReplyForm"
       />
