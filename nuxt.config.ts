@@ -32,7 +32,7 @@ export default defineNuxtConfig({
 			link: [
 				{rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'},
 				{rel: 'me', href: 'https://github.com/artvandervennet'},
-				{rel:'webmention', href: 'https://webmention.io/odyfeed.artvandervennet.ikdoeict.be/webmention'},
+				{rel:'webmention', href: '/api/webmention'},
 			]
 
 		}

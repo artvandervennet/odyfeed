@@ -23,15 +23,40 @@ const enrichedPost = computed(() => {
   } as EnrichedPost
 })
 
+const config = useRuntimeConfig()
+const postUrl = computed(() => {
+  return `${config.public.baseUrl}/actors/${username}/status/${statusId}`
+})
+
 useHead({
   title: () => post.value ? `${post.value.content.slice(0, 50)}... - OdyFeed` : 'Post - OdyFeed',
+  link: [
+    {
+      rel: 'webmention',
+      href: `${config.public.baseUrl}/api/webmention`,
+    },
+  ],
+  meta: [
+    {
+      property: 'og:type',
+      content: 'article',
+    },
+    {
+      property: 'og:url',
+      content: postUrl.value,
+    },
+    {
+      property: 'og:title',
+      content: () => post.value?.content.slice(0, 100) || 'Post',
+    },
+  ],
 })
 </script>
 
 <template>
   <div class="max-w-2xl mx-auto border-x border-gray-200 dark:border-gray-800 min-h-screen">
     <div
-        class="sticky top-14 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+        class="top-14 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 px-4 py-3">
       <UButton
           icon="i-heroicons-arrow-left"
           color="secondary"
