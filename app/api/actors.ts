@@ -19,6 +19,12 @@ export const fetchActorOutbox = async function (username: string): Promise<ASCol
   })
 }
 
+export const fetchActorInbox = async function (username: string): Promise<ASCollection<string>> {
+  return await $fetch(`/api/actors/${username}/inbox`, {
+    headers: apiHeaders,
+  })
+}
+
 export const fetchNoteByUrl = async function (url: string): Promise<ASNote> {
   return await $fetch(url, {
     headers: apiHeaders,

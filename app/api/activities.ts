@@ -2,28 +2,18 @@ import type { AuthSession } from '~/types/oidc'
 import type { ASActivity } from '~~/shared/types/activitypub'
 import { createAuthHeaders } from '~/utils/fetch'
 
-export const sendActivityToInbox = async function (
-	session: AuthSession,
-	inboxUrl: string,
-	activity: ASActivity
-): Promise<void> {
-	await $fetch(inboxUrl, {
-		method: 'POST',
-		headers: createAuthHeaders(session),
-		body: activity,
-	})
-}
-
 export const sendActivityToOutbox = async function (
 	session: AuthSession,
 	outboxUrl: string,
 	activity: ASActivity
 ): Promise<void> {
+	console.log('[API] Sending activity to outbox:', outboxUrl)
 	await $fetch(outboxUrl, {
 		method: 'POST',
 		headers: createAuthHeaders(session),
 		body: activity,
 	})
+	console.log('[API] Activity sent to outbox successfully')
 }
 
 export const sendLikeActivity = async function (
@@ -32,13 +22,12 @@ export const sendLikeActivity = async function (
 	userOutbox: string,
 	activity: ASActivity
 ): Promise<void> {
-	await sendActivityToInbox(session, targetInbox, activity)
+	console.log('[API] Sending like activity via outbox')
+	console.log('[API] Activity:', activity)
+	console.log('[API] Target inbox (for reference):', targetInbox)
 
-	try {
-		await sendActivityToOutbox(session, userOutbox, activity)
-	} catch (error) {
-		console.warn('Failed to post to own outbox, but activity was sent to target:', error)
-	}
+	await sendActivityToOutbox(session, userOutbox, activity)
+	console.log('[API] Like activity posted to outbox - ActivityPods will deliver to inbox')
 }
 
 export const sendUndoActivity = async function (
@@ -47,13 +36,12 @@ export const sendUndoActivity = async function (
 	userOutbox: string,
 	activity: ASActivity
 ): Promise<void> {
-	await sendActivityToInbox(session, targetInbox, activity)
+	console.log('[API] Sending undo activity via outbox')
+	console.log('[API] Activity:', activity)
+	console.log('[API] Target inbox (for reference):', targetInbox)
 
-	try {
-		await sendActivityToOutbox(session, userOutbox, activity)
-	} catch (error) {
-		console.warn('Failed to post to own outbox, but activity was sent to target:', error)
-	}
+	await sendActivityToOutbox(session, userOutbox, activity)
+	console.log('[API] Undo activity posted to outbox - ActivityPods will deliver to inbox')
 }
 
 export const sendReplyActivity = async function (
@@ -62,11 +50,11 @@ export const sendReplyActivity = async function (
 	userOutbox: string,
 	activity: ASActivity
 ): Promise<void> {
-	await sendActivityToInbox(session, targetInbox, activity)
+	console.log('[API] Sending reply activity via outbox')
+	console.log('[API] Activity:', activity)
+	console.log('[API] Target inbox (for reference):', targetInbox)
 
-	try {
-		await sendActivityToOutbox(session, userOutbox, activity)
-	} catch (error) {
-		console.warn('Failed to post to own outbox, but activity was sent to target:', error)
-	}
+	await sendActivityToOutbox(session, userOutbox, activity)
+	console.log('[API] Reply activity posted to outbox - ActivityPods will deliver to inbox')
 }
+

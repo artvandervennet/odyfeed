@@ -3,7 +3,7 @@ import {useAuthStore} from '~/stores/authStore';
 
 const auth = useAuthStore();
 
-const issuer = ref('https://mypod.store');
+const issuer = ref('https://vandervennet.art');
 const customIssuer = ref('');
 const useCustom = ref(false);
 const isLoggingIn = ref(false);
@@ -11,10 +11,16 @@ const errorMessage = ref('');
 
 const providers = [
   {
-    name: 'ActivityPods',
-    url: 'https://mypod.store',
-    description: 'ActivityPub-enabled Solid pods',
+    name: 'VanderVennet ActivityPods',
+    url: 'https://vandervennet.art',
+    description: 'Your ActivityPods provider',
     icon: 'i-heroicons-sparkles',
+  },
+  {
+    name: 'ActivityPods (MyPod)',
+    url: 'https://mypod.store',
+    description: 'Public ActivityPods instance',
+    icon: 'i-heroicons-cube',
   },
   {
     name: 'Inrupt PodSpaces',
@@ -22,9 +28,9 @@ const providers = [
     description: 'Enterprise Solid pods by Inrupt',
     icon: 'i-heroicons-building-office',
   },
-];
+]
 
-const validateProvider = async function (providerUrl: string): Promise<boolean> {
+const validateProvider = async function (providerUrl: string) {
   try {
     const { discoverOIDCConfiguration } = await import('~/utils/oidc');
     await discoverOIDCConfiguration(providerUrl);

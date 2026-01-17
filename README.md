@@ -44,14 +44,17 @@ Visit `http://localhost:3000` to see the app.
 
 ## Authentication
 
-This app uses ActivityPods-compatible OIDC authentication. For detailed information:
+This app uses ActivityPods-compatible OIDC authentication with full LDP data provider support.
 
-📖 **[See ACTIVITYPODS_AUTH.md](./ACTIVITYPODS_AUTH.md)** for complete authentication documentation.
+📖 **[See ACTIVITYPODS_INTEGRATION.md](./ACTIVITYPODS_INTEGRATION.md)** for complete integration documentation.
+
+📖 **[See ACTIVITYPODS_AUTH.md](./ACTIVITYPODS_AUTH.md)** for authentication flow details.
 
 ### Supported Providers
 
-- ✅ **ActivityPods** (`https://mypod.store`) - Full ActivityStreams support
-- ⚠️ **Generic Solid Pods** - Limited support (no ActivityStreams)
+- ✅ **VanderVennet ActivityPods** (`https://vandervennet.art`) - Primary provider
+- ✅ **ActivityPods** (`https://mypod.store`) - Public instance with full support
+- ⚠️ **Generic Solid Pods** - Limited support (no ActivityStreams inbox/outbox)
 
 ## Production
 

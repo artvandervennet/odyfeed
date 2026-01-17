@@ -204,7 +204,7 @@ export const useActivityPodsAuth = function () {
 
 	const fetchWithAuth = async function (session: AuthSession, url: string, options: RequestInit = {}): Promise<Response> {
 		const headers = new Headers(options.headers);
-		headers.set('Authorization', `Bearer ${session.idToken}`);
+		headers.set('Authorization', `Bearer ${session.accessToken}`);
 
 		if (!headers.has('Accept')) {
 			headers.set('Accept', 'application/ld+json, application/json');
