@@ -25,11 +25,11 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const baseUrl = process.baseURL || "http://localhost:3000/"
+  const baseUrl = process.env.BASE_URL || "http://localhost:3000/"
   if (!target.startsWith(baseUrl)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Target must be on this site',
+      statusMessage: `Target must be on this site (${baseUrl})`,
     })
   }
 
