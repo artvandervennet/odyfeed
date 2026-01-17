@@ -35,6 +35,11 @@ export default defineEventHandler(async (event) => {
 		processCreate(body, storage);
 	}
 
+	// Process Follow activity
+	if (body.type === ACTIVITY_TYPES.FOLLOW) {
+		await processFollow(body, username, storage);
+	}
+
 	return setResponseStatus(event, 202);
 });
 
@@ -226,6 +231,101 @@ function processCreate(activity: ASActivity, storage: ReturnType<typeof createDa
 	}
 
 	storage.write(parentPostPath, parentPost, {pretty: true});
+}
+
+/**
+ * Process incoming Follow activity
+ * Adds the follower to the actor's followers list and sends back an Accept activity
+ */
+async function processFollow(activity: ASActivity, username: string, storage: ReturnType<typeof createDataStorage>): Promise<void> {
+	const followerId = activity.actor;
+	if (!followerId) {
+		return;
+	}
+
+	const followersPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/followers.json`;
+	const followersData = storage.read<{ followers: string[] }>(followersPath);
+
+	if (!followersData.followers) {
+		followersData.followers = [];
+	}
+
+	if (!followersData.followers.includes(followerId)) {
+		followersData.followers.push(followerId);
+		storage.write(followersPath, followersData, {pretty: true});
+	}
+
+	await sendAcceptActivity(activity, username, storage);
+}
+
+/**
+ * Send Accept activity in response to a Follow request
+ */
+async function sendAcceptActivity(followActivity: ASActivity, username: string, storage: ReturnType<typeof createDataStorage>): Promise<void> {
+	try {
+		const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+		const actorId = `${baseUrl}/api/actors/${username}`;
+
+		const followerResponse = await fetch(followActivity.actor, {
+			headers: {
+				'Accept': 'application/activity+json, application/ld+json',
+			},
+		});
+
+		if (!followerResponse.ok) {
+			console.error(`Failed to fetch follower actor: ${followActivity.actor}`);
+			return;
+		}
+
+		const followerActor = await followerResponse.json();
+		const followerInbox = followerActor.inbox;
+
+		if (!followerInbox) {
+			console.error(`No inbox found for follower: ${followActivity.actor}`);
+			return;
+		}
+
+		const acceptActivity = {
+			"@context": "https://www.w3.org/ns/activitystreams",
+			type: ACTIVITY_TYPES.ACCEPT,
+			id: `${actorId}/accepts/${Date.now()}`,
+			actor: actorId,
+			object: followActivity,
+		};
+
+		const privateKeyData = storage.read<{ privateKey: string }>(`${FILE_PATHS.ACTORS_DATA_DIR}/${username}/private-key.pem`);
+
+		if (!privateKeyData.privateKey) {
+			console.error(`No private key found for actor: ${username}`);
+			return;
+		}
+
+		const { signRequest } = await import('~~/server/utils/crypto');
+		const body = JSON.stringify(acceptActivity);
+		const signatureHeaders = signRequest({
+			privateKey: privateKeyData.privateKey,
+			keyId: `${actorId}#main-key`,
+			url: followerInbox,
+			method: 'POST',
+			body,
+		});
+
+		const response = await fetch(followerInbox, {
+			method: 'POST',
+			headers: {
+				...signatureHeaders,
+				'Content-Type': 'application/activity+json',
+				'Accept': 'application/activity+json',
+			},
+			body,
+		});
+
+		if (!response.ok) {
+			console.error(`Failed to send Accept activity to ${followerInbox}: ${response.status} ${response.statusText}`);
+		}
+	} catch (error) {
+		console.error('Error sending Accept activity:', error);
+	}
 }
 
 

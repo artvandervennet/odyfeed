@@ -21,6 +21,8 @@ export const ACTIVITY_TYPES = {
   LIKE: "Like" as const,
   UNDO: "Undo" as const,
   CREATE: "Create" as const,
+  FOLLOW: "Follow" as const,
+  ACCEPT: "Accept" as const,
 };
 
 export const ACTOR_TYPES = {
