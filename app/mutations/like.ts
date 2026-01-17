@@ -3,6 +3,30 @@ import {useAuthStore} from '~/stores/authStore'
 import {sendLikeActivity, sendUndoActivity} from '~/api/activities'
 import type {EnrichedPost} from '~~/shared/types/activitypub'
 import {NAMESPACES, ACTIVITY_TYPES} from '~~/shared/constants'
+import {useActivityPodsAuth} from '~/composables/useActivityPodsAuth'
+
+const ensureValidToken = async function (auth: ReturnType<typeof useAuthStore>) {
+	if (!auth.session) {
+		throw new Error('Not authenticated')
+	}
+
+	const tokenExpiresIn = auth.session.expiresAt - Date.now()
+	console.log('[Token Check] Token expires in:', Math.floor(tokenExpiresIn / 1000), 'seconds')
+
+	if (tokenExpiresIn < 60000) {
+		console.log('[Token Check] Token expiring soon, refreshing...')
+		const {refreshSession} = useActivityPodsAuth()
+		const newSession = await refreshSession(auth.session)
+
+		if (newSession) {
+			auth.session = newSession
+			console.log('[Token Check] Token refreshed successfully')
+		} else {
+			console.error('[Token Check] Token refresh failed')
+			throw new Error('Token expired and refresh failed. Please login again.')
+		}
+	}
+}
 
 export const useLikeMutation = defineMutation(() => {
 	const auth = useAuthStore()
@@ -39,6 +63,8 @@ export const useLikeMutation = defineMutation(() => {
 		},
 		mutation: async (post: EnrichedPost) => {
 			console.log('[useLikeMutation] Executing mutation')
+
+			await ensureValidToken(auth)
 
 			if (!auth.session || !auth.webId || !auth.outbox) {
 				throw new Error('Not authenticated')
@@ -124,6 +150,8 @@ export const useUndoLikeMutation = defineMutation(() => {
 		},
 		mutation: async (post: EnrichedPost) => {
 			console.log('[useUndoLikeMutation] Executing mutation')
+
+			await ensureValidToken(auth)
 
 			if (!auth.session || !auth.webId || !auth.outbox) {
 				throw new Error('Not authenticated')
