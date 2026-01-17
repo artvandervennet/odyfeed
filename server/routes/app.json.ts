@@ -11,7 +11,9 @@ export default defineEventHandler((event) => {
 			"https://www.w3.org/ns/solid/oidc-context.jsonld",
 			{
 				"interop": "http://www.w3.org/ns/solid/interop#",
-				"as": "https://www.w3.org/ns/activitystreams#"
+				"as": "https://www.w3.org/ns/activitystreams#",
+				"acl": "http://www.w3.org/ns/auth/acl#",
+				"foaf": "http://xmlns.com/foaf/0.1/"
 			}
 		],
 		"@id": `${baseUrl}/app.json`,
@@ -19,38 +21,36 @@ export default defineEventHandler((event) => {
 		"client_id": `${baseUrl}/clientid.json`,
 		"client_name": "OdyFeed",
 		"interop:applicationName": "OdyFeed",
-		"interop:applicationDescription": "A social feed reader for ActivityPods",
+		"interop:applicationDescription": "A social feed reader for ActivityPods and ActivityPub",
 		"interop:applicationAuthor": {
 			"@id": podProvider,
-			"@type": "as:Person"
+			"@type": "foaf:Person"
 		},
 		"interop:applicationDeveloperAccount": podProvider,
 		"interop:applicationThumbnail": `${baseUrl}/favicon.ico`,
-		"interop:hasAccessNeedGroup": [
-			{
-				"@type": "interop:AccessNeedGroup",
-				"interop:accessNecessity": "interop:AccessRequired",
-				"interop:accessScenario": "interop:PersonalAccess",
-				"interop:authenticatedAs": "interop:SocialAgent",
-				"interop:hasAccessNeed": [
-					{
-						"@type": "interop:AccessNeed",
-						"interop:accessMode": ["acl:Read"],
-						"interop:registeredShapeTree": "as:Inbox"
-					},
-					{
-						"@type": "interop:AccessNeed",
-						"interop:accessMode": ["acl:Read", "acl:Write"],
-						"interop:registeredShapeTree": "as:Outbox"
-					},
-					{
-						"@type": "interop:AccessNeed",
-						"interop:accessMode": ["acl:Read"],
-						"interop:registeredShapeTree": "as:Profile"
-					}
-				]
-			}
-		],
+		"interop:hasAccessNeedGroup": {
+			"@type": "interop:AccessNeedGroup",
+			"interop:accessNecessity": "interop:AccessRequired",
+			"interop:accessScenario": "interop:PersonalAccess",
+			"interop:authenticatedAs": "interop:SocialAgent",
+			"interop:hasAccessNeed": [
+				{
+					"@type": "interop:AccessNeed",
+					"interop:accessMode": "acl:Read",
+					"interop:registeredShapeTree": "https://www.w3.org/ns/activitystreams#Inbox"
+				},
+				{
+					"@type": "interop:AccessNeed",
+					"interop:accessMode": ["acl:Read", "acl:Write"],
+					"interop:registeredShapeTree": "https://www.w3.org/ns/activitystreams#Outbox"
+				},
+				{
+					"@type": "interop:AccessNeed",
+					"interop:accessMode": "acl:Read",
+					"interop:registeredShapeTree": "https://www.w3.org/ns/activitystreams#Profile"
+				}
+			]
+		},
 		"redirect_uris": [`${baseUrl}/callback`],
 		"post_logout_redirect_uris": [baseUrl],
 		"token_endpoint_auth_method": "none",

@@ -48,6 +48,8 @@ This app uses ActivityPods-compatible OIDC authentication with full LDP data pro
 
 📖 **[See ACTIVITYPODS_INTEGRATION.md](./ACTIVITYPODS_INTEGRATION.md)** for complete integration documentation.
 
+📖 **[See TESTING_GUIDE.md](./TESTING_GUIDE.md)** for step-by-step testing instructions.
+
 📖 **[See ACTIVITYPODS_AUTH.md](./ACTIVITYPODS_AUTH.md)** for authentication flow details.
 
 ### Supported Providers

@@ -11,7 +11,8 @@ export default defineEventHandler((event) => {
 			"https://www.w3.org/ns/solid/oidc-context.jsonld",
 			{
 				"interop": "http://www.w3.org/ns/solid/interop#",
-				"as": "https://www.w3.org/ns/activitystreams#"
+				"as": "https://www.w3.org/ns/activitystreams#",
+				"foaf": "http://xmlns.com/foaf/0.1/"
 			}
 		],
 		"client_id": `${baseUrl}/clientid.json`,
