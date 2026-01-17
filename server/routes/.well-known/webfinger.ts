@@ -13,7 +13,7 @@ export default defineEventHandler((event) => {
     });
   }
 
-  const baseUrl = process.env.ODYSSEY_BASE_URL || DEFAULTS.BASE_URL;
+  const baseUrl = process.env.BASE_URL || DEFAULTS.BASE_URL;
   const domain = new URL(baseUrl).host;
 
   const actors: MythActor[] = parseActors();

@@ -63,10 +63,6 @@ export function parseActors(): MythActor[] {
 			avatar: avatar || "",
 			inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(username)}`,
 			outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(username)}`,
-			icon: avatar ? {
-				type: "Image",
-				url: avatar,
-			} : undefined,
 		} as MythActor);
 	}
 

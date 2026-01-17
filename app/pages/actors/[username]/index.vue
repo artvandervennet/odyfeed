@@ -47,7 +47,7 @@ const enrichedPosts = computed(() => {
       <UCard class="mb-8">
         <div class="flex items-start gap-6">
           <ActorAvatar
-              :avatar-url="actor.icon?.url || ''"
+              :avatar-url="actor.avatar || ''"
               :username="actor.preferredUsername"
           />
           <div class="flex-1">

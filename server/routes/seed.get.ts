@@ -58,16 +58,13 @@ export default defineEventHandler(async (event) => {
 			type: ACTOR_TYPES.BOT,
 			name: actor.name,
 			preferredUsername: actor.preferredUsername,
+			avatar: actor.avatar,
 			summary: actor.summary || `A mythological bot representing ${actor.name}`,
 			published: new Date().toISOString(),
 			inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(actor.preferredUsername)}`,
 			outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(actor.preferredUsername)}`,
 			followers: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWERS(actor.preferredUsername)}`,
 			following: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(actor.preferredUsername)}`,
-			icon: {
-				type: "Image",
-				url: actor.avatar,
-			},
 			publicKey: {
 				id: `${actorId}#main-key`,
 				owner: actorId,

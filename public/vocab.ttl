@@ -24,6 +24,11 @@ myth:tone
     rdfs:label "tone" ;
     rdfs:comment "The personality tone of an actor." .
 
+myth:avatar
+    a rdfs:Property ;
+    rdfs:label "avatar" ;
+    rdfs:comment "The avatar image URL for an actor." .
+
 myth:sequence
     a rdfs:Property ;
     rdfs:label "sequence" ;

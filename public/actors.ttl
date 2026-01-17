@@ -6,15 +6,18 @@
 <actors/odysseus>
     a myth:Actor ;
     foaf:name "Odysseus" ;
-    myth:tone "slim, berekend, volhardend" .
+    myth:tone "slim, berekend, volhardend" ;
+    myth:avatar "https://api.dicebear.com/7.x/avataaars/svg?seed=odysseus" .
 
 <actors/poseidon>
     a myth:Actor ;
     foaf:name "Poseidon" ;
-    myth:tone "wraakzuchtig, almachtig" .
+    myth:tone "wraakzuchtig, almachtig" ;
+    myth:avatar "https://api.dicebear.com/7.x/avataaars/svg?seed=poseidon" .
 
 <actors/athena>
     a myth:Actor ;
     foaf:name "Athena" ;
-    myth:tone "beschermend, strategisch" .
+    myth:tone "beschermend, strategisch" ;
+    myth:avatar "https://api.dicebear.com/7.x/avataaars/svg?seed=athena" .
 
