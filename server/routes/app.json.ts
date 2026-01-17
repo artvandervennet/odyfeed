@@ -2,7 +2,7 @@ export default defineEventHandler((event) => {
 	const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
 	const podProvider = process.env.POD_PROVIDER || 'https://vandervennet.art';
 
-	setResponseHeader(event, 'Content-Type', 'application/json');
+	setResponseHeader(event, 'Content-Type', 'application/ld+json');
 	setResponseHeader(event, 'Access-Control-Allow-Origin', '*');
 	setResponseHeader(event, 'Cache-Control', 'public, max-age=3600');
 
@@ -18,8 +18,6 @@ export default defineEventHandler((event) => {
 		],
 		"@id": `${baseUrl}/app.json`,
 		"@type": "interop:Application",
-		"client_id": `${baseUrl}/clientid.json`,
-		"client_name": "OdyFeed",
 		"interop:applicationName": "OdyFeed",
 		"interop:applicationDescription": "A social feed reader for ActivityPods and ActivityPub",
 		"interop:applicationAuthor": {
@@ -50,13 +48,6 @@ export default defineEventHandler((event) => {
 					"interop:registeredShapeTree": "https://www.w3.org/ns/activitystreams#Profile"
 				}
 			]
-		},
-		"redirect_uris": [`${baseUrl}/callback`],
-		"post_logout_redirect_uris": [baseUrl],
-		"token_endpoint_auth_method": "none",
-		"application_type": "web",
-		"response_types": ["code"],
-		"grant_types": ["authorization_code", "refresh_token"],
-		"scope": "openid offline_access webid"
+		}
 	};
 });
