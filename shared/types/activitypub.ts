@@ -10,12 +10,18 @@ export interface ASObject {
 
 export interface ASActor extends ASObject {
   type: "Person" | "Service" | "Application" | "Group" | "Organization";
+  name: string;
   preferredUsername: string;
   inbox: string;
   outbox: string;
   following?: string;
   followers?: string;
   icon?: ASImage;
+  publicKey?: {
+    id: string;
+    owner: string;
+    publicKeyPem: string;
+  };
 }
 
 export interface ASImage {
@@ -72,6 +78,7 @@ export interface MythActor {
   avatar: string;
   inbox: string;
   outbox: string;
+  icon?: ASImage;
 }
 
 export interface MythEvent {

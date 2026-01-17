@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import { parseEvents, parseActors } from "~~/server/utils/rdf";
 import { createDataStorage } from "~~/server/utils/fileStorage";
+import { generateActorKeyPair } from "~~/server/utils/crypto";
 import type { ASNote, ASActor } from "~~/shared/types/activitypub";
 import {
 	NAMESPACES,
@@ -31,42 +32,60 @@ export default defineEventHandler(async (event) => {
 		for (const actor of actors) {
 			const actorFilePath = `${FILE_PATHS.ACTORS_DATA_DIR}/${actor.preferredUsername}/profile.jsonld`;
 
-			if (storage.exists(actorFilePath)) {
-				results.push({
-					type: "actor",
-					actor: actor.preferredUsername,
-					status: "skipped (already exists)",
-				});
-				continue;
-			}
-
-			const actorObject: ASActor = {
-				"@context": [
-					NAMESPACES.ACTIVITYSTREAMS,
-					NAMESPACES.SECURITY,
-					{
-						myth: `${baseUrl}/vocab#`,
-						foaf: "http://xmlns.com/foaf/0.1/",
-					},
-				],
-				id: `${baseUrl}${ENDPOINT_PATHS.ACTORS_PROFILE(actor.preferredUsername)}`,
-				type: ACTOR_TYPES.BOT,
-				name: actor.name,
-				preferredUsername: actor.preferredUsername,
-				summary: actor.summary || `A mythological bot representing ${actor.name}`,
-				published: new Date().toISOString(),
-				inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(actor.preferredUsername)}`,
-				outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(actor.preferredUsername)}`,
-				followers: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWERS(actor.preferredUsername)}`,
-				following: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(actor.preferredUsername)}`,
-			};
-
-			storage.write(actorFilePath, actorObject, { pretty: true });
+		if (storage.exists(actorFilePath)) {
 			results.push({
 				type: "actor",
 				actor: actor.preferredUsername,
-				status: "created",
+				status: "skipped (already exists)",
 			});
+			continue;
+		}
+
+		// Generate RSA key pair for ActivityPub signatures
+		const keyPair = generateActorKeyPair();
+		const actorId = `${baseUrl}${ENDPOINT_PATHS.ACTORS_PROFILE(actor.preferredUsername)}`;
+
+		const actorObject: ASActor = {
+			"@context": [
+				NAMESPACES.ACTIVITYSTREAMS,
+				NAMESPACES.SECURITY,
+				{
+					myth: `${baseUrl}/vocab#`,
+					foaf: "http://xmlns.com/foaf/0.1/",
+				},
+			],
+			id: actorId,
+			type: ACTOR_TYPES.BOT,
+			name: actor.name,
+			preferredUsername: actor.preferredUsername,
+			summary: actor.summary || `A mythological bot representing ${actor.name}`,
+			published: new Date().toISOString(),
+			inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(actor.preferredUsername)}`,
+			outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(actor.preferredUsername)}`,
+			followers: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWERS(actor.preferredUsername)}`,
+			following: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(actor.preferredUsername)}`,
+			icon: {
+				type: "Image",
+				url: actor.avatar,
+			},
+			publicKey: {
+				id: `${actorId}#main-key`,
+				owner: actorId,
+				publicKeyPem: keyPair.publicKey,
+			},
+		};
+
+		storage.write(actorFilePath, actorObject, { pretty: true });
+
+		// Store private key separately for future HTTP signature implementation
+		const privateKeyPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${actor.preferredUsername}/private-key.pem`;
+		storage.write(privateKeyPath, { privateKey: keyPair.privateKey }, { pretty: false });
+
+		results.push({
+			type: "actor",
+			actor: actor.preferredUsername,
+			status: "created",
+		});
 		}
 
 		// Step 2: Generate posts for each event

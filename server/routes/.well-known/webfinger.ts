@@ -31,6 +31,9 @@ export default defineEventHandler((event) => {
     });
   }
 
+  setHeader(event, 'Content-Type', 'application/jrd+json; charset=utf-8');
+  setHeader(event, 'Access-Control-Allow-Origin', '*');
+
   return {
     subject: resource.startsWith('acct:') ? resource : `acct:${actor.preferredUsername}@${domain}`,
     links: [

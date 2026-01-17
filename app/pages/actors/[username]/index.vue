@@ -3,7 +3,7 @@ import { useQuery } from '@pinia/colada';
 import { computed } from 'vue';
 import { useRoute } from '#app';
 import { fetchActor, fetchActorOutbox, fetchNoteByUrl } from '~/api/actors';
-import type { ASNote, EnrichedPost } from '~~/shared/types/activitypub';
+import type { EnrichedPost } from '~~/shared/types/activitypub';
 
 const route = useRoute();
 const username = route.params.username as string;
@@ -47,7 +47,7 @@ const enrichedPosts = computed(() => {
       <UCard class="mb-8">
         <div class="flex items-start gap-6">
           <ActorAvatar
-              :avatar-url="actor.icon?.url || actor.avatar"
+              :avatar-url="actor.icon?.url || ''"
               :username="actor.preferredUsername"
           />
           <div class="flex-1">
@@ -92,7 +92,7 @@ const enrichedPosts = computed(() => {
     <div v-else-if="actor === null" class="text-center py-20">
       <UIcon name="i-heroicons-face-frown" class="w-16 h-16 mx-auto text-gray-400 mb-4" />
       <h2 class="text-2xl font-bold">Actor not found</h2>
-      <UButton to="/" class="mt-4" color="gray">Back to Timeline</UButton>
+      <UButton to="/" class="mt-4" color="neutral">Back to Timeline</UButton>
     </div>
     <div v-else class="max-w-2xl mx-auto space-y-4">
       <USkeleton class="h-40 w-full" />
