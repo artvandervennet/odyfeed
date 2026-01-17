@@ -50,6 +50,20 @@ export default defineEventHandler(async (event) => {
 				NAMESPACES.ACTIVITYSTREAMS,
 				NAMESPACES.SECURITY,
 				{
+					manuallyApprovesFollowers: "as:manuallyApprovesFollowers",
+					toot: NAMESPACES.TOOT,
+					featured: {
+						"@id": "toot:featured",
+						"@type": "@id",
+					},
+					featuredTags: {
+						"@id": "toot:featuredTags",
+						"@type": "@id",
+					},
+					discoverable: "toot:discoverable",
+					indexable: "toot:indexable",
+					memorial: "toot:memorial",
+					suspended: "toot:suspended",
 					myth: `${baseUrl}/vocab#`,
 					foaf: "http://xmlns.com/foaf/0.1/",
 				},
@@ -66,11 +80,14 @@ export default defineEventHandler(async (event) => {
 			following: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(actor.preferredUsername)}`,
 			icon: actor.avatar ? {
 				type: ACTIVITY_TYPES.IMAGE,
+				mediaType: "image/svg+xml",
 				url: actor.avatar,
 			} : undefined,
 			url: actorId,
 			discoverable: true,
+			indexable: true,
 			manuallyApprovesFollowers: false,
+			memorial: false,
 			publicKey: {
 				id: `${actorId}#main-key`,
 				owner: actorId,
