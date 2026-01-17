@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import type { MythActor } from '~~/shared/types/activitypub'
+import type { MythActor, ASActor } from '~~/shared/types/activitypub'
 
 const props = defineProps<{
-  actor: MythActor
+  actor: MythActor | ASActor
   showTone?: boolean
 }>()
+
+const { getAvatarUrl } = useActorAvatar()
 
 const actorProfileUrl = computed(() => {
   const username = props.actor.preferredUsername || props.actor.id.split('/').pop()
   return `/actors/${username}`
 })
+
+const avatarUrl = computed(() => getAvatarUrl(props.actor))
+const actorTone = computed(() => 'tone' in props.actor ? props.actor.tone : undefined)
 </script>
 
 <template>
@@ -19,7 +24,7 @@ const actorProfileUrl = computed(() => {
       class="flex items-center gap-3 group flex-1 min-w-0"
     >
       <ActorAvatar
-        :avatar-url="actor.avatar"
+        :avatar-url="avatarUrl"
         :username="actor.preferredUsername"
       />
       <div class="flex flex-col min-w-0">
@@ -27,8 +32,8 @@ const actorProfileUrl = computed(() => {
           <span class="font-bold group-hover:underline truncate">
             {{ actor.preferredUsername || 'Unknown' }}
           </span>
-          <span v-if="showTone && actor.tone" class="text-xs italic text-gray-400 shrink-0">
-            {{ actor.tone }}
+          <span v-if="showTone && actorTone" class="text-xs italic text-gray-400 shrink-0">
+            {{ actorTone }}
           </span>
         </div>
         <span class="text-sm text-gray-500 truncate">

@@ -12,15 +12,30 @@ export interface ASActor extends ASObject {
   type: "Person" | "Service" | "Application" | "Group" | "Organization";
   name: string;
   preferredUsername: string;
-  avatar?: string;
   inbox: string;
   outbox: string;
   following?: string;
   followers?: string;
+  icon?: {
+    type: "Image";
+    url: string;
+    mediaType?: string;
+  };
+  image?: {
+    type: "Image";
+    url: string;
+    mediaType?: string;
+  };
   publicKey?: {
     id: string;
     owner: string;
     publicKeyPem: string;
+  };
+  url?: string;
+  manuallyApprovesFollowers?: boolean;
+  discoverable?: boolean;
+  endpoints?: {
+    sharedInbox?: string;
   };
 }
 

@@ -8,6 +8,8 @@ import type { EnrichedPost } from '~~/shared/types/activitypub';
 const route = useRoute();
 const username = route.params.username as string;
 
+const { getAvatarUrl } = useActorAvatar()
+
 const { data: actor } = useQuery({
   key: ['actors', username],
   query: () => fetchActor(username)
@@ -40,6 +42,8 @@ const enrichedPosts = computed(() => {
     actor: actor.value
   })) as EnrichedPost[];
 });
+
+const avatarUrl = computed(() => getAvatarUrl(actor.value))
 </script>
 
 <template>
@@ -47,7 +51,7 @@ const enrichedPosts = computed(() => {
       <UCard class="mb-8">
         <div class="flex items-start gap-6">
           <ActorAvatar
-              :avatar-url="actor.avatar || ''"
+              :avatar-url="avatarUrl"
               :username="actor.preferredUsername"
           />
           <div class="flex-1">

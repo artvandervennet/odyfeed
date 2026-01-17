@@ -11,6 +11,7 @@ const {reply, level} = defineProps<{
 
 const auth = useAuthStore()
 const { isLiked } = useInteractions()
+const { getAvatarUrl } = useActorAvatar()
 const likeMutation = useLikeMutation()
 const undoLikeMutation = useUndoLikeMutation()
 
@@ -21,6 +22,7 @@ const isLoading = computed(() =>
   likeMutation.status.value === 'pending' ||
   undoLikeMutation.status.value === 'pending'
 )
+const avatarUrl = computed(() => getAvatarUrl(reply.actor))
 
 const postDetailUrl = computed(() => {
   const username = reply.actor?.preferredUsername
@@ -61,7 +63,7 @@ const handleReply = function (event: Event) {
         <NuxtLink :to="`/actors/${reply.actor?.preferredUsername}`">
           <ActorAvatar
             v-if="reply.actor"
-            :avatar-url="reply.actor.avatar"
+            :avatar-url="avatarUrl"
             :username="reply.actor.preferredUsername"
             size="sm"
           />
