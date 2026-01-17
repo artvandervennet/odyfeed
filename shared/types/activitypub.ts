@@ -34,6 +34,11 @@ export interface ASActor extends ASObject {
   url?: string;
   manuallyApprovesFollowers?: boolean;
   discoverable?: boolean;
+  indexable?: boolean;
+  memorial?: boolean;
+  suspended?: boolean;
+  featured?: string;
+  featuredTags?: string;
   endpoints?: {
     sharedInbox?: string;
   };

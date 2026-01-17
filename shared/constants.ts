@@ -5,7 +5,8 @@ export const NAMESPACES = {
   FOAF: "http://xmlns.com/foaf/0.1/",
   RDFS: "http://www.w3.org/2000/01/rdf-schema#",
   DCT: "http://purl.org/dc/terms/",
-  PUBLIC: "https://www.w3.org/ns/activitystreams#Public"
+  PUBLIC: "https://www.w3.org/ns/activitystreams#Public",
+  TOOT: "http://joinmastodon.org/ns#",
 };
 
 export const ACTIVITY_TYPES = {
@@ -14,7 +15,9 @@ export const ACTIVITY_TYPES = {
   PERSON: "Person" as const,
   IMAGE: "Image" as const,
   ORDERED_COLLECTION: "OrderedCollection" as const,
+  ORDERED_COLLECTION_PAGE: "OrderedCollectionPage" as const,
   COLLECTION: "Collection" as const,
+  COLLECTION_PAGE: "CollectionPage" as const,
   LIKE: "Like" as const,
   UNDO: "Undo" as const,
   CREATE: "Create" as const,
