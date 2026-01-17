@@ -1,4 +1,4 @@
-import { generateKeyPairSync, createSign } from 'crypto'
+import { generateKeyPairSync, createSign, createHash } from 'crypto'
 
 export interface KeyPair {
   publicKey: string
@@ -43,8 +43,7 @@ export const signRequest = function (params: SignRequestParams): Record<string, 
   let headers = '(request-target) host date'
 
   if (body) {
-    const crypto = require('crypto')
-    const digest = `SHA-256=${crypto.createHash('sha256').update(body).digest('base64')}`
+    const digest = `SHA-256=${createHash('sha256').update(body).digest('base64')}`
     stringToSign += `\ndigest: ${digest}`
     headers += ' digest'
   }
@@ -63,8 +62,7 @@ export const signRequest = function (params: SignRequestParams): Record<string, 
   }
 
   if (body) {
-    const crypto = require('crypto')
-    requestHeaders['Digest'] = `SHA-256=${crypto.createHash('sha256').update(body).digest('base64')}`
+    requestHeaders['Digest'] = `SHA-256=${createHash('sha256').update(body).digest('base64')}`
   }
 
   return requestHeaders
