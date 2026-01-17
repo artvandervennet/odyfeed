@@ -1,6 +1,20 @@
 import { createDataStorage } from "~~/server/utils/fileStorage";
 import type { ASCollection, ASNote } from "~~/shared/types/activitypub";
-import { NAMESPACES, ACTIVITY_TYPES, FILE_PATHS, ENDPOINT_PATHS, DEFAULTS } from "~~/shared/constants";
+import { NAMESPACES, ACTIVITYPUB_CONTEXT, ACTIVITY_TYPES, FILE_PATHS, ENDPOINT_PATHS, DEFAULTS } from "~~/shared/constants";
+
+const escapeHtml = function (text: string): string {
+	return text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+};
+
+const formatContentAsHtml = function (content: string): string {
+	const escaped = escapeHtml(content);
+	return `<p>${escaped}</p>`;
+};
 
 export default defineEventHandler((event): ASCollection<any> => {
 	const params = getRouterParams(event);
@@ -41,6 +55,12 @@ export default defineEventHandler((event): ASCollection<any> => {
 		const postPath = `${postsDir}/${file}`;
 		const post = storage.read<ASNote>(postPath);
 
+		const statusId = file.replace('.jsonld', '');
+		const statusUrl = `${baseUrl}${ENDPOINT_PATHS.ACTOR_STATUS(username, statusId)}`;
+		const conversationId = `${baseUrl}/contexts/${username}-${statusId}`;
+
+		const htmlContent = formatContentAsHtml(post.content);
+
 		return {
 			id: `${post.id}/activity`,
 			type: ACTIVITY_TYPES.CREATE,
@@ -48,15 +68,33 @@ export default defineEventHandler((event): ASCollection<any> => {
 			published: post.published,
 			to: post.to,
 			cc: post.cc || [`${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWERS(username)}`],
-			object: post,
+			object: {
+				...post,
+				content: htmlContent,
+				url: statusUrl,
+				sensitive: false,
+				atomUri: post.id,
+				inReplyToAtomUri: null,
+				conversation: conversationId,
+				context: conversationId,
+				attachment: [],
+				tag: [],
+				replies: {
+					id: `${post.id}/replies`,
+					type: ACTIVITY_TYPES.COLLECTION,
+					totalItems: 0,
+					first: `${post.id}/replies?page=true`
+				}
+			},
 		};
 	});
 
 	return {
-		"@context": NAMESPACES.ACTIVITYSTREAMS,
+		"@context": ACTIVITYPUB_CONTEXT,
 		id: `${outboxUrl}?page=true`,
 		type: ACTIVITY_TYPES.ORDERED_COLLECTION_PAGE,
 		totalItems: createActivities.length,
+		prev: createActivities.length > 0 ? `${outboxUrl}?min_id=0&page=true` : undefined,
 		partOf: outboxUrl,
 		orderedItems: createActivities,
 	};

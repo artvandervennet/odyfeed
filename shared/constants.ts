@@ -9,6 +9,19 @@ export const NAMESPACES = {
   TOOT: "http://joinmastodon.org/ns#",
 };
 
+export const ACTIVITYPUB_CONTEXT = [
+  "https://www.w3.org/ns/activitystreams",
+  {
+    "ostatus": "http://ostatus.org#",
+    "atomUri": "ostatus:atomUri",
+    "inReplyToAtomUri": "ostatus:inReplyToAtomUri",
+    "conversation": "ostatus:conversation",
+    "sensitive": "as:sensitive",
+    "toot": "http://joinmastodon.org/ns#",
+    "votersCount": "toot:votersCount"
+  }
+];
+
 export const ACTIVITY_TYPES = {
   NOTE: "Note" as const,
   SERVICE: "Service" as const,

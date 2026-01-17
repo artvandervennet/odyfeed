@@ -69,6 +69,13 @@ export interface ASNote extends ASObject {
   replies?: ASCollection<string>;
   webmentions?: ASCollection<WebmentionObject>;
   "myth:aboutEvent"?: string;
+  sensitive?: boolean;
+  atomUri?: string;
+  inReplyToAtomUri?: string | null;
+  conversation?: string;
+  context?: string;
+  attachment?: any[];
+  tag?: any[];
 }
 
 export interface ASCollection<T> extends ASObject {
