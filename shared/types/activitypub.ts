@@ -72,10 +72,15 @@ export interface ASNote extends ASObject {
 }
 
 export interface ASCollection<T> extends ASObject {
-  type: "Collection" | "OrderedCollection";
+  type: "Collection" | "OrderedCollection" | "CollectionPage" | "OrderedCollectionPage";
   totalItems: number;
   items?: T[];
   orderedItems?: T[];
+  first?: string;
+  last?: string;
+  next?: string;
+  prev?: string;
+  partOf?: string;
 }
 
 export interface ASActivity extends ASObject {
