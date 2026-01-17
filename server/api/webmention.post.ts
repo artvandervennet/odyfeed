@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const baseUrl = useRuntimeConfig(event).public.baseUrl
+  const baseUrl = process.baseURL || "http://localhost:3000/"
   if (!target.startsWith(baseUrl)) {
     throw createError({
       statusCode: 400,
