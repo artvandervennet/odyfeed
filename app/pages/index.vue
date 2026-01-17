@@ -15,9 +15,10 @@ const isLoading = computed(() => timelineStore.isLoading);
 <template>
   <UContainer>
     <div class="max-w-2xl mx-auto">
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-2">Timeline</h1>
-        <p class="text-gray-500 dark:text-gray-400">The story of the Odysee, told through the eyes of its actors.</p>
+      <div class="mb-8 h-card">
+        <h1 class="p-name text-3xl font-bold mb-2">Timeline</h1>
+        <p class="p-note text-gray-500 dark:text-gray-400">The story of the Odysee, told through the eyes of its actors.</p>
+        <a :href="useRuntimeConfig().public.baseUrl" class="u-url hidden" rel="me">OdyFeed</a>
       </div>
 
       <div v-if="isLoading && !timeline" class="space-y-4">

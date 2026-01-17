@@ -10,10 +10,6 @@
         <slot/>
       </UContainer>
     </main>
-    <footer>
-      <UContainer>
-        footer
-      </UContainer>
-    </footer>
+    <AppFooter />
   </div>
 </template>
