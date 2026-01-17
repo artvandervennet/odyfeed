@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "fs";
 import { resolve, dirname } from "path";
+import { logError } from "./logger";
 
 export interface FileStorageConfig {
 	basePath: string;
@@ -12,9 +13,6 @@ export class FileStorage {
 		this.basePath = config.basePath;
 	}
 
-	/**
-	 * Read a file from storage, creating empty JSON object if it doesn't exist
-	 */
 	read<T extends Record<string, any>>(relativePath: string): T {
 		const fullPath = resolve(this.basePath, relativePath);
 
@@ -26,14 +24,11 @@ export class FileStorage {
 			const content = readFileSync(fullPath, "utf-8");
 			return JSON.parse(content) as T;
 		} catch (error) {
-			console.error(`Error reading file ${fullPath}:`, error);
+			logError(`Error reading file ${fullPath}`, error);
 			return {} as T;
 		}
 	}
 
-	/**
-	 * Write data to storage, creating directories as needed
-	 */
 	write<T extends Record<string, any>>(
 		relativePath: string,
 		data: T,
@@ -53,17 +48,11 @@ export class FileStorage {
 		writeFileSync(fullPath, content, "utf-8");
 	}
 
-	/**
-	 * Check if a file exists
-	 */
 	exists(relativePath: string): boolean {
 		const fullPath = resolve(this.basePath, relativePath);
 		return existsSync(fullPath);
 	}
 
-	/**
-	 * Read all files in a directory
-	 */
 	listFiles(
 		relativePath: string,
 		extension?: string
@@ -81,15 +70,12 @@ export class FileStorage {
 			}
 			return files;
 		} catch (error) {
-			console.error(`Error listing directory ${fullPath}:`, error);
+			logError(`Error listing directory ${fullPath}`, error);
 			return [];
 		}
 	}
 }
 
-/**
- * Create a file storage instance for the data directory
- */
 export function createDataStorage(): FileStorage {
 	return new FileStorage({
 		basePath: resolve(process.cwd(), "data"),

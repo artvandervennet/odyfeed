@@ -1,75 +1,107 @@
 import {createDataStorage} from "~~/server/utils/fileStorage";
 import type {ASActivity, ASNote, ASObject, ASCollection} from "~~/shared/types/activitypub";
 import {ACTIVITY_TYPES, FILE_PATHS} from "~~/shared/constants";
+import {logInfo, logError, logDebug} from "~~/server/utils/logger";
 
 
 export default defineEventHandler(async (event) => {
 	const params = getRouterParams(event);
 	const username = params.username as string;
-	const body = await readBody<ASActivity>(event);
 	const storage = createDataStorage();
 
-	if (!body || !body.type) {
+	const actorFilePath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/profile.jsonld`;
+	if (!storage.exists(actorFilePath)) {
+		logError(`Actor not found: ${username}`);
 		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid activity",
+			statusCode: 404,
+			statusMessage: "Actor not found",
 		});
 	}
 
-	console.log(`[Inbox] Received ${body.type} activity for ${username} from ${body.actor}`);
+	const contentType = getHeader(event, 'content-type') || '';
+	if (!contentType.includes('application/activity+json') &&
+	    !contentType.includes('application/ld+json')) {
+		logError(`Invalid Content-Type for ${username}: ${contentType}`);
+		throw createError({
+			statusCode: 400,
+			statusMessage: 'Content-Type must be application/activity+json or application/ld+json'
+		});
+	}
 
-	// Store raw activity in inbox
+	const body = await readBody<ASActivity>(event);
+
+	if (!body || !body.type || !body.actor) {
+		logError(`Invalid activity format for ${username}`, { body });
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid activity format. Required fields: type, actor",
+		});
+	}
+
+	logInfo(`Received ${body.type} activity for ${username} from ${body.actor}`);
+
 	const inboxPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/inbox/${Date.now()}-${body.type.toLowerCase()}.jsonld`;
 	storage.write(inboxPath, body, {pretty: true});
 
-	// Process Like activity
 	if (body.type === ACTIVITY_TYPES.LIKE) {
 		processLike(body, storage);
+		setHeader(event, 'Content-Type', 'application/activity+json; charset=utf-8');
+		setResponseStatus(event, 202);
+		return { status: 'accepted', message: 'Like activity processed' };
 	}
 
-	// Process Undo activity
 	if (body.type === ACTIVITY_TYPES.UNDO) {
 		processUndo(body, storage);
+		setHeader(event, 'Content-Type', 'application/activity+json; charset=utf-8');
+		setResponseStatus(event, 202);
+		return { status: 'accepted', message: 'Undo activity processed' };
 	}
 
-	// Process Create activity (for replies)
 	if (body.type === ACTIVITY_TYPES.CREATE) {
 		processCreate(body, storage);
+		setHeader(event, 'Content-Type', 'application/activity+json; charset=utf-8');
+		setResponseStatus(event, 202);
+		return { status: 'accepted', message: 'Create activity processed' };
 	}
 
-	// Process Follow activity
 	if (body.type === ACTIVITY_TYPES.FOLLOW) {
 		await processFollow(body, username, storage);
+		setHeader(event, 'Content-Type', 'application/activity+json; charset=utf-8');
+		setResponseStatus(event, 202);
+		return { status: 'accepted', message: 'Follow request accepted' };
 	}
 
-	return setResponseStatus(event, 202);
+	logInfo(`Received ${body.type} activity - no specific handler`);
+	setHeader(event, 'Content-Type', 'application/activity+json; charset=utf-8');
+	setResponseStatus(event, 202);
+	return { status: 'accepted', message: `${body.type} activity received` };
 });
 
-/**
- * Process incoming Like activity
- * Adds the actor to the post's likes collection
- */
 function processLike(activity: ASActivity, storage: ReturnType<typeof createDataStorage>): void {
 	const targetId = typeof activity.object === "string"
 		? activity.object
 		: (activity.object as ASObject).id;
 
 	if (!targetId) {
+		logError('Like activity missing target ID');
 		return;
 	}
 
 	const postPath = extractPostPath(targetId);
 	if (!postPath) {
+		logError('Could not extract post path from target', { targetId });
 		return;
 	}
 
 	const post = storage.read<ASNote>(postPath);
 	if (!post.id) {
+		logError('Post not found or invalid', { postPath });
 		return;
 	}
 
 	const actorId = activity.actor;
 	if (!actorId) {
+		logError('Like activity missing actor ID');
 		return;
 	}
 
@@ -88,23 +120,24 @@ function processLike(activity: ASActivity, storage: ReturnType<typeof createData
 	if (!people.includes(actorId)) {
 		people.push(actorId);
 		likesCollection.totalItems = people.length;
+		logInfo('Added like to post', { postPath, actorId, totalLikes: people.length });
+	} else {
+		logDebug('Actor already liked this post', { postPath, actorId });
 	}
 
 	storage.write(postPath, post, {pretty: true});
 }
 
-/**
- * Process incoming Undo activity
- * Removes the actor from the post's likes collection
- */
 function processUndo(activity: ASActivity, storage: ReturnType<typeof createDataStorage>): void {
 	const objectToUndo = activity.object;
 	if (!objectToUndo || typeof objectToUndo !== "object") {
+		logError('Undo activity missing object or invalid format');
 		return;
 	}
 
 	const activityToUndo = objectToUndo as ASActivity;
 	if (activityToUndo.type !== ACTIVITY_TYPES.LIKE) {
+		logDebug('Undo activity for non-Like type', { type: activityToUndo.type });
 		return;
 	}
 
@@ -113,62 +146,68 @@ function processUndo(activity: ASActivity, storage: ReturnType<typeof createData
 		: (activityToUndo.object as ASObject).id;
 
 	if (!targetId) {
+		logError('Undo Like activity missing target ID');
 		return;
 	}
 
 	const postPath = extractPostPath(targetId);
 	if (!postPath) {
+		logError('Could not extract post path from target', { targetId });
 		return;
 	}
 
 	const post = storage.read<ASNote>(postPath);
 	if (!post.id) {
+		logError('Post not found or invalid', { postPath });
 		return;
 	}
 
 	const actorId = activity.actor;
 	if (!actorId) {
+		logError('Undo activity missing actor ID');
 		return;
 	}
 
 	if (!post.likes) {
+		logDebug('Post has no likes to undo', { postPath });
 		return;
 	}
 
 	const likesCollection = post.likes as ASCollection<string>;
 	let likes = likesCollection.orderedItems || [];
+	const originalCount = likes.length;
 	likes = likes.filter((id) => id !== actorId);
 	likesCollection.totalItems = likes.length;
 
+	if (originalCount > likes.length) {
+		logInfo('Removed like from post', { postPath, actorId, totalLikes: likes.length });
+	} else {
+		logDebug('No like to remove from post', { postPath, actorId });
+	}
 
-storage.write(postPath, post, {pretty: true});
+	storage.write(postPath, post, {pretty: true});
 }
 
-/**
- * Extract post file path from ActivityPub status URL
- * Example: https://domain.com/api/actors/odysseus/status/01-trojan-horse
- * Returns: posts/odysseus/01-trojan-horse.jsonld
- */
 function extractPostPath(targetUrl: string): string | null {
 	try {
 		const url = new URL(targetUrl);
 		const parts = url.pathname.split("/").filter(Boolean);
 
-		// Expected structure: /api/actors/{username}/status/{statusId} or /api/actors/{username}/statuses/{statusId}
 		const apiIndex = parts.indexOf("api");
 		if (apiIndex === -1) {
+			logDebug('No "api" segment in URL path', { targetUrl });
 			return null;
 		}
 
 		const usernameIndex = parts.indexOf("actors", apiIndex) + 1;
 		let statusesIndex = parts.indexOf("status", usernameIndex) + 1;
 
-		// Try "statuses" if "status" not found
 		if (statusesIndex === 0) {
 			statusesIndex = parts.indexOf("statuses", usernameIndex) + 1;
 		}
 
 		if (usernameIndex < 0 || statusesIndex < 0 || statusesIndex >= parts.length) {
+			logDebug('Invalid URL structure for post', { targetUrl, usernameIndex, statusesIndex });
 			return null;
 		}
 
@@ -177,44 +216,42 @@ function extractPostPath(targetUrl: string): string | null {
 
 		return `${FILE_PATHS.POSTS_DIR}/${username}/${statusId}.jsonld`;
 	} catch (error) {
-		console.error("Error parsing post URL:", error);
+		logError("Error parsing post URL", { targetUrl, error });
 		return null;
 	}
 }
 
-/**
- * Process incoming Create activity (for replies)
- * Validates the reply and adds the reply ID to parent post's replies collection
- */
 function processCreate(activity: ASActivity, storage: ReturnType<typeof createDataStorage>): void {
 	const objectData = activity.object;
 	if (!objectData || typeof objectData === "string") {
+		logDebug('Create activity has no object or object is a string');
 		return;
 	}
 
 	const note = objectData as ASNote;
 
-	// Validate it's a Note and has a valid inReplyTo
 	if (note.type !== ACTIVITY_TYPES.NOTE || !note.inReplyTo) {
+		logDebug('Create activity object is not a Note or has no inReplyTo', { type: note.type, hasInReplyTo: !!note.inReplyTo });
 		return;
 	}
 
-	// Validate the reply has required fields
 	if (!note.id || !note.content || !note.attributedTo) {
+		logError('Reply missing required fields', { hasId: !!note.id, hasContent: !!note.content, hasAttributedTo: !!note.attributedTo });
 		return;
 	}
 
 	const parentPostPath = extractPostPath(note.inReplyTo);
 	if (!parentPostPath) {
+		logError('Could not extract parent post path', { inReplyTo: note.inReplyTo });
 		return;
 	}
 
 	const parentPost = storage.read<ASNote>(parentPostPath);
 	if (!parentPost.id) {
+		logError('Parent post not found', { parentPostPath });
 		return;
 	}
 
-	// Initialize replies collection if it doesn't exist
 	if (!parentPost.replies) {
 		parentPost.replies = {
 			id: `${parentPost.id}/replies`,
@@ -224,7 +261,6 @@ function processCreate(activity: ASActivity, storage: ReturnType<typeof createDa
 		};
 	}
 
-	// Add reply ID to the collection (reply is stored on user's server)
 	const repliesCollection = parentPost.replies as ASCollection<string>;
 	const items = repliesCollection.orderedItems || repliesCollection.items || [];
 
@@ -235,23 +271,22 @@ function processCreate(activity: ASActivity, storage: ReturnType<typeof createDa
 			repliesCollection.items.push(note.id);
 		}
 		repliesCollection.totalItems = items.length + 1;
+		logInfo('Added reply to post', { parentPostPath, replyId: note.id, totalReplies: repliesCollection.totalItems });
+	} else {
+		logDebug('Reply already exists in collection', { parentPostPath, replyId: note.id });
 	}
 
 	storage.write(parentPostPath, parentPost, {pretty: true});
 }
 
-/**
- * Process incoming Follow activity
- * Adds the follower to the actor's followers list and sends back an Accept activity
- */
 async function processFollow(activity: ASActivity, username: string, storage: ReturnType<typeof createDataStorage>): Promise<void> {
 	const followerId = activity.actor;
 	if (!followerId) {
-		console.error('[Follow] No actor ID in Follow activity');
+		logError('Follow activity missing actor ID');
 		return;
 	}
 
-	console.log(`[Follow] Processing follow request from ${followerId} for ${username}`);
+	logInfo(`Processing follow request from ${followerId} for ${username}`);
 
 	const followersPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/followers.json`;
 	const followersData = storage.read<{ followers: string[] }>(followersPath);
@@ -263,23 +298,20 @@ async function processFollow(activity: ASActivity, username: string, storage: Re
 	if (!followersData.followers.includes(followerId)) {
 		followersData.followers.push(followerId);
 		storage.write(followersPath, followersData, {pretty: true});
-		console.log(`[Follow] Added ${followerId} to followers list`);
+		logInfo(`Added ${followerId} to followers list`, { totalFollowers: followersData.followers.length });
 	} else {
-		console.log(`[Follow] ${followerId} already in followers list`);
+		logDebug(`${followerId} already in followers list`);
 	}
 
 	await sendAcceptActivity(activity, username, storage);
 }
 
-/**
- * Send Accept activity in response to a Follow request
- */
 async function sendAcceptActivity(followActivity: ASActivity, username: string, storage: ReturnType<typeof createDataStorage>): Promise<void> {
 	try {
 		const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 		const actorId = `${baseUrl}/api/actors/${username}`;
 
-		console.log(`[Accept] Processing follow from: ${followActivity.actor}`);
+		logInfo(`Processing Accept for follow from: ${followActivity.actor}`);
 
 		const followerResponse = await fetch(followActivity.actor, {
 			headers: {
@@ -289,7 +321,7 @@ async function sendAcceptActivity(followActivity: ASActivity, username: string, 
 		});
 
 		if (!followerResponse.ok) {
-			console.error(`[Accept] Failed to fetch follower actor: ${followActivity.actor} - ${followerResponse.status}`);
+			logError(`Failed to fetch follower actor: ${followActivity.actor}`, { status: followerResponse.status, statusText: followerResponse.statusText });
 			return;
 		}
 
@@ -297,11 +329,11 @@ async function sendAcceptActivity(followActivity: ASActivity, username: string, 
 		const followerInbox = followerActor.inbox;
 
 		if (!followerInbox) {
-			console.error(`[Accept] No inbox found for follower: ${followActivity.actor}`);
+			logError(`No inbox found for follower: ${followActivity.actor}`);
 			return;
 		}
 
-		console.log(`[Accept] Follower inbox: ${followerInbox}`);
+		logInfo(`Follower inbox: ${followerInbox}`);
 
 		const acceptActivity = {
 			"@context": "https://www.w3.org/ns/activitystreams",
@@ -311,25 +343,28 @@ async function sendAcceptActivity(followActivity: ASActivity, username: string, 
 			object: followActivity,
 		};
 
-		const privateKeyData = storage.read<{ privateKey: string }>(`${FILE_PATHS.ACTORS_DATA_DIR}/${username}/private-key.pem`);
+		const privateKeyPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/private-key.pem`;
+		const privateKeyData = storage.read<{ privateKey?: string }>(privateKeyPath);
 
-		if (!privateKeyData.privateKey) {
-			console.error(`[Accept] No private key found for actor: ${username}`);
+		let privateKeyPem: string;
+		if (privateKeyData.privateKey) {
+			privateKeyPem = privateKeyData.privateKey;
+		} else {
+			logError(`No private key found for actor: ${username}`, { privateKeyPath });
 			return;
 		}
 
 		const { signRequest } = await import('~~/server/utils/crypto');
 		const body = JSON.stringify(acceptActivity);
 		const signatureHeaders = signRequest({
-			privateKey: privateKeyData.privateKey,
+			privateKey: privateKeyPem,
 			keyId: `${actorId}#main-key`,
 			url: followerInbox,
 			method: 'POST',
 			body,
 		});
 
-		console.log(`[Accept] Sending Accept activity to ${followerInbox}`);
-		console.log(`[Accept] Signature headers:`, Object.keys(signatureHeaders));
+		logDebug(`Sending Accept activity to ${followerInbox}`, { headers: Object.keys(signatureHeaders) });
 
 		const response = await fetch(followerInbox, {
 			method: 'POST',
@@ -344,14 +379,20 @@ async function sendAcceptActivity(followActivity: ASActivity, username: string, 
 
 		if (!response.ok) {
 			const errorText = await response.text().catch(() => 'Unable to read error');
-			console.error(`[Accept] Failed to send Accept activity to ${followerInbox}: ${response.status} ${response.statusText}`);
-			console.error(`[Accept] Error response: ${errorText}`);
+			logError(`Failed to send Accept activity to ${followerInbox}`, {
+				status: response.status,
+				statusText: response.statusText,
+				errorText
+			});
 		} else {
-			console.log(`[Accept] Successfully sent Accept activity to ${followerInbox}`);
+			logInfo(`Successfully sent Accept activity to ${followerInbox}`);
 		}
 	} catch (error) {
-		console.error('[Accept] Error sending Accept activity:', error);
+		logError('Error sending Accept activity', error);
 	}
 }
+
+
+
 
 
