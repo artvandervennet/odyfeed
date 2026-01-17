@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRepliesQuery } from '~/queries/replies'
+import { usePostWebmentionsQuery } from '~/queries/webmentions'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
 import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
 import { useReplyMutation } from '~/mutations/reply'
@@ -24,6 +25,19 @@ const likesCount = computed(() => post.likes?.totalItems || 0)
 const repliesCount = computed(() => post.replies?.totalItems || 0)
 
 const {data: replies, isLoading: repliesLoading} = useRepliesQuery()(post)
+
+const username = computed(() => post.actor?.preferredUsername || '')
+const statusId = computed(() => {
+  const parts = post.id.split('/')
+  return parts[parts.length - 1] || ''
+})
+
+const {data: webmentions, isLoading: webmentionsLoading} = usePostWebmentionsQuery()(
+  username.value,
+  statusId.value
+)
+
+const postUrl = computed(() => post.id)
 
 const handleLike = async function () {
   if (!auth.isLoggedIn) {
@@ -68,30 +82,33 @@ const toggleReplyForm = function () {
 
 <template>
   <div>
-    <div class="p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-      <ActorInfo
-          v-if="post.actor"
-          :actor="post.actor"
-          :show-tone="true"
-          :clickable="true"
-      />
+    <article class="h-entry p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+      <div v-if="post.actor" class="p-author h-card">
+        <ActorInfo
+            :actor="post.actor"
+            :show-tone="true"
+            :clickable="true"
+        />
+      </div>
 
       <div class="mt-4">
         <div
-            class="prose prose-base max-w-none dark:prose-invert text-base leading-relaxed mb-4 whitespace-pre-wrap break-words">
+            class="e-content prose prose-base max-w-none dark:prose-invert text-base leading-relaxed mb-4 whitespace-pre-wrap wrap-break-word">
           {{ post.content }}
         </div>
-        <time class="text-sm text-gray-500 dark:text-gray-400">
-          {{
-            new Date(post.published!).toLocaleString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })
-          }}
-        </time>
+        <a :href="postUrl" class="u-url">
+          <time :datetime="post.published" class="dt-published text-sm text-gray-500 dark:text-gray-400">
+            {{
+              new Date(post.published!).toLocaleString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })
+            }}
+          </time>
+        </a>
       </div>
 
       <div class="flex items-center gap-6 py-4 border-y border-gray-200 dark:border-gray-800 mt-4">
@@ -127,7 +144,7 @@ const toggleReplyForm = function () {
           Reply
         </UButton>
       </div>
-    </div>
+    </article>
 
     <div v-if="showReplyForm" class="p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
       <ReplyForm
@@ -144,6 +161,14 @@ const toggleReplyForm = function () {
     </div>
 
     <ReplyList :replies="replies || []" :is-loading="repliesLoading"/>
+
+    <WebmentionList
+      :webmentions="webmentions?.items || []"
+      :is-loading="webmentionsLoading"
+    />
+
+    <div class="border-t border-gray-200 dark:border-gray-800 p-4">
+      <WebmentionForm :target-url="postUrl" />
+    </div>
   </div>
 </template>
-
