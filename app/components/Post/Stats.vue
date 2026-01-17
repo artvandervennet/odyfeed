@@ -3,7 +3,7 @@ defineProps<{
   likesCount: number
   repliesCount: number
   isLiked: boolean
-  isLoading?: boolean
+  isLoading: boolean
 }>()
 
 const emit = defineEmits<{
