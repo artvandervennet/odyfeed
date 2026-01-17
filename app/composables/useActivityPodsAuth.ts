@@ -57,11 +57,10 @@ export const useActivityPodsAuth = function () {
 		authUrl.searchParams.set('client_id', clientId);
 		authUrl.searchParams.set('redirect_uri', redirectUri);
 		authUrl.searchParams.set('response_type', 'code');
-		authUrl.searchParams.set('scope', 'openid offline_access webid');
+		authUrl.searchParams.set('scope', 'openid webid');
 		authUrl.searchParams.set('code_challenge', pkce.codeChallenge);
 		authUrl.searchParams.set('code_challenge_method', 'S256');
 		authUrl.searchParams.set('state', state);
-		authUrl.searchParams.set('prompt', 'consent');
 
 		console.log('[ActivityPods Auth] Starting authorization flow');
 		console.log('[ActivityPods Auth] Client ID:', clientId);

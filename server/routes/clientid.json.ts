@@ -25,6 +25,6 @@ export default defineEventHandler((event) => {
 		"application_type": "web",
 		"response_types": ["code"],
 		"grant_types": ["authorization_code", "refresh_token"],
-		"scope": "openid offline_access webid"
+		"scope": "openid webid"
 	};
 });
