@@ -16,6 +16,8 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
+	console.log(`[Inbox] Received ${body.type} activity for ${username} from ${body.actor}`);
+
 	// Store raw activity in inbox
 	const inboxPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/inbox/${Date.now()}-${body.type.toLowerCase()}.jsonld`;
 	storage.write(inboxPath, body, {pretty: true});
@@ -144,7 +146,7 @@ storage.write(postPath, post, {pretty: true});
 
 /**
  * Extract post file path from ActivityPub status URL
- * Example: https://domain.com/api/actors/odysseus/statuses/01-trojan-horse
+ * Example: https://domain.com/api/actors/odysseus/status/01-trojan-horse
  * Returns: posts/odysseus/01-trojan-horse.jsonld
  */
 function extractPostPath(targetUrl: string): string | null {
@@ -152,14 +154,19 @@ function extractPostPath(targetUrl: string): string | null {
 		const url = new URL(targetUrl);
 		const parts = url.pathname.split("/").filter(Boolean);
 
-		// Expected structure: /api/actors/{username}/statuses/{statusId}
+		// Expected structure: /api/actors/{username}/status/{statusId} or /api/actors/{username}/statuses/{statusId}
 		const apiIndex = parts.indexOf("api");
 		if (apiIndex === -1) {
 			return null;
 		}
 
 		const usernameIndex = parts.indexOf("actors", apiIndex) + 1;
-		const statusesIndex = parts.indexOf("statuses", usernameIndex) + 1;
+		let statusesIndex = parts.indexOf("status", usernameIndex) + 1;
+
+		// Try "statuses" if "status" not found
+		if (statusesIndex === 0) {
+			statusesIndex = parts.indexOf("statuses", usernameIndex) + 1;
+		}
 
 		if (usernameIndex < 0 || statusesIndex < 0 || statusesIndex >= parts.length) {
 			return null;
@@ -240,8 +247,11 @@ function processCreate(activity: ASActivity, storage: ReturnType<typeof createDa
 async function processFollow(activity: ASActivity, username: string, storage: ReturnType<typeof createDataStorage>): Promise<void> {
 	const followerId = activity.actor;
 	if (!followerId) {
+		console.error('[Follow] No actor ID in Follow activity');
 		return;
 	}
+
+	console.log(`[Follow] Processing follow request from ${followerId} for ${username}`);
 
 	const followersPath = `${FILE_PATHS.ACTORS_DATA_DIR}/${username}/followers.json`;
 	const followersData = storage.read<{ followers: string[] }>(followersPath);
@@ -253,6 +263,9 @@ async function processFollow(activity: ASActivity, username: string, storage: Re
 	if (!followersData.followers.includes(followerId)) {
 		followersData.followers.push(followerId);
 		storage.write(followersPath, followersData, {pretty: true});
+		console.log(`[Follow] Added ${followerId} to followers list`);
+	} else {
+		console.log(`[Follow] ${followerId} already in followers list`);
 	}
 
 	await sendAcceptActivity(activity, username, storage);
@@ -266,14 +279,17 @@ async function sendAcceptActivity(followActivity: ASActivity, username: string, 
 		const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 		const actorId = `${baseUrl}/api/actors/${username}`;
 
+		console.log(`[Accept] Processing follow from: ${followActivity.actor}`);
+
 		const followerResponse = await fetch(followActivity.actor, {
 			headers: {
 				'Accept': 'application/activity+json, application/ld+json',
+				'User-Agent': 'OdyFeed/1.0 (ActivityPub)',
 			},
 		});
 
 		if (!followerResponse.ok) {
-			console.error(`Failed to fetch follower actor: ${followActivity.actor}`);
+			console.error(`[Accept] Failed to fetch follower actor: ${followActivity.actor} - ${followerResponse.status}`);
 			return;
 		}
 
@@ -281,9 +297,11 @@ async function sendAcceptActivity(followActivity: ASActivity, username: string, 
 		const followerInbox = followerActor.inbox;
 
 		if (!followerInbox) {
-			console.error(`No inbox found for follower: ${followActivity.actor}`);
+			console.error(`[Accept] No inbox found for follower: ${followActivity.actor}`);
 			return;
 		}
+
+		console.log(`[Accept] Follower inbox: ${followerInbox}`);
 
 		const acceptActivity = {
 			"@context": "https://www.w3.org/ns/activitystreams",
@@ -296,7 +314,7 @@ async function sendAcceptActivity(followActivity: ASActivity, username: string, 
 		const privateKeyData = storage.read<{ privateKey: string }>(`${FILE_PATHS.ACTORS_DATA_DIR}/${username}/private-key.pem`);
 
 		if (!privateKeyData.privateKey) {
-			console.error(`No private key found for actor: ${username}`);
+			console.error(`[Accept] No private key found for actor: ${username}`);
 			return;
 		}
 
@@ -310,21 +328,29 @@ async function sendAcceptActivity(followActivity: ASActivity, username: string, 
 			body,
 		});
 
+		console.log(`[Accept] Sending Accept activity to ${followerInbox}`);
+		console.log(`[Accept] Signature headers:`, Object.keys(signatureHeaders));
+
 		const response = await fetch(followerInbox, {
 			method: 'POST',
 			headers: {
 				...signatureHeaders,
 				'Content-Type': 'application/activity+json',
 				'Accept': 'application/activity+json',
+				'User-Agent': 'OdyFeed/1.0 (ActivityPub)',
 			},
 			body,
 		});
 
 		if (!response.ok) {
-			console.error(`Failed to send Accept activity to ${followerInbox}: ${response.status} ${response.statusText}`);
+			const errorText = await response.text().catch(() => 'Unable to read error');
+			console.error(`[Accept] Failed to send Accept activity to ${followerInbox}: ${response.status} ${response.statusText}`);
+			console.error(`[Accept] Error response: ${errorText}`);
+		} else {
+			console.log(`[Accept] Successfully sent Accept activity to ${followerInbox}`);
 		}
 	} catch (error) {
-		console.error('Error sending Accept activity:', error);
+		console.error('[Accept] Error sending Accept activity:', error);
 	}
 }
 

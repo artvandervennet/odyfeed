@@ -24,6 +24,7 @@ export default defineEventHandler((event): ASCollection<string> => {
 	const followersUrl = `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWERS(username)}`;
 
 	setHeader(event, 'Content-Type', 'application/activity+json');
+	setHeader(event, 'Access-Control-Allow-Origin', '*');
 
 	if (!page) {
 		return {

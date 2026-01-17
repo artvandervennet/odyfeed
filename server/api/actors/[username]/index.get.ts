@@ -17,5 +17,6 @@ export default defineEventHandler((event): ASActor | void => {
 	}
 
 	setHeader(event, 'Content-Type', 'application/activity+json');
+	setHeader(event, 'Access-Control-Allow-Origin', '*');
 	return storage.read<ASActor>(actorFilePath);
 });

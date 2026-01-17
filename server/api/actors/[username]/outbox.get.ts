@@ -24,6 +24,7 @@ export default defineEventHandler((event): ASCollection<any> => {
 	const actorId = `${baseUrl}${ENDPOINT_PATHS.ACTORS_PROFILE(username)}`;
 
 	setHeader(event, 'Content-Type', 'application/activity+json');
+	setHeader(event, 'Access-Control-Allow-Origin', '*');
 
 	if (!page) {
 		return {

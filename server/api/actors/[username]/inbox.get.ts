@@ -21,6 +21,7 @@ export default defineEventHandler((event): ASCollection<string> => {
 	const inboxUrl = `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(username)}`;
 
 	setHeader(event, 'Content-Type', 'application/activity+json');
+	setHeader(event, 'Access-Control-Allow-Origin', '*');
 
 	if (!page) {
 		return {
