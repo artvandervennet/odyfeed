@@ -23,6 +23,20 @@ export interface ASImage {
   url: string;
 }
 
+export interface WebmentionObject extends ASObject {
+  type: "Webmention";
+  source: string;
+  webmentionType: "comment" | "like" | "mention" | "repost";
+  author?: {
+    type: "Person";
+    name?: string;
+    url?: string;
+    photo?: string;
+  };
+  content?: string;
+  received: string;
+}
+
 export interface ASNote extends ASObject {
   type: "Note";
   attributedTo: string;
@@ -32,6 +46,7 @@ export interface ASNote extends ASObject {
   likes?: ASCollection<string>;
   inReplyTo?: string;
   replies?: ASCollection<string>;
+  webmentions?: ASCollection<WebmentionObject>;
   "myth:aboutEvent"?: string;
 }
 
