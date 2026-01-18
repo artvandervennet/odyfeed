@@ -10,8 +10,11 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@fedify/fedify": "^1.10.0",
+    "@fedify/h3": "^1.10.0",
     "@inrupt/solid-client": "^3.0.0",
     "@inrupt/solid-client-authn-browser": "^3.1.1",
+    "@inrupt/solid-client-authn-node": "^3.1.1",
     "@nuxt/eslint": "1.12.1",
     "@nuxt/ui": "^4.3.0",
     "@pinia/colada": "^0.20.0",
@@ -33,6 +36,8 @@
   "devDependencies": {
     "@iconify-json/heroicons": "^1.2.3",
     "@iconify-json/lucide": "^1.2.82",
+    "@types/localtunnel": "^2.0.4",
+    "localtunnel": "^2.0.2",
     "nitropack": "^2.12.9"
   }
 }
