@@ -72,3 +72,26 @@ export interface PostDetailProps {
   post: EnrichedPost
 }
 
+export interface WebIdMapping {
+  webId: string
+  username: string
+  actorId: string
+  createdAt: string
+  podStorageUrl?: string
+}
+
+export interface UserRegistration {
+  webId: string
+  username: string
+  name?: string
+  avatar?: string
+  summary?: string
+}
+
+export interface LocalUserSession {
+  webId: string
+  username: string
+  actorId: string
+  inbox: string
+  outbox: string
+}
