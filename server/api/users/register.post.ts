@@ -1,12 +1,12 @@
 import { saveSessionWithId, getUserSessionBySessionId } from "~~/server/utils/sessionStorage"
-import { ensurePodContainers, getPodStorageUrl, saveActivityToPod, saveActorProfileToPod, saveTypeIndicesToPod, saveProfileCardToPod, savePrivateKeyToPod, getProfileCardFromPod } from "~~/server/utils/podStorage"
+import { ensurePodContainers, getPodStorageUrl, saveActivityToPod, saveActorProfileToPod, saveTypeIndicesToPod, savePrivateKeyToPod } from "~~/server/utils/podStorage"
 import { parseActors, parseEvents } from "~~/server/utils/rdf"
 import { generatePostsForActor, generatePostActivity } from "~~/server/utils/postGenerator"
 import { createDataStorage } from "~~/server/utils/fileStorage"
 import { ENDPOINT_PATHS, FILE_PATHS, DEFAULTS, POD_CONTAINERS, NAMESPACES, ACTIVITY_TYPES } from "~~/shared/constants"
 import { logInfo, logError } from "~~/server/utils/logger"
 import type { ASActor } from "~~/shared/types/activitypub"
-import { generatePublicTypeIndex, generatePrivateTypeIndex, generateProfileCard } from "~~/server/utils/typeIndexGenerator"
+import { generatePublicTypeIndex, generatePrivateTypeIndex } from "~~/server/utils/typeIndexGenerator"
 import { createActorProfile, validateUsername, extractPodUrlFromWebId } from "~~/server/utils/actorHelpers"
 import { generateActorKeyPair } from "~~/server/utils/crypto"
 
@@ -208,7 +208,7 @@ export default defineEventHandler(async (event) => {
 		const publicTypeIndex = generatePublicTypeIndex(podUrl, [
 			{
 				forClass: `${NAMESPACES.ACTIVITYSTREAMS}Person`,
-				instance: `${podUrl}${POD_CONTAINERS.PROFILE_CARD}`,
+				instance: `${podUrl}${POD_CONTAINERS.ACTIVITYPUB_PROFILE}`,
 			},
 			{
 				forClass: `${NAMESPACES.ACTIVITYSTREAMS}OrderedCollection`,
@@ -232,33 +232,6 @@ export default defineEventHandler(async (event) => {
 			logInfo(`Type indices created for ${username}`)
 		} else {
 			logError(`Failed to create type indices for ${username}`)
-		}
-
-		// Fetch existing profile card to preserve Solid metadata
-		const existingProfileCard = await getProfileCardFromPod(webId, podUrl)
-		if (existingProfileCard) {
-			logInfo(`Retrieved existing profile card for ${username}, will merge with ActivityPub data`)
-		} else {
-			logInfo(`No existing profile card found for ${username}, creating new one`)
-		}
-
-		const profileCardTurtle = generateProfileCard(webId, podUrl, {
-			name: isMatchedActor ? matchingActor.name : (body.name || username),
-			preferredUsername: username,
-			summary: isMatchedActor ? matchingActor.summary : (body.summary || ""),
-			inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(username)}`,
-			outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(username)}`,
-			followers: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWERS(username)}`,
-			following: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(username)}`,
-			icon: isMatchedActor ? matchingActor.icon : (body.avatar ? { type: ACTIVITY_TYPES.IMAGE, url: body.avatar } : undefined),
-			image: isMatchedActor ? matchingActor.image : undefined,
-		}, existingProfileCard)
-
-		const profileCardSaved = await saveProfileCardToPod(webId, podUrl, profileCardTurtle)
-		if (profileCardSaved) {
-			logInfo(`Profile card created at ${profileCardSaved}`)
-		} else {
-			logError(`Failed to create profile card for ${username}`)
 		}
 	} else {
 		logInfo(`Skipping Pod profile/type index creation for ${username} (no valid Pod URL)`)

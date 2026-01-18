@@ -281,3 +281,58 @@ const shortenUri = function (uri: string, prefixes: Map<string, string>): string
 	}
 	return `<${uri}>`
 }
+
+export const generateActivityPubProfile = function (
+	webId: string,
+	podUrl: string,
+	actorData: {
+		name: string
+		preferredUsername: string
+		summary?: string
+		inbox: string
+		outbox: string
+		followers?: string
+		following?: string
+		icon?: { url: string }
+		image?: { url: string }
+	}
+): string {
+	let header = `@prefix foaf: <${NAMESPACES.FOAF}>.
+@prefix as: <${NAMESPACES.ACTIVITYSTREAMS}>.
+@prefix rdf: <${NAMESPACES.RDF}>.
+
+`
+
+	let content = `<#me>\n`
+	content += `    a as:Person;\n`
+	content += `    foaf:name "${actorData.name}";\n`
+	content += `    foaf:nick "${actorData.preferredUsername}";\n`
+
+	if (actorData.summary) {
+		content += `    as:summary "${actorData.summary}";\n`
+	}
+
+	content += `    as:inbox <${actorData.inbox}>;\n`
+	content += `    as:outbox <${actorData.outbox}>;\n`
+
+	if (actorData.followers) {
+		content += `    as:followers <${actorData.followers}>;\n`
+	}
+
+	if (actorData.following) {
+		content += `    as:following <${actorData.following}>;\n`
+	}
+
+	if (actorData.icon) {
+		content += `    foaf:img <${actorData.icon.url}>;\n`
+	}
+
+	if (actorData.image) {
+		content += `    foaf:depiction <${actorData.image.url}>.\n`
+	} else {
+		content = content.slice(0, -2) + '.\n'
+	}
+
+	return header + content
+}
+

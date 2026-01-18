@@ -119,3 +119,75 @@ export const deleteSessionById = async function (sessionId: string): Promise<voi
 	}
 }
 
+// Pending session metadata for surviving server restarts
+const PENDING_SESSION_MAP_PATH = 'sessions/pending-session-map.json'
+
+interface PendingSessionMetadata {
+	cookieSessionId: string
+	inruptSessionId: string
+	issuer: string
+	timestamp: number
+}
+
+interface PendingSessionMap {
+	[cookieSessionId: string]: PendingSessionMetadata
+}
+
+export const savePendingSession = async function (
+	cookieSessionId: string,
+	inruptSessionId: string,
+	issuer: string
+): Promise<void> {
+	const storage = createDataStorage()
+	let map: PendingSessionMap = {}
+
+	if (storage.exists(PENDING_SESSION_MAP_PATH)) {
+		map = storage.read<PendingSessionMap>(PENDING_SESSION_MAP_PATH)
+	}
+
+	map[cookieSessionId] = {
+		cookieSessionId,
+		inruptSessionId,
+		issuer,
+		timestamp: Date.now(),
+	}
+
+	storage.write(PENDING_SESSION_MAP_PATH, map, { pretty: true })
+}
+
+export const getPendingSession = async function (
+	cookieSessionId: string
+): Promise<PendingSessionMetadata | null> {
+	const storage = createDataStorage()
+
+	if (!storage.exists(PENDING_SESSION_MAP_PATH)) {
+		return null
+	}
+
+	const map = storage.read<PendingSessionMap>(PENDING_SESSION_MAP_PATH)
+	const metadata = map[cookieSessionId]
+
+	if (!metadata) {
+		return null
+	}
+
+	// Check if session is expired (older than 10 minutes)
+	const TEN_MINUTES = 10 * 60 * 1000
+	if (Date.now() - metadata.timestamp > TEN_MINUTES) {
+		return null
+	}
+
+	return metadata
+}
+
+export const deletePendingSession = async function (cookieSessionId: string): Promise<void> {
+	const storage = createDataStorage()
+
+	if (!storage.exists(PENDING_SESSION_MAP_PATH)) {
+		return
+	}
+
+	const map = storage.read<PendingSessionMap>(PENDING_SESSION_MAP_PATH)
+	delete map[cookieSessionId]
+	storage.write(PENDING_SESSION_MAP_PATH, map, { pretty: true })
+}

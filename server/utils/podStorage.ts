@@ -188,7 +188,7 @@ export const saveActorProfileToPod = async function (
 	}
 
 	try {
-		const profileUrl = `${podUrl}${POD_CONTAINERS.PROFILE_CARD}`
+		const profileUrl = `${podUrl}${POD_CONTAINERS.ACTIVITYPUB_PROFILE}`
 		const profileJson = JSON.stringify(actorProfile, null, 2)
 
 		const response = await authenticatedFetch(profileUrl, {
@@ -207,7 +207,7 @@ export const saveActorProfileToPod = async function (
 			return null
 		}
 	} catch (error) {
-		logError(`Failed to save actor profile to Pod: ${podUrl}${POD_CONTAINERS.PROFILE_CARD}`, error)
+		logError(`Failed to save actor profile to Pod: ${podUrl}${POD_CONTAINERS.ACTIVITYPUB_PROFILE}`, error)
 		return null
 	}
 }
@@ -310,6 +310,57 @@ export const saveProfileCardToPod = async function (
 
 	if (saved) {
 		return profileCardUrl
+	}
+
+	return null
+}
+
+export const getActivityPubProfileFromPod = async function (
+	webId: string,
+	podUrl: string
+): Promise<string | null> {
+	const authenticatedFetch = await getAuthenticatedFetch(webId)
+	if (!authenticatedFetch) {
+		logError(`Cannot authenticate for WebID: ${webId}`)
+		return null
+	}
+
+	try {
+		const activityPubProfileUrl = `${podUrl}${POD_CONTAINERS.ACTIVITYPUB_PROFILE}`
+		const response = await authenticatedFetch(activityPubProfileUrl, {
+			headers: {
+				'Accept': 'text/turtle',
+			},
+		})
+
+		if (response.ok) {
+			const turtleContent = await response.text()
+			logInfo(`Retrieved ActivityPub profile from Pod: ${activityPubProfileUrl}`)
+			return turtleContent
+		} else if (response.status === 404) {
+			logInfo(`No existing ActivityPub profile found at ${activityPubProfileUrl}`)
+			return null
+		} else {
+			logError(`Failed to retrieve ActivityPub profile: ${response.status} ${response.statusText}`)
+			return null
+		}
+	} catch (error) {
+		logError(`Error retrieving ActivityPub profile from ${podUrl}`, error)
+		return null
+	}
+}
+
+export const saveActivityPubProfileToPod = async function (
+	webId: string,
+	podUrl: string,
+	activityPubProfileTurtle: string
+): Promise<string | null> {
+	const activityPubProfileUrl = `${podUrl}${POD_CONTAINERS.ACTIVITYPUB_PROFILE}`
+	const saved = await saveTurtleFileToPod(webId, activityPubProfileUrl, activityPubProfileTurtle)
+
+	if (saved) {
+		logInfo(`ActivityPub profile saved to Pod: ${activityPubProfileUrl}`)
+		return activityPubProfileUrl
 	}
 
 	return null

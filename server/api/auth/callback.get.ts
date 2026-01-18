@@ -1,9 +1,9 @@
 import { Session } from '@inrupt/solid-client-authn-node'
-import { saveSessionWithId } from '~~/server/utils/sessionStorage'
+import { saveSessionWithId, getPendingSession, deletePendingSession } from '~~/server/utils/sessionStorage'
 import { getSessionCookie, setSessionCookie, generateSessionId } from '~~/server/utils/sessionCookie'
 import { logInfo, logError, logDebug } from '~~/server/utils/logger'
 import { getSharedSolidStorage } from '~~/server/utils/solidStorage'
-import { pendingSessions } from './login.get'
+import { pendingSessions, pendingInruptSessionIds } from './login.get'
 import { storeActiveSessionWithId } from '~~/server/utils/solidSession'
 
 const activeSessions = new Map<string, Session>()
@@ -16,17 +16,61 @@ export default defineEventHandler(async (event) => {
 	const storage = getSharedSolidStorage()
 
 	let session: Session
+	let existingInruptSessionId: string | undefined
 
 	// Try to recover pending session from memory
 	if (tempSessionId && pendingSessions.has(tempSessionId)) {
 		session = pendingSessions.get(tempSessionId)!
+		existingInruptSessionId = pendingInruptSessionIds.get(tempSessionId)
 		pendingSessions.delete(tempSessionId)
-		logInfo(`[Auth] Recovered pending session from memory: ${tempSessionId}`)
+		pendingInruptSessionIds.delete(tempSessionId)
+		logInfo(`[Auth] ✅ Recovered pending session from memory: ${tempSessionId}`)
+		if (existingInruptSessionId) {
+			logInfo(`[Auth] Using existing Inrupt session ID: ${existingInruptSessionId}`)
+		}
+
+		// Clean up persisted metadata
+		await deletePendingSession(tempSessionId)
+	} else if (tempSessionId) {
+		// Fallback: Try to recover from disk (for server restarts)
+		const pendingMetadata = await getPendingSession(tempSessionId)
+
+		if (pendingMetadata) {
+			logInfo(`[Auth] ✅ Recovered pending session from disk: ${tempSessionId}`)
+			logInfo(`[Auth] Inrupt session ID from disk: ${pendingMetadata.inruptSessionId}`)
+
+			existingInruptSessionId = pendingMetadata.inruptSessionId
+
+			// Create session with the SAME storage that has the DPoP keys
+			session = new Session({ storage, keepAlive: true })
+
+			// Clean up after successful recovery
+			await deletePendingSession(tempSessionId)
+		} else {
+			// No session found at all - this will likely fail
+			session = new Session({ storage, keepAlive: true })
+			logError(`[Auth] ⚠️ No pending session found in memory or disk`)
+			logError(`[Auth] Cookie session ID: ${tempSessionId}`)
+			logError(`[Auth] WARNING: DPoP binding will likely fail - "accountId mismatch" error expected`)
+		}
 	} else {
 		// Create new session with persistent storage
-		// The handleIncomingRedirect will populate it with tokens
-		session = new Session({ storage })
+		// IMPORTANT: Use the SAME storage instance to maintain DPoP keys
+		session = new Session({ storage, keepAlive: true })
 		logInfo(`[Auth] Created new session with persistent storage`)
+		logInfo(`[Auth] WARNING: No session cookie found - DPoP binding may fail`)
+	}
+
+	// Verify DPoP keys are available in storage
+	if (existingInruptSessionId) {
+		const dpopKeyStorageKey = `solidClientAuthenticationUser:${existingInruptSessionId}:dpopKey`
+		const hasDpopKey = await storage.get(dpopKeyStorageKey)
+		logInfo(`[Auth] DPoP key in storage: ${hasDpopKey ? '✅ FOUND' : '❌ MISSING'}`)
+
+		if (!hasDpopKey) {
+			logError(`[Auth] CRITICAL: DPoP key missing for session ${existingInruptSessionId}`)
+			logError(`[Auth] This will likely cause "accountId mismatch" error from Solid Pod`)
+		}
 	}
 
 	// Listen for token refresh events

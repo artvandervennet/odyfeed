@@ -61,6 +61,7 @@ export const POD_CONTAINERS = {
   SOCIAL: "social/",
   PROFILE: "profile/",
   PROFILE_CARD: "profile/card",
+  ACTIVITYPUB_PROFILE: "profile/activitypub",
   INBOX: "social/inbox/",
   OUTBOX: "social/outbox/",
   FOLLOWERS: "social/followers/",

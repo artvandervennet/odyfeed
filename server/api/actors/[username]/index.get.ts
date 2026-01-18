@@ -17,8 +17,8 @@ export default defineEventHandler(async (event) => {
 		const { webId, podUrl } = userMapping
 
 		try {
-			const profileCardUrl = `${podUrl}${POD_CONTAINERS.PROFILE_CARD}`
-			const profileData = await getActivityFromPod(webId, profileCardUrl)
+			const activityPubProfileUrl = `${podUrl}${POD_CONTAINERS.ACTIVITYPUB_PROFILE}`
+			const profileData = await getActivityFromPod(webId, activityPubProfileUrl)
 
 			if (profileData && profileData.id) {
 				logInfo(`Retrieved actor profile from Pod for ${username}`)

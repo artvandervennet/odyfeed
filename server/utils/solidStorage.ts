@@ -36,7 +36,16 @@ class SolidPersistentStorage implements IStorage {
 			}
 
 			const data = this.storage.read<{ value: string }>(filePath)
-			logDebug(`[SolidStorage] Retrieved key: ${key}`)
+
+			// Enhanced logging for critical keys
+			if (key.includes('dpopKey')) {
+				logInfo(`[SolidStorage] ✅ Retrieved DPoP key for session`)
+			} else if (key.includes('solidClientAuthenticationUser')) {
+				logDebug(`[SolidStorage] Retrieved session data: ${key}`)
+			} else {
+				logDebug(`[SolidStorage] Retrieved key: ${key}`)
+			}
+
 			return data.value
 		} catch (error) {
 			logError(`[SolidStorage] Error reading key ${key}`, error)
@@ -49,7 +58,15 @@ class SolidPersistentStorage implements IStorage {
 
 		try {
 			this.storage.write(filePath, { value }, { pretty: false })
-			logDebug(`[SolidStorage] Stored key: ${key}`)
+
+			// Enhanced logging for critical keys
+			if (key.includes('dpopKey')) {
+				logInfo(`[SolidStorage] ✅ Stored DPoP key for session`)
+			} else if (key.includes('solidClientAuthenticationUser')) {
+				logDebug(`[SolidStorage] Stored session data: ${key}`)
+			} else {
+				logDebug(`[SolidStorage] Stored key: ${key}`)
+			}
 		} catch (error) {
 			logError(`[SolidStorage] Error storing key ${key}`, error)
 			throw error
