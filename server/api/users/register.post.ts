@@ -1,5 +1,5 @@
 import { saveSessionWithId, getUserSessionBySessionId } from "~~/server/utils/sessionStorage"
-import { ensurePodContainers, getPodStorageUrl, saveActivityToPod, saveActorProfileToPod, saveTypeIndicesToPod, saveProfileCardToPod, savePrivateKeyToPod } from "~~/server/utils/podStorage"
+import { ensurePodContainers, getPodStorageUrl, saveActivityToPod, saveActorProfileToPod, saveTypeIndicesToPod, saveProfileCardToPod, savePrivateKeyToPod, getProfileCardFromPod } from "~~/server/utils/podStorage"
 import { parseActors, parseEvents } from "~~/server/utils/rdf"
 import { generatePostsForActor, generatePostActivity } from "~~/server/utils/postGenerator"
 import { createDataStorage } from "~~/server/utils/fileStorage"
@@ -234,6 +234,14 @@ export default defineEventHandler(async (event) => {
 			logError(`Failed to create type indices for ${username}`)
 		}
 
+		// Fetch existing profile card to preserve Solid metadata
+		const existingProfileCard = await getProfileCardFromPod(webId, podUrl)
+		if (existingProfileCard) {
+			logInfo(`Retrieved existing profile card for ${username}, will merge with ActivityPub data`)
+		} else {
+			logInfo(`No existing profile card found for ${username}, creating new one`)
+		}
+
 		const profileCardTurtle = generateProfileCard(webId, podUrl, {
 			name: isMatchedActor ? matchingActor.name : (body.name || username),
 			preferredUsername: username,
@@ -244,7 +252,7 @@ export default defineEventHandler(async (event) => {
 			following: `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(username)}`,
 			icon: isMatchedActor ? matchingActor.icon : (body.avatar ? { type: ACTIVITY_TYPES.IMAGE, url: body.avatar } : undefined),
 			image: isMatchedActor ? matchingActor.image : undefined,
-		})
+		}, existingProfileCard)
 
 		const profileCardSaved = await saveProfileCardToPod(webId, podUrl, profileCardTurtle)
 		if (profileCardSaved) {

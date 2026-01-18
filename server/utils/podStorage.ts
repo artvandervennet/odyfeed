@@ -265,6 +265,41 @@ export const saveTypeIndicesToPod = async function (
 	return false
 }
 
+export const getProfileCardFromPod = async function (
+	webId: string,
+	podUrl: string
+): Promise<string | null> {
+	const authenticatedFetch = await getAuthenticatedFetch(webId)
+	if (!authenticatedFetch) {
+		logError(`Cannot authenticate for WebID: ${webId}`)
+		return null
+	}
+
+	try {
+		const profileCardUrl = `${podUrl}${POD_CONTAINERS.PROFILE_CARD}`
+		const response = await authenticatedFetch(profileCardUrl, {
+			headers: {
+				'Accept': 'text/turtle',
+			},
+		})
+
+		if (response.ok) {
+			const turtleContent = await response.text()
+			logInfo(`Retrieved profile card from Pod: ${profileCardUrl}`)
+			return turtleContent
+		} else if (response.status === 404) {
+			logInfo(`No existing profile card found at ${profileCardUrl}`)
+			return null
+		} else {
+			logError(`Failed to retrieve profile card: ${response.status} ${response.statusText}`)
+			return null
+		}
+	} catch (error) {
+		logError(`Error retrieving profile card from ${podUrl}`, error)
+		return null
+	}
+}
+
 export const saveProfileCardToPod = async function (
 	webId: string,
 	podUrl: string,
