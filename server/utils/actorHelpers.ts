@@ -1,6 +1,8 @@
 import type { ASActor } from "~~/shared/types/activitypub"
-import { ENDPOINT_PATHS, ACTIVITYPUB_CONTEXT, ACTIVITY_TYPES } from "~~/shared/constants"
+import { ENDPOINT_PATHS, ACTIVITYPUB_CONTEXT, ACTIVITY_TYPES, FILE_PATHS } from "~~/shared/constants"
 import type { MythActor } from "~~/shared/types/activitypub"
+import { createDataStorage } from "./fileStorage"
+import { logError } from "./logger"
 
 interface ActorProfileData {
 	username: string
@@ -11,6 +13,16 @@ interface ActorProfileData {
 	avatar?: string
 	name?: string
 	summary?: string
+}
+
+interface UserMapping {
+	username: string
+	actorId: string
+	createdAt: string
+}
+
+interface WebIdMappings {
+	[webId: string]: UserMapping
 }
 
 export const createActorProfile = function (data: ActorProfileData): ASActor {
@@ -52,3 +64,33 @@ export const extractPodUrlFromWebId = function (webId: string): string {
 	const webIdUrl = new URL(webId)
 	return `${webIdUrl.protocol}//${webIdUrl.host}/`
 }
+
+export const getWebIdFromUsername = function (username: string): { webId: string; podUrl: string; actorId: string } | null {
+	try {
+		const storage = createDataStorage()
+		const mappingsPath = FILE_PATHS.WEBID_MAPPINGS
+
+		if (!storage.exists(mappingsPath)) {
+			return null
+		}
+
+		const mappings = storage.read<WebIdMappings>(mappingsPath)
+
+		for (const [webId, mapping] of Object.entries(mappings)) {
+			if (mapping.username === username) {
+				const podUrl = extractPodUrlFromWebId(webId)
+				return {
+					webId,
+					podUrl,
+					actorId: mapping.actorId,
+				}
+			}
+		}
+
+		return null
+	} catch (error) {
+		logError(`Failed to get webId for username: ${username}`, error)
+		return null
+	}
+}
+

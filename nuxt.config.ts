@@ -25,6 +25,7 @@ export default defineNuxtConfig({
 
 	runtimeConfig: {
 		openaiApiKey: process.env.OPENAI_API_KEY,
+		activitypubPageSize: process.env.ACTIVITYPUB_PAGE_SIZE || '20',
 		public: {
 			baseUrl: process.env.BASE_URL || 'http://localhost:3000',
 			podProvider: process.env.POD_PROVIDER || 'https://vandervennet.art'
