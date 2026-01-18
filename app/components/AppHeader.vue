@@ -1,27 +1,24 @@
 <script setup lang="ts">
 import {useAuthStore} from '~/stores/authStore';
-import { useSolidAuth } from '~/composables/useSolidAuth';
 
 const auth = useAuthStore();
-const solidAuth = useSolidAuth();
 const colorMode = useColorMode();
 
 const needsRegistration = computed(() => {
-  return solidAuth.isLoggedIn.value && !auth.localUser;
+	return auth.isAuthenticated && !auth.isLoggedIn
 });
 
 const isDark = computed({
-  get() {
-    return colorMode.value === 'dark'
-  },
-  set(_isDark) {
-    colorMode.preference = _isDark ? 'dark' : 'light'
-  }
+	get() {
+		return colorMode.value === 'dark'
+	},
+	set(_isDark) {
+		colorMode.preference = _isDark ? 'dark' : 'light'
+	}
 })
 
 const logout = async function () {
-  await auth.logout();
-  navigateTo('/');
+	await auth.logout();
 };
 </script>
 
@@ -61,8 +58,7 @@ const logout = async function () {
                 ]
               ]"
             >
-              <UButton
-              variant="ghost">
+              <UButton variant="ghost">
                 <UAvatar
                     :src="auth.userProfile?.avatar || undefined"
                     :alt="auth.userProfile?.name || auth.userProfile?.preferredUsername || 'User'"
@@ -70,13 +66,22 @@ const logout = async function () {
                     class="cursor-pointer ring-1 ring-gray-200 dark:ring-gray-800 hover:ring-primary-500 transition-all"
                 />
               </UButton>
-
-
             </UDropdownMenu>
           </template>
 
-          <RegistrationModal v-if="needsRegistration"/>
-          <LoginModal v-else-if="!solidAuth.isLoggedIn.value"/>
+          <template v-else-if="needsRegistration">
+            <UButton
+                label="Complete Profile"
+                icon="i-heroicons-user-plus"
+                size="sm"
+                color="primary"
+                to="/register"
+            />
+          </template>
+
+          <template v-else>
+            <LoginModal />
+          </template>
 
         </div>
       </div>

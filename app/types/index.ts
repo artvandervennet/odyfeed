@@ -95,3 +95,36 @@ export interface LocalUserSession {
   inbox: string
   outbox: string
 }
+
+export interface BackendAuthStatus {
+  authenticated: boolean
+  webId: string | null
+  username: string | null
+  hasValidToken: boolean
+  podUrl: string | null
+}
+
+export interface UserData {
+  username: string
+  actorId: string
+}
+
+export interface RegisterUserPayload {
+  username: string
+  name?: string
+  summary?: string
+}
+
+export interface RegisterUserResponse {
+  username: string
+  actorId: string
+  inbox: string
+  outbox: string
+}
+
+export interface UserProfile {
+  preferredUsername?: string
+  name?: string
+  avatar?: string
+  summary?: string
+}

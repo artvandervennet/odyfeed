@@ -2,23 +2,23 @@
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '~/stores/authStore';
 
+definePageMeta({
+	name: 'setup'
+})
+
 const auth = useAuthStore();
+const router = useRouter();
 
 const showLoginModal = ref(false);
-const showRegistrationModal = ref(false);
 const validationError = ref<string | null>(null);
-const isAuthenticatedButNotRegistered = ref(false);
 const isCheckingAuth = ref(true);
 
 const showLoginPrompt = computed(() => {
-	// Don't show login prompt while checking auth
 	if (isCheckingAuth.value) return false;
-	// Show login if not authenticated and not in registration flow
-	return !auth.isLoggedIn && !isAuthenticatedButNotRegistered.value;
+	return !auth.isLoggedIn && !auth.isAuthenticated;
 });
 
 const showSuccessMessage = computed(() => {
-	// Show success if logged in (has username)
 	return auth.isLoggedIn && auth.username;
 });
 
@@ -32,35 +32,19 @@ onMounted(async () => {
 		return;
 	}
 
-	// Always check backend auth status on mount
 	console.log('[Setup] Checking authentication status...')
 
 	try {
-		const backendStatus = await $fetch('/api/auth/status')
-		console.log('[Setup] Backend status:', backendStatus)
+		await auth.initSession()
 
-		// @ts-ignore - backendStatus has dynamic properties
-		if (backendStatus.authenticated && backendStatus.webId) {
-			// User is authenticated on backend
-
-			// @ts-ignore
-			if (backendStatus.username) {
-				// Already registered - reload auth store to sync
-				console.log('[Setup] User already registered, syncing auth store...')
-				await auth.initSession()
-				isCheckingAuth.value = false
-			} else {
-				// Authenticated but not registered
-				console.log('[Setup] User authenticated but not registered, showing registration form')
-				isAuthenticatedButNotRegistered.value = true
-				showRegistrationModal.value = true
-				isCheckingAuth.value = false
-			}
+		if (auth.isAuthenticated && !auth.isLoggedIn) {
+			console.log('[Setup] User authenticated but not registered, redirecting to /register')
+			await router.push('/register')
 		} else {
-			// Not authenticated
-			console.log('[Setup] No backend authentication found')
-			isCheckingAuth.value = false
+			console.log('[Setup] Auth check complete')
 		}
+
+		isCheckingAuth.value = false
 	} catch (error) {
 		console.error('[Setup] Failed to check auth status:', error)
 		isCheckingAuth.value = false
@@ -149,32 +133,9 @@ onMounted(async () => {
 						</UButton>
 					</div>
 				</UCard>
-
-				<!-- Authenticated but not registered - show registration form via modal -->
-				<UCard v-else-if="isAuthenticatedButNotRegistered">
-					<div class="text-center py-8">
-						<UIcon name="i-heroicons-user-plus" class="w-12 h-12 mx-auto text-primary-500 mb-4" />
-						<h2 class="text-xl font-semibold mb-2">Almost there!</h2>
-						<p class="text-gray-500 dark:text-gray-400 mb-4">
-							Complete your profile to start using OdyFeed.
-						</p>
-						<p class="text-sm text-gray-600 dark:text-gray-300">
-							The registration form should appear automatically.
-							If it doesn't, click the button below.
-						</p>
-						<UButton
-							class="mt-4"
-							icon="i-heroicons-pencil-square"
-							@click="showRegistrationModal = true"
-						>
-							Open Registration Form
-						</UButton>
-					</div>
-				</UCard>
 			</div>
 		</UContainer>
 
 		<LoginModal v-model="showLoginModal" />
-		<RegistrationModal v-model="showRegistrationModal" />
 	</div>
 </template>
