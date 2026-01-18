@@ -10,33 +10,34 @@ function getBaseUrl() {
 	return process.env.BASE_URL || DEFAULTS.BASE_URL;
 }
 
-function parseTurtleFile(filename: string): Map<string, Map<string, any>> {
-	const path = resolve(process.cwd(), "public", filename);
-	const fileContent = readFileSync(path, "utf-8");
+function parseTurtleFile(filename: string): Map<string, Map<string, string | string[]>> {
+	const filePath = resolve(process.cwd(), "public", filename);
+	const content = readFileSync(filePath, "utf-8");
 	const parser = new Parser();
-	const quads = parser.parse(fileContent);
-	const resources = new Map<string, Map<string, any>>();
+	const quads = parser.parse(content);
+
+	const resources = new Map<string, Map<string, string | string[]>>();
 
 	for (const quad of quads) {
 		const subject = quad.subject.value;
+		const predicate = quad.predicate.value.split("#").pop() || quad.predicate.value.split("/").pop();
+		const object = quad.object.value;
+
 		if (!resources.has(subject)) {
 			resources.set(subject, new Map());
 		}
-		const resource = resources.get(subject)!;
-		const predicateKey = quad.predicate.value.split("#").pop() || quad.predicate.value;
-		const objectValue = quad.object.termType === "Literal"
-			? quad.object.value
-			: quad.object.value;
 
-		if (resource.has(predicateKey)) {
-			const existing = resource.get(predicateKey);
-			if (Array.isArray(existing)) {
-				existing.push(objectValue);
+		const predicateMap = resources.get(subject)!;
+		const existingValue = predicateMap.get(predicate!);
+
+		if (existingValue) {
+			if (Array.isArray(existingValue)) {
+				existingValue.push(object);
 			} else {
-				resource.set(predicateKey, [existing, objectValue]);
+				predicateMap.set(predicate!, [existingValue, object]);
 			}
 		} else {
-			resource.set(predicateKey, objectValue);
+			predicateMap.set(predicate!, object);
 		}
 	}
 
@@ -50,9 +51,11 @@ export function parseActors(): MythActor[] {
 
 	for (const [subject, predicates] of resources.entries()) {
 		const username = subject.split("/").pop() || subject;
+
 		const name = predicates.get("name") as string;
 		const tone = predicates.get("tone") as string;
 		const avatar = predicates.get("avatar") as string;
+
 
 		actors.push({
 			id: `${baseUrl}${ENDPOINT_PATHS.ACTORS_PROFILE(username)}`,
