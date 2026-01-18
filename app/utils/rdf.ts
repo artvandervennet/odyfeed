@@ -16,7 +16,6 @@ export function parseEvents(): Event[] {
 
 	const eventMap: Record<string, Partial<Event>> = {};
 
-	console.log(quads)
 
 	for (const quad of quads) {
 		const subject = quad.subject.value;

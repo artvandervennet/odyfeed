@@ -73,7 +73,7 @@ export const fetchAndParseMicroformats = async function (
       published,
     }
   } catch (error) {
-    console.error('Error fetching microformats:', error)
+    logError('Error fetching microformats:', error)
     return null
   }
 }

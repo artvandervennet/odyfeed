@@ -9,7 +9,6 @@ export default defineEventHandler((event) => {
 		setHeader(event, "Content-Type", "text/turtle; charset=utf-8");
 		return content;
 	} catch (error) {
-		console.error("Error loading events:", error);
 		throw createError({
 			statusCode: 500,
 			statusMessage: "Failed to load events",

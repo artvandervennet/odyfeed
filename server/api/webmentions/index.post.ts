@@ -173,7 +173,7 @@ const extractPostPath = function (targetUrl: string): string | null {
 
     return `${FILE_PATHS.POSTS_DIR}/${username}/${statusId}.jsonld`
   } catch (error) {
-    console.error('Error parsing post URL:', error)
+    logError('Error parsing post URL:', error)
     return null
   }
 }

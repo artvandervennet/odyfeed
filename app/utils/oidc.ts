@@ -42,11 +42,8 @@ export const discoverOIDCConfiguration = async function (issuer: string): Promis
 		if (!response.ok) {
 			throw new Error(`Failed to fetch OIDC configuration: ${response.statusText}`);
 		}
-		const res = await response.json();
-		console.log('OIDC configuration discovered:', res);
-		return res;
+		return await response.json();
 	} catch (error) {
-		console.error('OIDC discovery failed:', error);
 		throw new Error(`Failed to discover OIDC configuration for ${issuer}`);
 	}
 };
@@ -62,7 +59,6 @@ export const parseJWT = function (token: string): { webId?: string; sub?: string
 		const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
 		return JSON.parse(decoded);
 	} catch (error) {
-		console.error('Failed to parse JWT:', error);
 		return {};
 	}
 };
