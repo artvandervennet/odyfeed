@@ -1,7 +1,15 @@
 import { requireAuth } from "~~/server/utils/authHelpers"
-import { validateActorParams, fetchUserMapping, buildCollection, buildCollectionPage, validatePageParam, setActivityPubHeaders } from "~~/server/utils/actorEndpointHelpers"
-import { listActivitiesFromPod } from "~~/server/utils/podStorage"
-import { POD_CONTAINERS, ENDPOINT_PATHS, DEFAULTS } from "~~/shared/constants"
+import {
+	validateActorParams,
+	fetchUserMapping,
+	buildCollection,
+	validatePageParam,
+	setActivityPubHeaders,
+	extractStatusIdFromPodUrl,
+	transformActivityUrls
+} from "~~/server/utils/actorEndpointHelpers"
+import { listActivitiesFromPod, getActivityFromPod } from "~~/server/utils/podStorage"
+import { POD_CONTAINERS, ENDPOINT_PATHS } from "~~/shared/constants"
 import { logError } from "~~/server/utils/logger"
 
 export default defineEventHandler(async (event) => {
@@ -18,8 +26,9 @@ export default defineEventHandler(async (event) => {
 	const { podUrl } = fetchUserMapping(username)
 
 	const pageParam = getQuery(event).page as string | undefined
-	const pageSize = parseInt(process.env.ACTIVITYPUB_PAGE_SIZE || '20', 10)
-	const baseUrl = process.env.BASE_URL || DEFAULTS.BASE_URL
+	const config = useRuntimeConfig()
+	const pageSize = parseInt(config.activitypubPageSize as string, 10) || 20
+	const baseUrl = config.public.baseUrl
 	const inboxUrl = `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(username)}`
 
 	try {
@@ -43,14 +52,34 @@ export default defineEventHandler(async (event) => {
 			return collection
 		}
 
-		const { pageItems, hasNext, hasPrev } = buildCollectionPage(inboxUrl, activityUrls, page, pageSize)
+		const startIndex = (page - 1) * pageSize
+		const endIndex = startIndex + pageSize
+		const pageUrls = activityUrls.slice(startIndex, endIndex)
+		const hasNext = endIndex < totalItems
+		const hasPrev = page > 1
+
+		const activities = []
+		for (const activityUrl of pageUrls) {
+			try {
+				const activity = await getActivityFromPod(webId, activityUrl)
+				if (activity) {
+					const statusId = extractStatusIdFromPodUrl(activityUrl)
+					const transformedActivity = transformActivityUrls(activity, baseUrl, username, statusId)
+					activities.push(transformedActivity)
+				} else {
+					logError(`Failed to fetch activity from Pod: ${activityUrl}`)
+				}
+			} catch (error) {
+				logError(`Error fetching activity ${activityUrl}`, error)
+			}
+		}
 
 		const collectionPage = buildCollection({
 			id: `${inboxUrl}?page=${page}`,
 			type: 'OrderedCollectionPage',
 			totalItems,
 			partOf: inboxUrl,
-			orderedItems: pageItems,
+			orderedItems: activities as any,
 			next: hasNext ? `${inboxUrl}?page=${page + 1}` : undefined,
 			prev: hasPrev ? `${inboxUrl}?page=${page - 1}` : undefined,
 		})

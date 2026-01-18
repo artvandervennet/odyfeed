@@ -21,7 +21,7 @@ export interface CollectionOptions {
 	totalItems: number
 	first?: string
 	partOf?: string
-	orderedItems?: string[]
+	orderedItems?: string[] | any[]
 	next?: string
 	prev?: string
 }
@@ -60,10 +60,10 @@ export const fetchUserMapping = function (username: string): UserMapping {
 	return userMapping
 }
 
-export const buildCollection = function (options: CollectionOptions): ASCollection<string> {
+export const buildCollection = function (options: CollectionOptions): ASCollection<string | any> {
 	const { context, id, type, totalItems, first, partOf, orderedItems, next, prev } = options
 
-	const collection: ASCollection<string> = {
+	const collection: ASCollection<string | any> = {
 		'@context': context || (ACTIVITYPUB_CONTEXT as unknown as string),
 		id,
 		type,
@@ -114,3 +114,38 @@ export const setActivityPubHeaders = function (event: H3Event, cacheMaxAge = 300
 	setHeader(event, 'Content-Type', 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"')
 	setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}`)
 }
+
+export const extractStatusIdFromPodUrl = function (podUrl: string): string {
+	const parts = podUrl.split('/')
+	const filename = parts[parts.length - 1]
+	return filename.replace('.json', '')
+}
+
+export const buildActivityUrl = function (baseUrl: string, username: string, statusId: string): string {
+	return `${baseUrl}/api/actors/${username}/status/${statusId}`
+}
+
+export const transformActivityUrls = function (
+	activity: any,
+	baseUrl: string,
+	username: string,
+	statusId: string
+): any {
+	const activityUrl = buildActivityUrl(baseUrl, username, statusId)
+
+	const transformedActivity = {
+		...activity,
+		id: `${activityUrl}/activity`,
+	}
+
+	if (transformedActivity.object && typeof transformedActivity.object === 'object') {
+		transformedActivity.object = {
+			...transformedActivity.object,
+			id: activityUrl,
+			url: activityUrl,
+		}
+	}
+
+	return transformedActivity
+}
+
