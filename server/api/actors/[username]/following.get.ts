@@ -8,9 +8,8 @@ export default defineEventHandler(async (event) => {
 	const { webId, podUrl } = fetchUserMapping(username)
 
 	const pageParam = getQuery(event).page as string | undefined
-	const config = useRuntimeConfig()
-	const pageSize = parseInt(config.activitypubPageSize as string, 10) || 20
-	const baseUrl = config.public.baseUrl
+	const pageSize = parseInt(process.env.ACTIVITYPUB_PAGE_SIZE || '20', 10)
+	const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
 	const followingUrl = `${baseUrl}${ENDPOINT_PATHS.ACTORS_FOLLOWING(username)}`
 
 	try {

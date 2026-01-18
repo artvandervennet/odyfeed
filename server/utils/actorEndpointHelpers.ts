@@ -135,7 +135,7 @@ export const transformActivityUrls = function (
 
 	const transformedActivity = {
 		...activity,
-		id: `${activityUrl}/activity`,
+		id: `${activityUrl}`,
 	}
 
 	if (transformedActivity.object && typeof transformedActivity.object === 'object') {
