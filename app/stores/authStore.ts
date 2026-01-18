@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Mutations
   const registerMutation = useRegisterMutation()
-  const { mutate: logoutMutate } = useLogoutMutation()
+  const logoutMutation = useLogoutMutation()
 
   // Computed
   const isLoggedIn = computed<boolean>(() => !!localUser.value?.username)
@@ -129,7 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async function (): Promise<void> {
     try {
-      logoutMutate()
+      await logoutMutation.mutateAsync()
     } catch (error) {
       console.error('[Auth] Logout error:', error)
       localUser.value = null
