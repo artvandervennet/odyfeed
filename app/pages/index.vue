@@ -2,6 +2,8 @@
 import { useTimelineQuery } from "~/queries/timeline"
 
 const { data: timeline, isLoading } = useTimelineQuery()
+
+const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.origin : '')
 </script>
 
 <template>
@@ -10,7 +12,7 @@ const { data: timeline, isLoading } = useTimelineQuery()
       <div class="mb-8 h-card">
         <h1 class="p-name text-3xl font-bold mb-2">Timeline</h1>
         <p class="p-note text-gray-500 dark:text-gray-400">The story of the Odysee, told through the eyes of its actors.</p>
-        <a :href="useRuntimeConfig().public.baseUrl" class="u-url hidden" rel="me">OdyFeed</a>
+        <a :href="baseUrl" class="u-url hidden" rel="me">OdyFeed</a>
       </div>
 
       <div v-if="isLoading && !timeline" class="space-y-4">

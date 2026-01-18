@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useQuery } from '@pinia/colada'
 import { usePostQuery } from '~/queries/post'
 import { fetchActor } from '~/api/actors'
 import type { EnrichedPost, MythActor } from '~~/shared/types/activitypub'
@@ -23,9 +24,9 @@ const enrichedPost = computed(() => {
   } as EnrichedPost
 })
 
-const config = useRuntimeConfig()
+const baseUrl = window?.location.origin || ''
 const postUrl = computed(() => {
-  return `${config.public.baseUrl}/actors/${username}/status/${statusId}`
+  return `${baseUrl}/actors/${username}/status/${statusId}`
 })
 
 useHead({
@@ -33,7 +34,7 @@ useHead({
   link: [
     {
       rel: 'webmention',
-      href: `${config.public.baseUrl}/api/webmention`,
+      href: `${baseUrl}/api/webmention`,
     },
   ],
   meta: [

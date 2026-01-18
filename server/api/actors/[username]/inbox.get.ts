@@ -1,7 +1,7 @@
 import { requireAuth } from "~~/server/utils/authHelpers"
 import { validateActorParams, fetchUserMapping, buildCollection, buildCollectionPage, validatePageParam, setActivityPubHeaders } from "~~/server/utils/actorEndpointHelpers"
 import { listActivitiesFromPod } from "~~/server/utils/podStorage"
-import { POD_CONTAINERS, ENDPOINT_PATHS } from "~~/shared/constants"
+import { POD_CONTAINERS, ENDPOINT_PATHS, DEFAULTS } from "~~/shared/constants"
 import { logError } from "~~/server/utils/logger"
 
 export default defineEventHandler(async (event) => {
@@ -18,9 +18,8 @@ export default defineEventHandler(async (event) => {
 	const { podUrl } = fetchUserMapping(username)
 
 	const pageParam = getQuery(event).page as string | undefined
-	const config = useRuntimeConfig()
-	const pageSize = parseInt(config.activitypubPageSize as string, 10) || 20
-	const baseUrl = config.public.baseUrl
+	const pageSize = parseInt(process.env.ACTIVITYPUB_PAGE_SIZE || '20', 10)
+	const baseUrl = process.env.BASE_URL || DEFAULTS.BASE_URL
 	const inboxUrl = `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(username)}`
 
 	try {
