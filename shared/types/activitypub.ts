@@ -94,6 +94,8 @@ export interface ASActivity extends ASObject {
   actor: string;
   object: string | ASObject;
   target?: string;
+  to?: string | string[];
+  cc?: string | string[];
 }
 
 export interface MythActor {

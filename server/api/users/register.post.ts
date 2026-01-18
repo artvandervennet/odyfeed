@@ -1,5 +1,5 @@
 import { saveSessionWithId, getUserSessionBySessionId } from "~~/server/utils/sessionStorage"
-import { ensurePodContainers, getPodStorageUrl, saveActivityToPod, saveActorProfileToPod, saveTypeIndicesToPod, saveProfileCardToPod } from "~~/server/utils/podStorage"
+import { ensurePodContainers, getPodStorageUrl, saveActivityToPod, saveActorProfileToPod, saveTypeIndicesToPod, saveProfileCardToPod, savePrivateKeyToPod } from "~~/server/utils/podStorage"
 import { parseActors, parseEvents } from "~~/server/utils/rdf"
 import { generatePostsForActor, generatePostActivity } from "~~/server/utils/postGenerator"
 import { createDataStorage } from "~~/server/utils/fileStorage"
@@ -8,6 +8,7 @@ import { logInfo, logError } from "~~/server/utils/logger"
 import type { ASActor } from "~~/shared/types/activitypub"
 import { generatePublicTypeIndex, generatePrivateTypeIndex, generateProfileCard } from "~~/server/utils/typeIndexGenerator"
 import { createActorProfile, validateUsername, extractPodUrlFromWebId } from "~~/server/utils/actorHelpers"
+import { generateActorKeyPair } from "~~/server/utils/crypto"
 
 interface RegisterRequest {
 	username: string
@@ -174,6 +175,9 @@ export default defineEventHandler(async (event) => {
 		logInfo(`Pod containers initialized for ${username} at ${podUrl}`)
 	}
 
+	const { publicKey, privateKey } = generateActorKeyPair()
+	logInfo(`Generated RSA key pair for ${username}`)
+
 	const actorProfile: ASActor = createActorProfile({
 		username,
 		baseUrl,
@@ -183,9 +187,17 @@ export default defineEventHandler(async (event) => {
 		avatar: body.avatar,
 		name: body.name,
 		summary: body.summary,
+		publicKey,
 	})
 
 	if (podUrl && podInitialized) {
+		const keySaved = await savePrivateKeyToPod(webId, podUrl, privateKey)
+		if (!keySaved) {
+			logError(`Failed to save private key to Pod for ${username}`)
+		} else {
+			logInfo(`Private key saved to Pod for ${username}`)
+		}
+
 		const profileSaved = await saveActorProfileToPod(webId, podUrl, actorProfile)
 		if (!profileSaved) {
 			logError(`Failed to save actor profile to Pod for ${username}`)

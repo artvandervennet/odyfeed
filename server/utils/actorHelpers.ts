@@ -13,6 +13,7 @@ interface ActorProfileData {
 	avatar?: string
 	name?: string
 	summary?: string
+	publicKey?: string
 }
 
 interface UserMapping {
@@ -34,11 +35,12 @@ export const createActorProfile = function (data: ActorProfileData): ASActor {
 		avatar,
 		name,
 		summary,
+		publicKey,
 	} = data
 
 	const actorId = `${baseUrl}${ENDPOINT_PATHS.ACTORS_PROFILE(username)}`
 
-	return {
+	const profile: ASActor = {
 		"@context": ACTIVITYPUB_CONTEXT as unknown as string,
 		id: actorId,
 		type: ACTIVITY_TYPES.PERSON,
@@ -54,6 +56,16 @@ export const createActorProfile = function (data: ActorProfileData): ASActor {
 		url: actorId,
 		published: new Date().toISOString(),
 	}
+
+	if (publicKey) {
+		profile.publicKey = {
+			id: `${actorId}#main-key`,
+			owner: actorId,
+			publicKeyPem: publicKey,
+		}
+	}
+
+	return profile
 }
 
 export const validateUsername = function (username: string): boolean {

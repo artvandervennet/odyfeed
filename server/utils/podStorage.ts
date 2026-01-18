@@ -311,3 +311,61 @@ export const getPodStorageUrl = async function (webId: string): Promise<string |
 		return null
 	}
 }
+
+export const savePrivateKeyToPod = async function (
+	webId: string,
+	podUrl: string,
+	privateKey: string
+): Promise<boolean> {
+	const authenticatedFetch = await getAuthenticatedFetch(webId)
+	if (!authenticatedFetch) {
+		logError(`Cannot authenticate for WebID: ${webId}`)
+		return false
+	}
+
+	try {
+		const keysUrl = `${podUrl}${POD_CONTAINERS.SETTINGS}keys.json`
+		const keyData = JSON.stringify({ privateKey }, null, 2)
+
+		const response = await authenticatedFetch(keysUrl, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: keyData,
+		})
+
+		if (response.ok) {
+			logInfo(`Private key saved to Pod: ${keysUrl}`)
+			return true
+		} else {
+			logError(`Failed to save private key: ${response.status} ${response.statusText}`)
+			return false
+		}
+	} catch (error) {
+		logError(`Failed to save private key to Pod`, error)
+		return false
+	}
+}
+
+export const getPrivateKeyFromPod = async function (
+	webId: string,
+	podUrl: string
+): Promise<string | null> {
+	const authenticatedFetch = await getAuthenticatedFetch(webId)
+	if (!authenticatedFetch) {
+		return null
+	}
+
+	try {
+		const keysUrl = `${podUrl}${POD_CONTAINERS.SETTINGS}keys.json`
+		const file = await getFile(keysUrl, { fetch: authenticatedFetch })
+		const text = await file.text()
+		const data = JSON.parse(text)
+		return data.privateKey || null
+	} catch (error) {
+		logError(`Failed to get private key from Pod: ${webId}`, error)
+		return null
+	}
+}
+

@@ -39,6 +39,8 @@ export const ACTIVITY_TYPES = {
   CREATE: "Create" as const,
   FOLLOW: "Follow" as const,
   ACCEPT: "Accept" as const,
+  ANNOUNCE: "Announce" as const,
+  DELETE: "Delete" as const,
 };
 
 export const ACTOR_TYPES = {
