@@ -12,6 +12,17 @@ export default defineNuxtConfig({
 	css: ['~/assets/css/main.css'],
 	ssr: false,
 
+	vite: {
+		server: {
+			allowedHosts: [
+				'.ngrok-free.dev',
+				'.ngrok.io',
+				'.ngrok.app',
+				'localhost'
+			]
+		}
+	},
+
 	runtimeConfig: {
 		openaiApiKey: process.env.OPENAI_API_KEY,
 		public: {
@@ -32,7 +43,7 @@ export default defineNuxtConfig({
 			link: [
 				{rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'},
 				{rel: 'me', href: 'https://github.com/artvandervennet'},
-				{rel:'webmention', href: '/api/webmention'},
+				{rel:'webmention', href: '/api/webmentions'},
 			]
 
 		}

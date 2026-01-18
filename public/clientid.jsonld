@@ -1,0 +1,15 @@
+{
+  "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
+  "client_id": "https://unsickerly-unillustrated-lamonica.ngrok-free.dev/clientid.jsonld",
+  "client_name": "OdyFeed",
+  "redirect_uris": [
+    "https://unsickerly-unillustrated-lamonica.ngrok-free.dev/api/auth/callback"
+  ],
+  "scope": "openid webid offline_access",
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none"
+}

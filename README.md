@@ -58,6 +58,17 @@ This app uses ActivityPods-compatible OIDC authentication with full LDP data pro
 - ✅ **ActivityPods** (`https://mypod.store`) - Public instance with full support
 - ⚠️ **Generic Solid Pods** - Limited support (no ActivityStreams inbox/outbox)
 
+### Troubleshooting ngrok + Solid Providers
+
+⚠️ **Important**: If using ngrok free tier for development:
+
+- ✅ **Inrupt PodSpaces** works with ngrok (default in UI)
+- ❌ **SolidCommunity.net** does NOT work with ngrok free tier
+
+See **[SOLUTION_NGROK_500_ERROR.md](./SOLUTION_NGROK_500_ERROR.md)** for complete details and solutions.
+
+**Quick Fix**: Use Inrupt PodSpaces (`https://login.inrupt.com`) for development with ngrok.
+
 ## Production
 
 Build the application for production:

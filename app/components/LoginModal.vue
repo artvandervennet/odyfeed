@@ -3,7 +3,7 @@ import {useAuthStore} from '~/stores/authStore';
 
 const auth = useAuthStore();
 
-const issuer = ref('https://vandervennet.art');
+const issuer = ref('https://login.inrupt.com');
 const customIssuer = ref('');
 const useCustom = ref(false);
 const isLoggingIn = ref(false);
@@ -11,35 +11,40 @@ const errorMessage = ref('');
 
 const providers = [
   {
-    name: 'VanderVennet ActivityPods',
-    url: 'https://vandervennet.art',
-    description: 'Your ActivityPods provider',
-    icon: 'i-heroicons-sparkles',
-  },
-  {
-    name: 'ActivityPods (MyPod)',
-    url: 'https://mypod.store',
-    description: 'Public ActivityPods instance',
-    icon: 'i-heroicons-cube',
-  },
-  {
     name: 'Inrupt PodSpaces',
     url: 'https://login.inrupt.com',
     description: 'Enterprise Solid pods by Inrupt',
     icon: 'i-heroicons-building-office',
+    worksWithNgrok: true,
+  },
+  {
+    name: 'solidcommunity.net',
+    url: 'https://solidcommunity.net',
+    description: 'Community Solid pod provider',
+    icon: 'i-heroicons-cube',
+    worksWithNgrok: false,
+  },
+  {
+    name: 'solidweb.org',
+    url: 'https://solidweb.org',
+    description: 'Public Solid pod provider',
+    icon: 'i-heroicons-globe-alt',
+    worksWithNgrok: false,
   },
 ]
 
-const validateProvider = async function (providerUrl: string) {
-  try {
-    const { discoverOIDCConfiguration } = await import('~/utils/oidc');
-    await discoverOIDCConfiguration(providerUrl);
-    return true;
-  } catch (error) {
-    console.error('Provider validation failed:', error);
-    return false;
-  }
-};
+const isNgrok = computed(() => {
+  if (typeof window === 'undefined') return false
+  return window.location.hostname.includes('ngrok')
+})
+
+const selectedProvider = computed(() => {
+  return providers.find(p => p.url === issuer.value)
+})
+
+const showNgrokWarning = computed(() => {
+  return isNgrok.value && selectedProvider.value && !selectedProvider.value.worksWithNgrok
+})
 
 const handleLogin = async function () {
   isLoggingIn.value = true;
@@ -54,19 +59,8 @@ const handleLogin = async function () {
       return;
     }
 
-    console.log(selectedIssuer)
-    const isValid = await validateProvider(selectedIssuer);
-    console.log(isValid)
-    if (!isValid) {
-      errorMessage.value = 'Unable to connect to this provider. Please check the URL and try again.';
-      isLoggingIn.value = false;
-      return;
-    }
-
-
     await auth.login(selectedIssuer);
   } catch (error) {
-    console.error('Login error:', error);
     errorMessage.value = 'Login failed. Please try again.';
     isLoggingIn.value = false;
   }
@@ -93,6 +87,21 @@ const handleLogin = async function () {
     <template #body>
 
       <div class="space-y-5">
+        <UAlert
+            v-if="showNgrokWarning"
+            color="warning"
+            variant="soft"
+            title="Provider Incompatibility"
+            icon="i-heroicons-exclamation-triangle"
+        >
+          <template #description>
+            <div class="space-y-2 text-sm">
+              <p>{{ selectedProvider?.name }} does not work with ngrok free tier. The authentication will fail with a 500 error.</p>
+              <p class="font-medium">Please use Inrupt PodSpaces instead, or deploy to a production server.</p>
+            </div>
+          </template>
+        </UAlert>
+
         <div v-if="!useCustom" class="space-y-3">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Choose your Pod provider
@@ -115,7 +124,25 @@ const handleLogin = async function () {
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center justify-between">
-                    <span class="font-medium text-gray-900 dark:text-white">{{ provider.name }}</span>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-gray-900 dark:text-white">{{ provider.name }}</span>
+                      <UBadge
+                          v-if="isNgrok && provider.worksWithNgrok"
+                          color="success"
+                          variant="soft"
+                          size="xs"
+                      >
+                        Works with ngrok
+                      </UBadge>
+                      <UBadge
+                          v-if="isNgrok && !provider.worksWithNgrok"
+                          color="warning"
+                          variant="soft"
+                          size="xs"
+                      >
+                        Requires production URL
+                      </UBadge>
+                    </div>
                     <UIcon
                         v-if="issuer === provider.url"
                         name="i-heroicons-check-circle-solid"

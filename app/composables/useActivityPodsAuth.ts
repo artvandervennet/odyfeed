@@ -201,7 +201,6 @@ export const useActivityPodsAuth = function () {
 				window.location.href = baseUrl;
 			}
 		} catch (error) {
-			console.error('Logout failed:', error);
 			clearSession();
 			window.location.href = baseUrl;
 		}

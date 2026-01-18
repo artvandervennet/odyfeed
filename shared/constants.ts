@@ -7,6 +7,9 @@ export const NAMESPACES = {
   DCT: "http://purl.org/dc/terms/",
   PUBLIC: "https://www.w3.org/ns/activitystreams#Public",
   TOOT: "http://joinmastodon.org/ns#",
+  ACL: "http://www.w3.org/ns/auth/acl#",
+  SOLID: "http://www.w3.org/ns/solid/terms#",
+  RDF: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
 };
 
 export const ACTIVITYPUB_CONTEXT = [
@@ -39,7 +42,6 @@ export const ACTIVITY_TYPES = {
 };
 
 export const ACTOR_TYPES = {
-  BOT: "Person" as const,
   PERSON: "Person" as const,
 } as const;
 
@@ -47,13 +49,31 @@ export const FILE_PATHS = {
   ACTORS: "actors.ttl",
   EVENTS: "events.ttl",
   VOCAB: "vocab.ttl",
+  SESSIONS_DIR: "sessions",
+  WEBID_MAPPINGS: "users/webid-mappings.json",
   POSTS_DIR: "posts",
   ACTORS_DATA_DIR: "actors",
 };
 
+export const POD_CONTAINERS = {
+  SOCIAL: "social/",
+  PROFILE: "profile/",
+  PROFILE_CARD: "profile/card",
+  INBOX: "social/inbox/",
+  OUTBOX: "social/outbox/",
+  FOLLOWERS: "social/followers/",
+  FOLLOWING: "social/following/",
+  ACTIVITIES: "social/activities/",
+  SETTINGS: "settings/",
+  PUBLIC_TYPE_INDEX: "settings/publicTypeIndex.ttl",
+  PRIVATE_TYPE_INDEX: "settings/privateTypeIndex.ttl",
+} as const;
+
 export const ENDPOINT_PATHS = {
   API_ACTORS: "/api/actors",
   API_TIMELINE: "/api/timeline",
+  API_USERS_REGISTER: "/api/users/register",
+  API_USERS_ME: "/api/users/me",
   ACTORS_PROFILE: (username: string) => `/api/actors/${username}`,
   ACTORS_INBOX: (username: string) => `/api/actors/${username}/inbox`,
   ACTORS_OUTBOX: (username: string) => `/api/actors/${username}/outbox`,

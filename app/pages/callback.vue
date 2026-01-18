@@ -1,11 +1,28 @@
 <script setup lang="ts">
 const auth = useAuthStore();
+const solidAuth = useSolidAuth();
 const router = useRouter();
 
 onMounted(async () => {
   try {
-    await auth.initSession();
-    await router.push('/');
+    console.log('[Callback] Waiting for auth to complete...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (solidAuth.isLoggedIn.value) {
+      console.log('[Callback] Solid session established, redirecting to home');
+      await router.push('/');
+    } else {
+      console.log('[Callback] Session not established, waiting longer...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      if (solidAuth.isLoggedIn.value) {
+        console.log('[Callback] Session now established, redirecting');
+        await router.push('/');
+      } else {
+        console.error('[Callback] Session failed to establish');
+        await router.push('/');
+      }
+    }
   } catch (error) {
     console.error('Callback handling failed:', error);
     await router.push('/');

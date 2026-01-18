@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import {useAuthStore} from '~/stores/authStore';
+import { useSolidAuth } from '~/composables/useSolidAuth';
 
 const auth = useAuthStore();
+const solidAuth = useSolidAuth();
 const colorMode = useColorMode();
+
+const needsRegistration = computed(() => {
+  return solidAuth.isLoggedIn.value && !auth.localUser;
+});
 
 const isDark = computed({
   get() {
@@ -69,7 +75,8 @@ const logout = async function () {
             </UDropdownMenu>
           </template>
 
-          <LoginModal v-if="!auth.isLoggedIn"/>
+          <RegistrationModal v-if="needsRegistration"/>
+          <LoginModal v-else-if="!solidAuth.isLoggedIn.value"/>
 
         </div>
       </div>

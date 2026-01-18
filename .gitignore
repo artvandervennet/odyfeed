@@ -24,6 +24,7 @@ logs
 !.env.example
 /data/inbox/
 /data/posts/
+/data/sessions/*.json
 
 # Firebase
 .firebase/
