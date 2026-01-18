@@ -23,6 +23,9 @@ importers:
       '@inrupt/solid-client-authn-node':
         specifier: ^3.1.1
         version: 3.1.1
+      '@kiliankil/solid-vcard-card':
+        specifier: ^1.2.2
+        version: 1.2.2(@inrupt/solid-client@3.0.0)
       '@nuxt/eslint':
         specifier: 1.12.1
         version: 1.12.1(@typescript-eslint/utils@8.50.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(@vue/compiler-sfc@3.5.26)(eslint@9.39.2(jiti@2.6.1))(magicast@0.5.1)(typescript@5.9.3)(vite@7.3.0(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(yaml@2.8.2))
@@ -841,6 +844,12 @@ packages:
   '@js-temporal/polyfill@0.5.1':
     resolution: {integrity: sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==}
     engines: {node: '>=12'}
+
+  '@kiliankil/solid-vcard-card@1.2.2':
+    resolution: {integrity: sha512-hcFMzBag7JOi8a2Hrt575NUQz0BzqFDjRM+JUSxGPndAN6YB8B//8XsS2diJSZGiQhbZktRk3wAUJUoh8lVxkA==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@inrupt/solid-client': '>=2.0.0'
 
   '@kwsites/file-exists@1.1.1':
     resolution: {integrity: sha512-m9/5YGR18lIwxSFDwfE3oA7bWuq9kdau6ugN4H2rJeyhFQZcG9AgSHkQtSD15a8WvTgfz9aikZMrKPHvbpqFiw==}
@@ -6800,6 +6809,10 @@ snapshots:
   '@js-temporal/polyfill@0.5.1':
     dependencies:
       jsbi: 4.3.2
+
+  '@kiliankil/solid-vcard-card@1.2.2(@inrupt/solid-client@3.0.0)':
+    dependencies:
+      '@inrupt/solid-client': 3.0.0
 
   '@kwsites/file-exists@1.1.1':
     dependencies:

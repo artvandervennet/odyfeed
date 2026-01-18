@@ -15,6 +15,7 @@
     "@inrupt/solid-client": "^3.0.0",
     "@inrupt/solid-client-authn-browser": "^3.1.1",
     "@inrupt/solid-client-authn-node": "^3.1.1",
+    "@kiliankil/solid-vcard-card": "^1.2.2",
     "@nuxt/eslint": "1.12.1",
     "@nuxt/ui": "^4.3.0",
     "@pinia/colada": "^0.20.0",

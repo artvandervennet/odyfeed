@@ -20,7 +20,7 @@ export default defineNuxtConfig({
 				'.ngrok.app',
 				'localhost'
 			]
-		}
+		},
 	},
 
 	runtimeConfig: {
@@ -30,6 +30,11 @@ export default defineNuxtConfig({
 			baseUrl: process.env.BASE_URL || 'http://localhost:3000',
 			podProvider: process.env.POD_PROVIDER || 'https://vandervennet.art'
 		},
+	},
+	vue: {
+		compilerOptions: {
+			isCustomElement: (tag) => tag === 'solid-vcard-card'
+		}
 	},
 	app: {
 		head:{

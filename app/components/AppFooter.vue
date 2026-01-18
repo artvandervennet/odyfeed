@@ -43,8 +43,10 @@ const recentWebmentions = computed(() => {
         </div>
       </div>
 
-      <div v-if="hasWebmentions && recentWebmentions.length > 0"
-           class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
+      <div
+        v-if="hasWebmentions && recentWebmentions.length > 0"
+        class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800"
+      >
         <div class="space-y-3">
           <WebmentionCard
               v-for="webmention in recentWebmentions"
@@ -52,6 +54,10 @@ const recentWebmentions = computed(() => {
               :webmention="webmention"
           />
         </div>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
+        <solid-vcard-card profile="https://artvandervennet.solidcommunity.net/profile/card#me" />
       </div>
     </div>
   </UContainer>
