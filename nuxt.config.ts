@@ -18,6 +18,8 @@ export default defineNuxtConfig({
 				'.ngrok-free.dev',
 				'.ngrok.io',
 				'.ngrok.app',
+				'.ikdoeict.be',
+				'odyfeed.artvandervennet.ikdoeict.be',
 				'localhost'
 			]
 		},
