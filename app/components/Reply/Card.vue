@@ -1,33 +1,31 @@
 <script setup lang="ts">
 import type { EnrichedPost } from '~~/shared/types/activitypub'
 import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
-import { useInteractions } from '~/composables/usePost'
 import { useAuthStore } from '~/stores/authStore'
+import { isPostLikedByUser, getPostLikesCount, getPostRepliesCount, extractStatusIdFromPostUrl } from '~/utils/postHelpers'
 
-const {reply, level} = defineProps<{
+const props = defineProps<{
   reply: EnrichedPost
   level?: number
 }>()
 
 const auth = useAuthStore()
-const { isLiked } = useInteractions()
 const { getAvatarUrl } = useActorAvatar()
 const likeMutation = useLikeMutation()
 const undoLikeMutation = useUndoLikeMutation()
 
-const liked = computed(() => isLiked(reply))
-const likesCount = computed(() => reply.likes?.totalItems || 0)
-const repliesCount = computed(() => reply.replies?.totalItems || 0)
+const liked = computed(() => isPostLikedByUser(props.reply, auth.webId))
+const likesCount = computed(() => getPostLikesCount(props.reply))
+const repliesCount = computed(() => getPostRepliesCount(props.reply))
 const isLoading = computed(() =>
   likeMutation.status.value === 'pending' ||
   undoLikeMutation.status.value === 'pending'
 )
-const avatarUrl = computed(() => getAvatarUrl(reply.actor))
+const avatarUrl = computed(() => getAvatarUrl(props.reply.actor))
 
 const postDetailUrl = computed(() => {
-  const username = reply.actor?.preferredUsername
-  const statusId = reply.id
-  console.log("username:", username, " statusId: ", statusId)
+  const username = props.reply.actor?.preferredUsername
+  const statusId = extractStatusIdFromPostUrl(props.reply.id)
   return `/actors/${username}/status/${statusId}`
 })
 
@@ -42,9 +40,9 @@ const handleLike = async function (event: Event) {
   if (isLoading.value) return
 
   if (liked.value) {
-    undoLikeMutation.mutate(reply)
+    undoLikeMutation.mutate(props.reply)
   } else {
-    likeMutation.mutate(reply)
+    likeMutation.mutate(props.reply)
   }
 }
 
@@ -56,15 +54,15 @@ const handleReply = function (event: Event) {
 <template>
   <article
     class="p-4 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
-    :class="{ 'pl-12 ml-4 border-l-2 border-gray-200 dark:border-gray-700': level && level > 0 }"
+    :class="{ 'pl-12 ml-4 border-l-2 border-gray-200 dark:border-gray-700': props.level && props.level > 0 }"
   >
     <div class="flex gap-3">
       <div @click.stop class="shrink-0">
-        <NuxtLink :to="`/actors/${reply.actor?.preferredUsername}`">
+        <NuxtLink :to="`/actors/${props.reply.actor?.preferredUsername}`">
           <ActorAvatar
-            v-if="reply.actor"
+            v-if="props.reply.actor"
             :avatar-url="avatarUrl"
-            :username="reply.actor.preferredUsername"
+            :username="props.reply.actor.preferredUsername"
             size="sm"
           />
         </NuxtLink>
@@ -73,8 +71,8 @@ const handleReply = function (event: Event) {
       <div class="flex-1 min-w-0">
         <div @click.stop class="mb-2">
           <ActorInfo
-            v-if="reply.actor"
-            :actor="reply.actor"
+            v-if="props.reply.actor"
+            :actor="props.reply.actor"
             :show-tone="false"
             :clickable="true"
           />
@@ -85,10 +83,10 @@ const handleReply = function (event: Event) {
           @click="navigateTo(postDetailUrl)"
         >
           <p class="text-sm prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap break-words">
-            {{ reply.content }}
+            {{ props.reply.content }}
           </p>
           <time class="text-xs text-gray-500 mt-2 block">
-            {{ new Date(reply.published!).toLocaleString('en-US', {
+            {{ new Date(props.reply.published!).toLocaleString('en-US', {
               hour: 'numeric',
               minute: '2-digit',
               month: 'short',

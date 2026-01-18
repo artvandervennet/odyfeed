@@ -4,15 +4,14 @@ import { usePostWebmentionsQuery } from '~/queries/webmentions'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
 import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
 import { useReplyMutation } from '~/mutations/reply'
-import { useInteractions } from '~/composables/usePost'
 import { useAuthStore } from '~/stores/authStore'
+import { isPostLikedByUser, getPostLikesCount, getPostRepliesCount, extractStatusIdFromPostUrl } from '~/utils/postHelpers'
 
-const {post} = defineProps<{
+const props = defineProps<{
   post: EnrichedPost
 }>()
 
 const auth = useAuthStore()
-const { isLiked } = useInteractions()
 const likeMutation = useLikeMutation()
 const undoLikeMutation = useUndoLikeMutation()
 const replyMutation = useReplyMutation()
@@ -20,24 +19,21 @@ const replyMutation = useReplyMutation()
 const showReplyForm = ref(false)
 const replyContent = ref('')
 
-const liked = computed(() => isLiked(post))
-const likesCount = computed(() => post.likes?.totalItems || 0)
-const repliesCount = computed(() => post.replies?.totalItems || 0)
+const liked = computed(() => isPostLikedByUser(props.post, auth.webId))
+const likesCount = computed(() => getPostLikesCount(props.post))
+const repliesCount = computed(() => getPostRepliesCount(props.post))
 
-const {data: replies, isLoading: repliesLoading} = useRepliesQuery()(post)
+const { data: replies, isLoading: repliesLoading } = useRepliesQuery()(props.post)
 
-const username = computed(() => post.actor?.preferredUsername || '')
-const statusId = computed(() => {
-  const parts = post.id.split('/')
-  return parts[parts.length - 1] || ''
-})
+const username = computed(() => props.post.actor?.preferredUsername || '')
+const statusId = computed(() => extractStatusIdFromPostUrl(props.post.id))
 
-const {data: webmentions, isLoading: webmentionsLoading} = usePostWebmentionsQuery()(
+const { data: webmentions, isLoading: webmentionsLoading } = usePostWebmentionsQuery()(
   username.value,
   statusId.value
 )
 
-const postUrl = computed(() => post.id)
+const postUrl = computed(() => props.post.id)
 
 const handleLike = async function () {
   if (!auth.isLoggedIn) {
@@ -48,9 +44,9 @@ const handleLike = async function () {
   if (likeMutation.isLoading.value) return
 
   if (liked.value) {
-    undoLikeMutation.mutate(post)
+    undoLikeMutation.mutate(props.post)
   } else {
-    likeMutation.mutate(post)
+    likeMutation.mutate(props.post)
   }
 }
 
@@ -62,7 +58,7 @@ const handleReply = async function () {
     return
   }
 
-  replyMutation.mutate({ post, content: replyContent.value })
+  replyMutation.mutate({ post: props.post, content: replyContent.value })
   replyContent.value = ''
   showReplyForm.value = false
 }
@@ -83,9 +79,9 @@ const toggleReplyForm = function () {
 <template>
   <div>
     <article class="h-entry p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-      <div v-if="post.actor" class="p-author h-card">
+      <div v-if="props.post.actor" class="p-author h-card">
         <ActorInfo
-            :actor="post.actor"
+            :actor="props.post.actor"
             :show-tone="true"
             :clickable="true"
         />
@@ -94,12 +90,12 @@ const toggleReplyForm = function () {
       <div class="mt-4">
         <div
             class="e-content prose prose-base max-w-none dark:prose-invert text-base leading-relaxed mb-4 whitespace-pre-wrap wrap-break-word">
-          {{ post.content }}
+          {{ props.post.content }}
         </div>
         <a :href="postUrl" class="u-url">
-          <time :datetime="post.published" class="dt-published text-sm text-gray-500 dark:text-gray-400">
+          <time :datetime="props.post.published" class="dt-published text-sm text-gray-500 dark:text-gray-400">
             {{
-              new Date(post.published!).toLocaleString('en-US', {
+              new Date(props.post.published!).toLocaleString('en-US', {
                 hour: 'numeric',
                 minute: '2-digit',
                 month: 'short',

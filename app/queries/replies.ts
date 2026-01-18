@@ -1,10 +1,11 @@
-import type {EnrichedPost, ASNote} from '~~/shared/types/activitypub'
-import {fetchNoteByUrl, fetchActor} from '~/api/actors'
+import type { EnrichedPost, ASNote } from '~~/shared/types/activitypub'
+import { fetchNoteByUrl, fetchActor } from '~/api/actors'
+import { queryKeys } from '~/utils/queryKeys'
 
 export const useRepliesQuery = defineQuery(() => {
 	return (post: ASNote) => {
 		return useQuery<EnrichedPost[]>({
-			key: ['replies', post.id],
+			key: queryKeys.replies(post.id),
 			query: async () => {
 				if (!post.replies?.orderedItems && !post.replies?.items) return []
 

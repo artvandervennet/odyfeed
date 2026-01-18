@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import type {EnrichedPost} from '~~/shared/types/activitypub'
-import {useLikeMutation, useUndoLikeMutation} from '~/mutations/like'
-import {useReplyMutation} from '~/mutations/reply'
-import {useInteractions} from '~/composables/usePost'
-import {useAuthStore} from '~/stores/authStore'
+import type { EnrichedPost } from '~~/shared/types/activitypub'
+import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
+import { useReplyMutation } from '~/mutations/reply'
+import { useAuthStore } from '~/stores/authStore'
+import { isPostLikedByUser, getPostLikesCount, getPostRepliesCount, extractStatusIdFromPostUrl } from '~/utils/postHelpers'
 
-const {post, showReplies, isDetailView} = defineProps<{
+const props = defineProps<{
   post: EnrichedPost
   showReplies?: boolean
   isDetailView?: boolean
 }>()
 
 const auth = useAuthStore()
-const {isLiked} = useInteractions()
 const likeMutation = useLikeMutation()
 const undoLikeMutation = useUndoLikeMutation()
 const replyMutation = useReplyMutation()
@@ -20,34 +19,30 @@ const replyMutation = useReplyMutation()
 const showReplyForm = ref(false)
 const replyContent = ref('')
 
-const liked = computed(() => isLiked(post))
-const likesCount = computed(() => post.likes?.totalItems || 0)
-const repliesCount = computed(() => post.replies?.totalItems || 0)
+const liked = computed(() => isPostLikedByUser(props.post, auth.webId))
+const likesCount = computed(() => getPostLikesCount(props.post))
+const repliesCount = computed(() => getPostRepliesCount(props.post))
 
 const postDetailUrl = computed(() => {
-  const username = post.actor?.preferredUsername
-  const statusId = post.id.split('/').pop()
-  console.log("username:", username, " statusId: ", statusId)
+  const username = props.post.actor?.preferredUsername
+  const statusId = extractStatusIdFromPostUrl(props.post.id)
   return `/actors/${username}/status/${statusId}`
 })
 
 const handleLike = async function (event: Event) {
   event.stopPropagation()
 
-  console.log("liking")
   if (!auth.isLoggedIn) {
     console.warn('User must be logged in to like posts')
     return
   }
 
-  if (likeMutation.isLoading.value) return
+  if (likeMutation.isLoading.value || undoLikeMutation.isLoading.value) return
 
   if (liked.value) {
-    console.log("undo lik")
-    undoLikeMutation.mutate(post)
+    undoLikeMutation.mutate(props.post)
   } else {
-    console.log("like")
-    likeMutation.mutate(post)
+    likeMutation.mutate(props.post)
   }
 }
 
@@ -59,7 +54,7 @@ const handleReply = async function () {
     return
   }
 
-  replyMutation.mutate({post, content: replyContent.value})
+  replyMutation.mutate({ post: props.post, content: replyContent.value })
   replyContent.value = ''
   showReplyForm.value = false
 }
@@ -85,8 +80,8 @@ const toggleReplyForm = function (event?: Event) {
       @click.stop="navigateTo(postDetailUrl)">
     <div>
       <ActorInfo
-          v-if="post.actor"
-          :actor="post.actor"
+          v-if="props.post.actor"
+          :actor="props.post.actor"
           :show-tone="true"
           :clickable="true"
           @click.stop
@@ -95,8 +90,8 @@ const toggleReplyForm = function (event?: Event) {
 
     <div class="mt-3">
       <PostContent
-          :content="post.content"
-          :published="post.published!"
+          :content="props.post.content"
+          :published="props.post.published!"
       />
     </div>
 
