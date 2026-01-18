@@ -1,5 +1,5 @@
 export interface ASObject {
-  "@context"?: string | any[];
+  "@context"?: string | string[] | Record<string, unknown>;
   id: string;
   type: string;
   name?: string;
@@ -105,6 +105,16 @@ export interface MythActor {
   avatar: string;
   inbox: string;
   outbox: string;
+  icon?: {
+    type: "Image";
+    url: string;
+    mediaType?: string;
+  };
+  image?: {
+    type: "Image";
+    url: string;
+    mediaType?: string;
+  };
 }
 
 export interface MythEvent {
@@ -117,5 +127,5 @@ export interface MythEvent {
 }
 
 export interface EnrichedPost extends ASNote {
-  actor?: MythActor;
+  actor?: ASActor | MythActor;
 }
