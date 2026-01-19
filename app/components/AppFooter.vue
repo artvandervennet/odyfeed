@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useWebmentions } from '~/composables/useWebmentions'
+import {useWebmentions} from '~/composables/useWebmentions'
 
-const { webmentionCount, hasWebmentions, recentWebmentions, isLoading } = useWebmentions()
+const {webmentionCount, hasWebmentions, recentWebmentions, isLoading} = useWebmentions()
 </script>
 
 <template>
 
   <UContainer>
-    <div class="max-w-2xl mx-auto">
+    <div class="max-w-2xl mx-auto flex flex-col gap-6">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h3 class="text-lg font-semibold mb-2">OdyFeed</h3>
@@ -35,8 +35,8 @@ const { webmentionCount, hasWebmentions, recentWebmentions, isLoading } = useWeb
       </div>
 
       <div
-        v-if="hasWebmentions && recentWebmentions.length > 0"
-        class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800"
+          v-if="hasWebmentions && recentWebmentions.length > 0"
+          class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800"
       >
         <div class="space-y-3">
           <WebmentionCard
@@ -46,6 +46,7 @@ const { webmentionCount, hasWebmentions, recentWebmentions, isLoading } = useWeb
           />
         </div>
       </div>
+      <WebmentionForm :target-url="useRoute().fullPath"/>
     </div>
   </UContainer>
 </template>

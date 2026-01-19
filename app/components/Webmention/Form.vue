@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useSendWebmentionMutation } from '~/mutations/webmention'
-import FormField from "~/components/atoms/FormField.vue";
 
 const { targetUrl } = defineProps<{
   targetUrl: string
@@ -51,50 +50,56 @@ const isValidUrl = function (url: string): boolean {
 
 <template>
   <UCard>
-    <div class="space-y-4">
-      <div>
-        <h3 class="text-lg font-semibold mb-2">Send a Webmention</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Have you written a response to this post on your own site?
-          Enter the URL here to send a webmention.
-        </p>
-      </div>
-
-      <form @submit.prevent="handleSubmit" target-url="">
-        <FormField
-          v-model="sourceUrl"
-          label="Your post URL"
-          type="url"
-          placeholder="https://yoursite.com/your-post"
-          :disabled="webmentionMutation.isLoading.value"
-          :error="errorMessage"
-          required
-          class="mb-4"
-          @enter="handleSubmit"
-        />
-
-        <div class="flex items-center gap-4">
-          <UButton
-            type="submit"
-            :loading="webmentionMutation.isLoading.value"
-            :disabled="!sourceUrl || webmentionMutation.isLoading.value"
+      <form @submit.prevent="handleSubmit" class="space-y-2" target-url="">
+        <div class="flex items-center gap-1.5">
+          <h3 class="text-sm font-semibold">Send a Webmention</h3>
+          <UTooltip
+            text="Notify this post that you mentioned it on your website"
+            :popper="{ placement: 'top' }"
           >
-            Send Webmention
-          </UButton>
+            <UIcon
+              name="i-heroicons-information-circle"
+              class="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help"
+              aria-label="What is a webmention?"
+            />
+          </UTooltip>
+        </div>
 
-          <p v-if="successMessage" class="text-sm text-green-600 dark:text-green-400">
+        <div class="space-y-1.5">
+          <div>
+            <label for="webmention-source" class="block text-xs font-medium text-gray-700 dark:text-gray-300">
+              Your post URL
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Enter the URL of your post that mentions this content
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <input
+              id="webmention-source"
+              v-model="sourceUrl"
+              type="url"
+              placeholder="https://yoursite.com/your-post"
+              :disabled="webmentionMutation.isLoading.value"
+              class="flex-1 px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              required
+            />
+            <UButton
+              type="submit"
+              size="xs"
+              :loading="webmentionMutation.isLoading.value"
+              :disabled="!sourceUrl || webmentionMutation.isLoading.value"
+            >
+              Send
+            </UButton>
+          </div>
+          <p v-if="errorMessage" class="text-xs text-red-600 dark:text-red-400">
+            {{ errorMessage }}
+          </p>
+          <p v-if="successMessage" class="text-xs text-green-600 dark:text-green-400">
             {{ successMessage }}
           </p>
         </div>
       </form>
-
-      <UAlert
-        v-if="!errorMessage && !successMessage"
-        color="primary"
-        variant="soft"
-        title="What is a webmention?"
-        description="A webmention is a way to notify this post that you've mentioned it on your site. Just paste your post URL above."
-      />
-    </div>
   </UCard>
 </template>
