@@ -57,7 +57,7 @@ const recentWebmentions = computed(() => {
       </div>
 
       <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-        <solid-vcard-card profile="https://artvandervennet.solidcommunity.net/profile/card#me" />
+        <solid-vcard-card profile="https://artvdv.solidcommunity.net/profile/card#me"/>
       </div>
     </div>
   </UContainer>
