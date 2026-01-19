@@ -5,6 +5,7 @@ import { logInfo, logError, logDebug } from '~~/server/utils/logger'
 import { getSharedSolidStorage } from '~~/server/utils/solidStorage'
 import { pendingSessions, pendingInruptSessionIds } from './login.get'
 import { storeActiveSessionWithId } from '~~/server/utils/solidSession'
+import { getUsernameFromWebId } from '~~/server/utils/actorHelpers'
 
 const activeSessions = new Map<string, Session>()
 
@@ -234,10 +235,19 @@ export default defineEventHandler(async (event) => {
 		// Generate permanent session ID
 		const permanentSessionId = generateSessionId()
 
+		// Check if user is already registered by looking up webId in mappings
+		const existingUsername = getUsernameFromWebId(webId)
+
+		if (existingUsername) {
+			logInfo(`[Auth] Returning user detected: ${existingUsername} (${webId})`)
+		} else {
+			logInfo(`[Auth] New user - username will be set during registration`)
+		}
+
 		// Save session data to backend storage with session ID mapping
 		await saveSessionWithId(permanentSessionId, webId, {
 			webId,
-			username: '', // Will be set during registration
+			username: existingUsername || '', // Use existing username for returning users
 			issuer: finalIssuer,
 			clientId: finalClientId,
 			clientSecret,

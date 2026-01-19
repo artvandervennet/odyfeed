@@ -106,3 +106,26 @@ export const getWebIdFromUsername = function (username: string): { webId: string
 	}
 }
 
+export const getUsernameFromWebId = function (webId: string): string | null {
+	try {
+		const storage = createDataStorage()
+		const mappingsPath = FILE_PATHS.WEBID_MAPPINGS
+
+		if (!storage.exists(mappingsPath)) {
+			return null
+		}
+
+		const mappings = storage.read<WebIdMappings>(mappingsPath)
+		const userMapping = mappings[webId]
+
+		if (!userMapping) {
+			return null
+		}
+
+		return userMapping.username
+	} catch (error) {
+		logError(`Failed to get username for webId: ${webId}`, error)
+		return null
+	}
+}
+
