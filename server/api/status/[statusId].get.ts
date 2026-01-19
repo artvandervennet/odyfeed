@@ -1,4 +1,4 @@
-import { getActivityFromPod } from "~~/server/utils/podStorage"
+import { getActivityFromPod, listActivitiesFromPod } from "~~/server/utils/podStorage"
 import { POD_CONTAINERS, FILE_PATHS } from "~~/shared/constants"
 import type { ASNote } from "~~/shared/types/activitypub"
 import { logInfo, logError } from "~~/server/utils/logger"
@@ -38,27 +38,61 @@ export default defineEventHandler(async (event) => {
 		const mappings = storage.read<WebIdMappings>(mappingsPath)
 		const registeredUsers = Object.entries(mappings)
 
+		const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+		const targetUrl = `${baseUrl}/api/status/${statusId}`
+
 		let foundActivity = null
 		let foundUsername = null
 
+		logInfo(`[Status] Looking for post with ID: ${targetUrl}`)
+
+		// Search through all users' outboxes
 		for (const [webId, userMapping] of registeredUsers) {
 			const username = userMapping.username
 			const podUrl = webId.replace('/profile/card#me', '')
-			const activityUrl = `${podUrl}${POD_CONTAINERS.OUTBOX}${statusId}.json`
+			const outboxContainer = `${podUrl}${POD_CONTAINERS.OUTBOX}`
 
 			try {
-				const activity = await getActivityFromPod(webId, activityUrl)
-				if (activity) {
-					foundActivity = activity
-					foundUsername = username
-					break
+				const activityUrls = await listActivitiesFromPod(webId, outboxContainer)
+
+				// Check each activity
+				for (const activityUrl of activityUrls) {
+					try {
+						const activity = await getActivityFromPod(webId, activityUrl)
+
+						if (!activity) continue
+
+						// Check multiple ID fields
+						const activityId = activity.id
+						const objectId = activity.object?.id
+						const objectUrl = activity.object?.url
+
+						// Match by full URL or by ending path
+						if (activityId === targetUrl ||
+						    objectId === targetUrl ||
+						    objectUrl === targetUrl ||
+						    activityId?.endsWith(`/status/${statusId}`) ||
+						    objectId?.endsWith(`/status/${statusId}`) ||
+						    objectUrl?.endsWith(`/status/${statusId}`)) {
+							foundActivity = activity
+							foundUsername = username
+							logInfo(`[Status] Found matching activity: ${activityUrl}`)
+							break
+						}
+					} catch (error) {
+						continue
+					}
 				}
+
+				if (foundActivity) break
 			} catch (error) {
+				logError(`[Status] Error searching ${username}'s outbox`, error)
 				continue
 			}
 		}
 
 		if (!foundActivity || !foundUsername) {
+			logError(`[Status] Post not found: ${statusId}`)
 			throw createError({
 				statusCode: 404,
 				statusMessage: 'Post not found',
