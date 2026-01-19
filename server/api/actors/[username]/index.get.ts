@@ -6,10 +6,13 @@ import type { ASActor } from "~~/shared/types/activitypub"
 import { logInfo, logError } from "~~/server/utils/logger"
 import { validateActorParams, setActivityPubHeaders } from "~~/server/utils/actorEndpointHelpers"
 import { getWebIdFromUsername } from "~~/server/utils/actorHelpers"
+import { optionalAuth } from "~~/server/utils/authHelpers"
 
 export default defineEventHandler(async (event) => {
 	const { username } = validateActorParams(event)
 	const baseUrl = process.env.BASE_URL || DEFAULTS.BASE_URL
+	const auth = optionalAuth(event)
+	const isOwner = auth?.username === username
 
 	const userMapping = getWebIdFromUsername(username)
 
@@ -21,7 +24,7 @@ export default defineEventHandler(async (event) => {
 			const profileData = await getActivityFromPod(webId, activityPubProfileUrl)
 
 			if (profileData && profileData.id) {
-				logInfo(`Retrieved actor profile from Pod for ${username}`)
+				logInfo(`Retrieved actor profile from Pod for ${username}${isOwner ? ' (owner)' : ''}`)
 				setActivityPubHeaders(event)
 				return profileData as ASActor
 			}
@@ -34,7 +37,7 @@ export default defineEventHandler(async (event) => {
 	const matchingActor = mythActors.find((a) => a.preferredUsername === username)
 
 	if (matchingActor) {
-		logInfo(`Returning mythological actor profile for ${username}`)
+		logInfo(`Returning mythological actor profile for ${username}${isOwner ? ' (owner)' : ''}`)
 		const actorProfile = createActorProfile({
 			username,
 			baseUrl,

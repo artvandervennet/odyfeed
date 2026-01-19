@@ -24,13 +24,13 @@ export const logoutUser = async function (): Promise<LogoutResponse> {
 }
 
 export const getUserByWebId = async function (webId: string): Promise<UserDataResponse> {
-  return await $fetch<UserDataResponse>(`/api/users/me?webId=${encodeURIComponent(webId)}`, {
+  return await $fetch<UserDataResponse>(`/api/auth/me?webId=${encodeURIComponent(webId)}`, {
     credentials: 'include',
   })
 }
 
 export const registerNewUser = async function (payload: RegisterUserRequest): Promise<RegisterUserResponse> {
-  return await $fetch<RegisterUserResponse>('/api/users/register', {
+  return await $fetch<RegisterUserResponse>('/api/auth/register', {
     method: 'POST',
     body: payload,
     credentials: 'include',

@@ -36,6 +36,17 @@ export const requireAuth = function (event: H3Event): { webId: string; username:
 	}
 }
 
+export const optionalAuth = function (event: H3Event): { webId: string; username: string } | null {
+	const auth = event.context.auth
+	if (!auth || !auth.webId) {
+		return null
+	}
+	return {
+		webId: auth.webId,
+		username: auth.username,
+	}
+}
+
 export const getAuthenticatedWebId = function (event: H3Event): string | undefined {
 	return event.context.auth?.webId
 }
@@ -70,3 +81,20 @@ export const checkNoteAuthorization = function (
 
 	return { isPublic: false, isAuthorized }
 }
+
+export const validateStringField = function (value: unknown, fieldName: string, required = false): string {
+	if (required && (!value || typeof value !== 'string')) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: `${fieldName} is required and must be a string`,
+		})
+	}
+	if (value && typeof value !== 'string') {
+		throw createError({
+			statusCode: 400,
+			statusMessage: `${fieldName} must be a string`,
+		})
+	}
+	return value as string
+}
+

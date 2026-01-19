@@ -75,8 +75,8 @@ export const POD_CONTAINERS = {
 export const ENDPOINT_PATHS = {
   API_ACTORS: "/api/actors",
   API_TIMELINE: "/api/timeline",
-  API_USERS_REGISTER: "/api/users/register",
-  API_USERS_ME: "/api/users/me",
+  API_AUTH_REGISTER: "/api/auth/register",
+  API_AUTH_ME: "/api/auth/me",
   ACTORS_PROFILE: (username: string) => `/api/actors/${username}`,
   ACTORS_INBOX: (username: string) => `/api/actors/${username}/inbox`,
   ACTORS_OUTBOX: (username: string) => `/api/actors/${username}/outbox`,

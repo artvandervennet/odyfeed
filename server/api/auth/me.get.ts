@@ -1,5 +1,6 @@
 import { createDataStorage } from "~~/server/utils/fileStorage"
 import { FILE_PATHS } from "~~/shared/constants"
+import type { UserDataResponse } from "~~/shared/types/api"
 
 interface WebIdMappings {
 	[webId: string]: {
@@ -9,7 +10,7 @@ interface WebIdMappings {
 	}
 }
 
-export default defineEventHandler((event) => {
+export default defineEventHandler((event): UserDataResponse => {
 	const webId = getQuery(event).webId as string
 
 	if (!webId) {
@@ -40,9 +41,7 @@ export default defineEventHandler((event) => {
 	}
 
 	return {
-		webId,
 		username: userMapping.username,
 		actorId: userMapping.actorId,
-		createdAt: userMapping.createdAt,
 	}
 })

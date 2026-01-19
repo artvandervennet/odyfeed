@@ -22,10 +22,17 @@ export default defineEventHandler(async (event) => {
 
 	const activity = await readBody<ASActivity>(event)
 
-	if (!activity || !activity.type) {
+	if (!activity || typeof activity !== 'object') {
 		throw createError({
 			statusCode: 400,
-			statusMessage: 'Invalid activity format',
+			statusMessage: 'Invalid request body',
+		})
+	}
+
+	if (!activity.type || typeof activity.type !== 'string') {
+		throw createError({
+			statusCode: 400,
+			statusMessage: 'Invalid activity format - type is required',
 		})
 	}
 

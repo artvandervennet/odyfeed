@@ -3,19 +3,13 @@ import { ensurePodContainers, getPodStorageUrl, saveActivityToPod, saveActorProf
 import { parseActors, parseEvents } from "~~/server/utils/rdf"
 import { generatePostsForActor, generatePostActivity } from "~~/server/utils/postGenerator"
 import { createDataStorage } from "~~/server/utils/fileStorage"
-import { ENDPOINT_PATHS, FILE_PATHS, DEFAULTS, POD_CONTAINERS, NAMESPACES, ACTIVITY_TYPES } from "~~/shared/constants"
+import { ENDPOINT_PATHS, FILE_PATHS, DEFAULTS, POD_CONTAINERS, NAMESPACES } from "~~/shared/constants"
 import { logInfo, logError } from "~~/server/utils/logger"
 import type { ASActor } from "~~/shared/types/activitypub"
+import type { RegisterUserRequest, RegisterUserResponse } from "~~/shared/types/api"
 import { generatePublicTypeIndex, generatePrivateTypeIndex } from "~~/server/utils/typeIndexGenerator"
 import { createActorProfile, validateUsername, extractPodUrlFromWebId } from "~~/server/utils/actorHelpers"
 import { generateActorKeyPair } from "~~/server/utils/crypto"
-
-interface RegisterRequest {
-	username: string
-	name?: string
-	avatar?: string
-	summary?: string
-}
 
 interface WebIdMappings {
 	[webId: string]: {
@@ -26,12 +20,11 @@ interface WebIdMappings {
 }
 
 export default defineEventHandler(async (event) => {
-	const body = await readBody<RegisterRequest>(event)
+	const body = await readBody<RegisterUserRequest>(event)
 	const auth = event.context.auth
 	const storage = createDataStorage()
 	const baseUrl = process.env.BASE_URL || DEFAULTS.BASE_URL
 
-	// Authentication required
 	if (!auth || !auth.webId) {
 		throw createError({
 			statusCode: 401,
@@ -39,10 +32,31 @@ export default defineEventHandler(async (event) => {
 		})
 	}
 
-	if (!body.username) {
+	if (!body || typeof body !== 'object') {
 		throw createError({
 			statusCode: 400,
-			statusMessage: "username is required",
+			statusMessage: "Invalid request body",
+		})
+	}
+
+	if (!body.username || typeof body.username !== 'string') {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "username is required and must be a string",
+		})
+	}
+
+	if (body.name && typeof body.name !== 'string') {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "name must be a string",
+		})
+	}
+
+	if (body.summary && typeof body.summary !== 'string') {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "summary must be a string",
 		})
 	}
 
@@ -56,7 +70,6 @@ export default defineEventHandler(async (event) => {
 		})
 	}
 
-	// Load session data (contains real tokens from OAuth)
 	const sessionData = await getUserSessionBySessionId(auth.sessionId)
 
 	if (!sessionData) {
@@ -85,10 +98,10 @@ export default defineEventHandler(async (event) => {
 		const existing = mappings[webId]
 		logInfo(`WebID already registered: ${webId} -> ${existing.username}`)
 		return {
-			success: true,
 			username: existing.username,
 			actorId: existing.actorId,
-			message: "WebID already registered",
+			inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(existing.username)}`,
+			outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(existing.username)}`,
 		}
 	}
 
@@ -120,14 +133,12 @@ export default defineEventHandler(async (event) => {
 	}
 	storage.write(mappingsPath, mappings, { pretty: true })
 
-	// Check for mock token
 	const isMockToken = refreshToken === 'mock-refresh-token' || !refreshToken
 
 	if (isMockToken) {
 		logInfo(`Using mock refresh token for ${username} - Pod operations will be skipped`)
 	}
 
-	// Update session with username
 	await saveSessionWithId(auth.sessionId, webId, {
 		webId,
 		username,
@@ -142,7 +153,6 @@ export default defineEventHandler(async (event) => {
 	let podInitialized = false
 
 	if (!isMockToken) {
-		// Try to get Pod URL if not already discovered
 		if (!podUrl) {
 			podUrl = await getPodStorageUrl(webId) || ''
 
@@ -151,7 +161,6 @@ export default defineEventHandler(async (event) => {
 				podUrl = extractPodUrlFromWebId(webId)
 			}
 
-			// Update session with discovered Pod URL
 			await saveSessionWithId(auth.sessionId, webId, {
 				webId,
 				username,
@@ -184,7 +193,6 @@ export default defineEventHandler(async (event) => {
 		isMatchedActor,
 		matchingActor,
 		webId,
-		avatar: body.avatar,
 		name: body.name,
 		summary: body.summary,
 		publicKey,
@@ -273,15 +281,11 @@ export default defineEventHandler(async (event) => {
 
 				setResponseStatus(event, 201)
 				return {
-					success: true,
 					username,
 					actorId,
 					inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(username)}`,
 					outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(username)}`,
-					actor: matchingActor.name,
-					postsGenerated: savedCount,
-					isMatchedActor: true,
-				}
+				} satisfies RegisterUserResponse
 			} catch (error) {
 				logError(`Failed to generate posts for ${username}`, error)
 				throw createError({
@@ -300,16 +304,9 @@ export default defineEventHandler(async (event) => {
 
 	setResponseStatus(event, 201)
 	return {
-		success: true,
 		username,
 		actorId,
 		inbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_INBOX(username)}`,
 		outbox: `${baseUrl}${ENDPOINT_PATHS.ACTORS_OUTBOX(username)}`,
-		actor: isMatchedActor ? matchingActor.name : undefined,
-		postsGenerated: 0,
-		isMatchedActor,
-	}
+	} satisfies RegisterUserResponse
 })
-
-
-

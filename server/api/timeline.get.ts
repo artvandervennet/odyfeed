@@ -4,6 +4,7 @@ import { FILE_PATHS, POD_CONTAINERS } from '~~/shared/constants'
 import { logError, logInfo } from '~~/server/utils/logger'
 import { listActivitiesFromPod, getActivityFromPod } from '~~/server/utils/podStorage'
 import { extractNoteFromActivity } from '~~/server/utils/authHelpers'
+import { extractPodUrlFromWebId } from '~~/server/utils/actorHelpers'
 import type { ASNote, EnrichedPost, ASActivity, MythActor } from '~~/shared/types/activitypub'
 
 interface WebIdMappings {
@@ -14,10 +15,6 @@ interface WebIdMappings {
 	}
 }
 
-const extractPodUrlFromWebId = function (webId: string): string {
-	const webIdUrl = new URL(webId)
-	return `${webIdUrl.protocol}//${webIdUrl.host}/`
-}
 
 export default defineEventHandler(async (event) => {
 	try {

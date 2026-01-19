@@ -12,6 +12,14 @@ export default defineEventHandler(async (event) => {
 	const { webId, podUrl, actorId } = fetchUserMapping(username)
 
 	const body = await readBody(event)
+
+	if (!body || typeof body !== 'object') {
+		throw createError({
+			statusCode: 400,
+			statusMessage: 'Invalid request body',
+		})
+	}
+
 	const bodyString = JSON.stringify(body)
 
 	const { verified, actorId: senderActorId } = await verifyHttpSignature(event, bodyString)
