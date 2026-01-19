@@ -139,10 +139,16 @@ export const transformActivityUrls = function (
 	}
 
 	if (transformedActivity.object && typeof transformedActivity.object === 'object') {
+		const originalObjectId = transformedActivity.object.id
+		const shouldPreserveObjectId =
+			originalObjectId &&
+			typeof originalObjectId === 'string' &&
+			originalObjectId.includes('/status/')
+
 		transformedActivity.object = {
 			...transformedActivity.object,
-			id: activityUrl,
-			url: activityUrl,
+			id: shouldPreserveObjectId ? originalObjectId : activityUrl,
+			url: shouldPreserveObjectId ? originalObjectId : activityUrl,
 		}
 	}
 

@@ -53,7 +53,23 @@ export default defineEventHandler(async (event) => {
 
 	try {
 		const outboxContainer = `${podUrl}${POD_CONTAINERS.OUTBOX}`
-		const uuid = generateUUID()
+
+		let uuid = generateUUID()
+
+		if (activity.type === ACTIVITY_TYPES.CREATE) {
+			const activityObject = activity.object as any
+			if (activityObject && activityObject.type === 'Note' && activityObject.id) {
+				const noteId = activityObject.id as string
+				if (noteId.includes('/status/')) {
+					const statusIdMatch = noteId.match(/\/status\/([^/]+)$/)
+					if (statusIdMatch && statusIdMatch[1]) {
+						uuid = statusIdMatch[1]
+						logInfo(`Using existing UUID from Note ID: ${uuid}`)
+					}
+				}
+			}
+		}
+
 		const slug = `${uuid}.json`
 
 		const savedUrl = await saveActivityToPod(webId, outboxContainer, activity, slug)
