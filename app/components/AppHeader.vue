@@ -27,10 +27,21 @@ const logout = async function () {
       class="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md">
     <UContainer>
       <div class="flex h-16 items-center justify-between gap-3">
-        <NuxtLink to="/" class="flex items-center gap-2.5 font-semibold text-lg hover:opacity-80 transition-opacity">
-          <UIcon name="i-heroicons-sparkles" class="text-primary-500 w-5 h-5"/>
-          <span class="text-gray-900 dark:text-white">OdyFeed</span>
-        </NuxtLink>
+        <div class="flex items-center gap-6">
+          <NuxtLink to="/" class="flex items-center gap-2.5 font-semibold text-lg hover:opacity-80 transition-opacity">
+            <UIcon name="i-heroicons-sparkles" class="text-primary-500 w-5 h-5"/>
+            <span class="text-gray-900 dark:text-white">OdyFeed</span>
+          </NuxtLink>
+
+          <nav class="hidden sm:flex items-center gap-4">
+            <NuxtLink
+              to="/about"
+              class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              About
+            </NuxtLink>
+          </nav>
+        </div>
 
         <div class="flex items-center gap-3">
           <ClientOnly v-if="!colorMode?.forced">

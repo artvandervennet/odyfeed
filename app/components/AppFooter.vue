@@ -55,10 +55,6 @@ const recentWebmentions = computed(() => {
           />
         </div>
       </div>
-
-      <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-        <solid-vcard-card profile="https://artvdv.solidcommunity.net/profile/card#me"/>
-      </div>
     </div>
   </UContainer>
 </template>
