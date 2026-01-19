@@ -589,3 +589,55 @@ export const removeLikeFromPost = async function (
 	}
 }
 
+export const addReplyToPost = async function (
+	webId: string,
+	postActivityUrl: string,
+	replyNoteId: string
+): Promise<boolean> {
+	try {
+		const activity = await getActivityFromPod(webId, postActivityUrl)
+		if (!activity) {
+			logError(`Post activity not found: ${postActivityUrl}`)
+			return false
+		}
+
+		let noteToUpdate = activity
+		if (activity.type === 'Create' && activity.object) {
+			noteToUpdate = activity.object
+		}
+
+		if (!noteToUpdate.replies) {
+			noteToUpdate.replies = {
+				type: 'OrderedCollection',
+				totalItems: 0,
+				orderedItems: []
+			}
+		}
+
+		if (!noteToUpdate.replies.orderedItems) {
+			noteToUpdate.replies.orderedItems = []
+		}
+
+		if (!noteToUpdate.replies.orderedItems.includes(replyNoteId)) {
+			noteToUpdate.replies.orderedItems.push(replyNoteId)
+			noteToUpdate.replies.totalItems = (noteToUpdate.replies.totalItems || 0) + 1
+
+			if (activity.type === 'Create') {
+				activity.object = noteToUpdate
+			}
+
+			const updated = await updateActivityInPod(webId, postActivityUrl, activity)
+			if (updated) {
+				logInfo(`Added reply ${replyNoteId} to post ${postActivityUrl}`)
+			}
+			return updated
+		} else {
+			logDebug(`Reply ${replyNoteId} already exists on post ${postActivityUrl}`)
+			return true
+		}
+	} catch (error) {
+		logError(`Failed to add reply to post ${postActivityUrl}`, error)
+		return false
+	}
+}
+

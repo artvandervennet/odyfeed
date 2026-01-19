@@ -1,10 +1,10 @@
 import { validateActorParams, fetchUserMapping } from "~~/server/utils/actorEndpointHelpers"
-import { saveActivityToPod, getPrivateKeyFromPod, addLikeToPost, removeLikeFromPost } from "~~/server/utils/podStorage"
+import { saveActivityToPod, getPrivateKeyFromPod, addLikeToPost, removeLikeFromPost, addReplyToPost } from "~~/server/utils/podStorage"
 import { verifyHttpSignature } from "~~/server/utils/httpSignature"
 import { generateAcceptActivity, sendActivityToInbox, dereferenceActor } from "~~/server/utils/federation"
 import { POD_CONTAINERS, ACTIVITY_TYPES } from "~~/shared/constants"
 import { logInfo, logError, logDebug } from "~~/server/utils/logger"
-import type { ASActivity } from "~~/shared/types/activitypub"
+import type { ASActivity, ASNote } from "~~/shared/types/activitypub"
 import { generateUUID } from "~~/server/utils/crypto"
 
 export default defineEventHandler(async (event) => {
@@ -147,6 +147,36 @@ export default defineEventHandler(async (event) => {
 							logInfo(`✅ Updated post ${postStatusId} by removing like from ${activity.actor}`)
 						} else {
 							logError(`Failed to update post ${postStatusId} to remove like`)
+						}
+					}
+				}
+			}
+		}
+
+		if (activity.type === ACTIVITY_TYPES.CREATE) {
+			logInfo(`Received Create activity from ${activity.actor}`)
+
+			const activityObject = activity.object as any
+			if (activityObject && activityObject.type === 'Note' && activityObject.inReplyTo) {
+				const replyNote = activityObject as ASNote
+				const inReplyTo = replyNote.inReplyTo
+
+				logInfo(`Processing reply from ${activity.actor} to ${inReplyTo}`)
+
+				if (typeof inReplyTo === 'string') {
+					const urlParts = inReplyTo.split('/')
+					const parentStatusId = urlParts[urlParts.length - 1]
+
+					if (parentStatusId) {
+						const outboxContainer = `${podUrl}${POD_CONTAINERS.OUTBOX}`
+						const parentPostActivityUrl = `${outboxContainer}${parentStatusId}.json`
+
+						const updated = await addReplyToPost(webId, parentPostActivityUrl, replyNote.id)
+
+						if (updated) {
+							logInfo(`✅ Updated post ${parentStatusId} with reply ${replyNote.id}`)
+						} else {
+							logError(`Failed to update post ${parentStatusId} with reply`)
 						}
 					}
 				}
