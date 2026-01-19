@@ -1,20 +1,13 @@
 <script setup lang="ts">
 import {useAuthStore} from '~/stores/authStore'
+import AuthActions from "~/components/molecules/AuthActions.vue";
+import ThemeToggle from "~/components/molecules/ThemeToggle.vue";
+import UserMenu from "~/components/molecules/UserMenu.vue";
 
 const auth = useAuthStore()
-const colorMode = useColorMode()
 
 const needsRegistration = computed(() => {
   return auth.isAuthenticated && !auth.isLoggedIn
-})
-
-const isDark = computed({
-  get() {
-    return colorMode.value === 'dark'
-  },
-  set(_isDark) {
-    colorMode.preference = _isDark ? 'dark' : 'light'
-  },
 })
 
 const logout = async function () {
@@ -46,63 +39,16 @@ const logout = async function () {
         </div>
 
         <div class="flex items-center gap-3">
-          <ClientOnly v-if="!colorMode?.forced">
-            <UButton
-                :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
-                color="neutral"
-                variant="ghost"
-                :aria-label="`Switch to ${isDark ? 'light' : 'dark'} mode`"
-                @click="isDark = !isDark"
-            />
-          </ClientOnly>
+          <ThemeToggle />
 
-          <template v-if="auth.isLoggedIn">
-            <UButton
-                to="/inbox"
-                icon="i-heroicons-inbox"
-                color="neutral"
-                variant="ghost"
-                aria-label="Inbox"
-            />
-            <UDropdownMenu
-                :items="[
-                [
-                  { label: auth.userProfile?.name || auth.userProfile?.preferredUsername || 'My Account', icon: 'i-heroicons-user', disabled: true }
-                ],
-                [
-                  { label: 'View Profile', icon: 'i-heroicons-user-circle', to: '/profile' },
-                  { label: 'Setup Pod', icon: 'i-heroicons-cog-6-tooth', to: '/setup' }
-                ],
-                [
-                  { label: 'Logout', icon: 'i-heroicons-arrow-right-on-rectangle', onSelect: logout }
-                ]
-              ]"
-            >
-              <UButton variant="ghost">
-                <UAvatar
-                    :src="auth.userProfile?.avatar || undefined"
-                    :alt="auth.userProfile?.name || auth.userProfile?.preferredUsername || 'User'"
-                    size="sm"
-                    class="cursor-pointer ring-1 ring-gray-200 dark:ring-gray-800 hover:ring-primary-500 transition-all"
-                />
-              </UButton>
-            </UDropdownMenu>
-          </template>
-
-          <template v-else-if="needsRegistration">
-            <UButton
-                label="Complete Profile"
-                icon="i-heroicons-user-plus"
-                size="sm"
-                color="primary"
-                to="/register"
-            />
-          </template>
-
-          <template v-else>
-            <LoginModal/>
-          </template>
-
+          <AuthActions :is-logged-in="auth.isLoggedIn" :needs-registration="needsRegistration">
+            <template #user-menu>
+              <UserMenu :user-profile="auth.userProfile" @logout="logout" />
+            </template>
+            <template #login-button>
+              <LoginModal />
+            </template>
+          </AuthActions>
         </div>
       </div>
     </UContainer>

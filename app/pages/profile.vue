@@ -1,78 +1,61 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/authStore'
+const auth = useAuth()
+const { isLoggedIn, userProfile, webId, logout, inbox, outbox, actorId } = auth
 
-const auth = useAuthStore()
+const displayName = computed(() => userProfile.value?.name || userProfile.value?.preferredUsername || 'Your Profile')
 
-const displayName = computed(() =>
-    auth.userProfile?.name || auth.userProfile?.preferredUsername || 'Your Profile',
-)
+const username = computed(() => userProfile.value?.preferredUsername || extractUsernameFromWebId(webId.value))
 
-const username = computed(() =>
-    auth.userProfile?.preferredUsername || auth.username || extractUsernameFromWebId(auth.webId),
-)
-
-const extractUsernameFromWebId = function (webId: string) {
-  try {
-    const url = new URL(webId)
-    return url.hostname.split('.')[0] || 'user'
-  } catch {
-    return 'user'
-  }
-}
-
-const handleLogout = async function () {
-  await auth.logout()
+const extractUsernameFromWebId = function (webId: string): string {
+	try {
+		const url = new URL(webId)
+		return url.hostname.split('.')[0] || 'user'
+	} catch {
+		return 'user'
+	}
 }
 </script>
 
 <template>
   <UContainer>
     <div class="max-w-2xl mx-auto py-8">
-      <template v-if="!auth.isLoggedIn">
-        <UCard class="text-center py-10">
-          <UIcon name="i-heroicons-lock-closed" class="w-12 h-12 mx-auto text-gray-400 mb-4"/>
-          <h2 class="text-xl font-bold mb-2">Authentication Required</h2>
-          <p class="text-gray-500 dark:text-gray-400 mb-4">
-            Please log in to view your profile.
-          </p>
-          <UButton to="/" color="primary">Go to Home</UButton>
-        </UCard>
-      </template>
+      <EmptyState
+        v-if="!isLoggedIn"
+        icon="i-heroicons-lock-closed"
+        title="Authentication Required"
+        description="Please log in to view your profile."
+        action-label="Go to Home"
+        action-to="/"
+      />
 
       <template v-else>
         <UCard class="mb-8">
           <div class="flex items-start gap-6">
-            <ActorAvatar
-                :avatar-url="auth.userProfile?.avatar"
-                :username="username"
-                size="lg"
-            />
+            <ActorAvatar :avatar-url="userProfile?.avatar" :username="username" size="lg" />
             <div class="flex-1">
               <div class="flex items-center justify-between mb-2">
                 <h1 class="text-2xl font-bold">{{ displayName }}</h1>
-                <UBadge color="primary" variant="subtle">
-                  Your Profile
-                </UBadge>
+                <UBadge color="primary" variant="subtle"> Your Profile </UBadge>
               </div>
               <p class="text-gray-500 mb-4">@{{ username }}</p>
-              <p v-if="auth.userProfile?.summary" class="text-sm dark:text-gray-300 mb-4">
-                {{ auth.userProfile.summary }}
+              <p v-if="userProfile?.summary" class="text-sm dark:text-gray-300 mb-4">
+                {{ userProfile.summary }}
               </p>
 
               <div class="mt-4 space-y-2">
                 <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
                   <p class="text-gray-600 dark:text-gray-400 break-all">
-                    <strong>WebID:</strong> {{ auth.webId }}
+                    <strong>WebID:</strong> {{ webId }}
                   </p>
                 </div>
-                <div v-if="auth.inbox" class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
+                <div v-if="inbox" class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
                   <p class="text-gray-600 dark:text-gray-400 break-all">
-                    <strong>Inbox:</strong> {{ auth.inbox }}
+                    <strong>Inbox:</strong> {{ inbox }}
                   </p>
                 </div>
-                <div v-if="auth.outbox" class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
+                <div v-if="outbox" class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
                   <p class="text-gray-600 dark:text-gray-400 break-all">
-                    <strong>Outbox:</strong> {{ auth.outbox }}
+                    <strong>Outbox:</strong> {{ outbox }}
                   </p>
                 </div>
               </div>
@@ -85,21 +68,23 @@ const handleLogout = async function () {
           <div class="space-y-3 text-sm">
             <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
               <span class="font-medium text-gray-600 dark:text-gray-400">Display Name</span>
-              <span class="text-gray-900 dark:text-white">{{ auth.userProfile?.name || 'Not set' }}</span>
+              <span class="text-gray-900 dark:text-white">{{ userProfile?.name || 'Not set' }}</span>
             </div>
             <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
               <span class="font-medium text-gray-600 dark:text-gray-400">Username</span>
-              <span class="text-gray-900 dark:text-white">{{ auth.username }}</span>
+              <span class="text-gray-900 dark:text-white">{{ username }}</span>
             </div>
             <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
               <span class="font-medium text-gray-600 dark:text-gray-400">Preferred Username</span>
-              <span class="text-gray-900 dark:text-white">{{ auth.userProfile?.preferredUsername || 'Not set' }}</span>
+              <span class="text-gray-900 dark:text-white">{{
+                userProfile?.preferredUsername || 'Not set'
+              }}</span>
             </div>
             <div class="flex justify-between py-2">
               <span class="font-medium text-gray-600 dark:text-gray-400">Actor ID</span>
               <span class="text-gray-900 dark:text-white text-xs break-all text-right max-w-xs">{{
-                  auth.actorId || 'Not set'
-                }}</span>
+                actorId || 'Not set'
+              }}</span>
             </div>
           </div>
         </UCard>
@@ -111,7 +96,7 @@ const handleLogout = async function () {
             variant="soft"
             icon="i-heroicons-arrow-right-on-rectangle"
             block
-            @click="handleLogout"
+            @click="logout"
           >
             Logout
           </UButton>

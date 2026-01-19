@@ -1,16 +1,7 @@
 <script setup lang="ts">
-import {useSiteWebmentionsQuery} from '~/queries/webmentions'
+import { useWebmentions } from '~/composables/useWebmentions'
 
-const {data: webmentions, isLoading} = useSiteWebmentionsQuery()
-
-const webmentionCount = computed(() => webmentions.value?.total || 0)
-
-const hasWebmentions = computed(() => webmentionCount.value > 0)
-
-const recentWebmentions = computed(() => {
-  if (!webmentions.value?.items) return []
-  return webmentions.value.items.slice(0, 3)
-})
+const { webmentionCount, hasWebmentions, recentWebmentions, isLoading } = useWebmentions()
 </script>
 
 <template>

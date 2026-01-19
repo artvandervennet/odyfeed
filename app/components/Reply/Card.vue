@@ -81,7 +81,7 @@ const handleReply = function (event: Event) {
           class="mb-3 cursor-pointer"
           @click="navigateTo(postDetailUrl)"
         >
-          <p class="text-sm prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap break-words">
+          <p class="text-sm prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap wrap-break-word">
             {{ props.reply.content }}
           </p>
           <time class="text-xs text-gray-500 mt-2 block">

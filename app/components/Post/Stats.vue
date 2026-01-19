@@ -1,39 +1,37 @@
 <script setup lang="ts">
-defineProps<{
-  likesCount: number
-  repliesCount: number
-  isLiked: boolean
-  isLikeLoading?: boolean
-  isReplyLoading?: boolean
-}>()
+import ActionButton from "~/components/atoms/ActionButton.vue";
+
+interface Props {
+	likesCount: number
+	repliesCount: number
+	isLiked: boolean
+	isLikeLoading?: boolean
+	isReplyLoading?: boolean
+}
+
+defineProps<Props>()
 
 const emit = defineEmits<{
-  like: [event: Event]
-  reply: [event: Event]
+	like: [event: Event]
+	reply: [event: Event]
 }>()
 </script>
 
 <template>
-  <div class="flex items-center gap-2">
-    <UButton
-        @click="emit('reply', $event)"
-        variant="ghost"
-        color="secondary"
-        size="xs"
-        icon="i-heroicons-chat-bubble-left"
-        :loading="isReplyLoading"
-        :disabled="isReplyLoading">
-      {{ repliesCount }}
-    </UButton>
-    <UButton
-        @click="emit('like', $event)"
-        variant="ghost"
-        :color="isLiked ? 'primary' : 'secondary'"
-        size="xs"
-        :icon="isLiked ? 'i-heroicons-heart-20-solid' : 'i-heroicons-heart'"
-        :loading="isLikeLoading"
-        :disabled="isLikeLoading">
-      {{ likesCount }}
-    </UButton>
-  </div>
+	<div class="flex items-center gap-2">
+		<ActionButton
+			icon="i-heroicons-chat-bubble-left"
+			:count="repliesCount"
+			:loading="isReplyLoading"
+			color="secondary"
+			@click="emit('reply', $event)"
+		/>
+		<ActionButton
+			:icon="isLiked ? 'i-heroicons-heart-20-solid' : 'i-heroicons-heart'"
+			:count="likesCount"
+			:loading="isLikeLoading"
+			:color="isLiked ? 'primary' : 'secondary'"
+			@click="emit('like', $event)"
+		/>
+	</div>
 </template>

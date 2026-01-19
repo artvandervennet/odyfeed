@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useSendWebmentionMutation } from '~/mutations/webmention'
+import FormField from "~/components/atoms/FormField.vue";
 
 const { targetUrl } = defineProps<{
   targetUrl: string
@@ -59,20 +60,18 @@ const isValidUrl = function (url: string): boolean {
         </p>
       </div>
 
-      <form @submit.prevent="handleSubmit">
-        <UFormGroup
+      <form @submit.prevent="handleSubmit" target-url="">
+        <FormField
+          v-model="sourceUrl"
           label="Your post URL"
+          type="url"
+          placeholder="https://yoursite.com/your-post"
+          :disabled="webmentionMutation.isLoading.value"
           :error="errorMessage"
+          required
           class="mb-4"
-        >
-          <UInput
-            v-model="sourceUrl"
-            type="url"
-            placeholder="https://yoursite.com/your-post"
-            :disabled="webmentionMutation.isLoading.value"
-            required
-          />
-        </UFormGroup>
+          @enter="handleSubmit"
+        />
 
         <div class="flex items-center gap-4">
           <UButton

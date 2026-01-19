@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useRepliesQuery } from '~/queries/replies'
-import { usePostWebmentionsQuery } from '~/queries/webmentions'
-import type { EnrichedPost } from '~~/shared/types/activitypub'
-import { useAuthStore } from '~/stores/authStore'
-import { extractUsernameAndStatusIdFromPostUrl } from '~/utils/postHelpers'
-import { usePostActions } from '~/composables/usePostActions'
+import {useRepliesQuery} from '~/queries/replies'
+import {usePostWebmentionsQuery} from '~/queries/webmentions'
+import type {EnrichedPost} from '~~/shared/types/activitypub'
+import {useAuthStore} from '~/stores/authStore'
+import {extractUsernameAndStatusIdFromPostUrl} from '~/utils/postHelpers'
+import {usePostActions} from '~/composables/usePostActions'
 
 const props = defineProps<{
   post: EnrichedPost
@@ -26,13 +26,13 @@ const {
   handleReply,
 } = usePostActions(postComputed)
 
-const { data: replies, isLoading: repliesLoading } = useRepliesQuery()(props.post)
+const {data: replies, isLoading: repliesLoading} = useRepliesQuery()(props.post)
 
-const { username, statusId } = extractUsernameAndStatusIdFromPostUrl(props.post.id)
+const {username, statusId} = extractUsernameAndStatusIdFromPostUrl(props.post.id)
 
-const { data: webmentions, isLoading: webmentionsLoading } = usePostWebmentionsQuery()(
-  username,
-  statusId
+const {data: webmentions, isLoading: webmentionsLoading} = usePostWebmentionsQuery()(
+    username,
+    statusId,
 )
 
 const postUrl = computed(() => props.post.id)
@@ -145,12 +145,12 @@ const toggleReplyForm = function () {
     <ReplyList :replies="replies || []" :is-loading="repliesLoading"/>
 
     <WebmentionList
-      :webmentions="webmentions?.items || []"
-      :is-loading="webmentionsLoading"
+        :webmentions="webmentions?.items || []"
+        :is-loading="webmentionsLoading"
     />
 
     <div class="border-t border-gray-200 dark:border-gray-800 p-4">
-      <WebmentionForm :target-url="postUrl" />
+      <WebmentionForm :target-url="postUrl"/>
     </div>
   </div>
 </template>

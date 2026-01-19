@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/authStore'
+import {useAuth} from '~/composables/useAuth'
+import {useAuthProviders} from '~/composables/useAuthProviders'
+import {useFormValidation} from '~/composables/useFormValidation'
 
-const auth = useAuthStore()
+const {login} = useAuth()
+const {providers, getProviderByUrl} = useAuthProviders()
+const {validateRequired} = useFormValidation()
 
 const issuer = ref('https://login.inrupt.com')
 const customIssuer = ref('')
@@ -9,42 +13,8 @@ const useCustom = ref(false)
 const isLoggingIn = ref(false)
 const errorMessage = ref('')
 
-const providers = [
-  {
-    name: 'Inrupt PodSpaces',
-    url: 'https://login.inrupt.com',
-    description: 'Enterprise Solid pods by Inrupt',
-    icon: 'i-heroicons-building-office',
-    worksWithNgrok: true,
-  },
-  {
-    name: 'solidcommunity.net',
-    url: 'https://solidcommunity.net',
-    description: 'Community Solid pod provider',
-    icon: 'i-heroicons-cube',
-    worksWithNgrok: false,
-  },
-  {
-    name: 'solidweb.org',
-    url: 'https://solidweb.org',
-    description: 'Public Solid pod provider',
-    icon: 'i-heroicons-globe-alt',
-    worksWithNgrok: false,
-  },
-]
+const selectedProvider = computed(() => getProviderByUrl(issuer.value))
 
-const isNgrok = computed(() => {
-  if (typeof window === 'undefined') return false
-  return window.location.hostname.includes('ngrok')
-})
-
-const selectedProvider = computed(() => {
-  return providers.find(p => p.url === issuer.value)
-})
-
-const showNgrokWarning = computed(() => {
-  return isNgrok.value && selectedProvider.value && !selectedProvider.value.worksWithNgrok
-})
 
 const handleLogin = async function () {
   isLoggingIn.value = true
@@ -53,16 +23,18 @@ const handleLogin = async function () {
   try {
     const selectedIssuer = useCustom.value ? customIssuer.value : issuer.value
 
-    if (!selectedIssuer) {
-      errorMessage.value = 'Please enter a provider URL'
+    const validation = validateRequired(selectedIssuer, 'Provider URL')
+    if (!validation.isValid) {
+      errorMessage.value = validation.error
       isLoggingIn.value = false
       return
     }
 
-    await auth.login(selectedIssuer)
+    await login(selectedIssuer)
   } catch (error) {
     errorMessage.value = 'Login failed. Please try again.'
     isLoggingIn.value = false
+    console.error(error)
   }
 }
 </script>
@@ -87,21 +59,6 @@ const handleLogin = async function () {
     <template #body>
 
       <div class="space-y-5">
-        <UAlert
-            v-if="showNgrokWarning"
-            color="warning"
-            variant="soft"
-            title="Provider Incompatibility"
-            icon="i-heroicons-exclamation-triangle"
-        >
-          <template #description>
-            <div class="space-y-2 text-sm">
-              <p>{{ selectedProvider?.name }} does not work with ngrok free tier. The authentication will fail with a 500 error.</p>
-              <p class="font-medium">Please use Inrupt PodSpaces instead, or deploy to a production server.</p>
-            </div>
-          </template>
-        </UAlert>
-
         <div v-if="!useCustom" class="space-y-3">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Choose your Pod provider
@@ -126,22 +83,6 @@ const handleLogin = async function () {
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                       <span class="font-medium text-gray-900 dark:text-white">{{ provider.name }}</span>
-                      <UBadge
-                          v-if="isNgrok && provider.worksWithNgrok"
-                          color="success"
-                          variant="soft"
-                          size="xs"
-                      >
-                        Works with ngrok
-                      </UBadge>
-                      <UBadge
-                          v-if="isNgrok && !provider.worksWithNgrok"
-                          color="warning"
-                          variant="soft"
-                          size="xs"
-                      >
-                        Requires production URL
-                      </UBadge>
                     </div>
                     <UIcon
                         v-if="issuer === provider.url"
@@ -194,7 +135,9 @@ const handleLogin = async function () {
         />
         <div class="flex items-center justify-between gap-3">
           <p class="text-xs text-gray-500 dark:text-gray-400">
-            New to Solid? <a href="https://solidproject.org/users/get-a-pod" target="_blank" class="text-primary-500 hover:text-primary-600 underline">Get a Pod</a>
+            New to Solid? <a
+href="https://solidproject.org/users/get-a-pod" target="_blank"
+                             class="text-primary-500 hover:text-primary-600 underline">Get a Pod</a>
           </p>
           <UButton
               label="Continue"

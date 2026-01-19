@@ -15,9 +15,7 @@ const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.o
         <a :href="baseUrl" class="u-url hidden" rel="me">OdyFeed</a>
       </div>
 
-      <div v-if="isLoading && !timeline" class="space-y-4">
-        <USkeleton v-for="i in 3" :key="i" class="h-40 w-full" />
-      </div>
+      <LoadingCard v-if="isLoading && !timeline" />
 
       <div v-else-if="timeline?.groupedByEvent && timeline.groupedByEvent.length > 0" class="space-y-8">
         <div
@@ -43,10 +41,12 @@ const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.o
         </div>
       </div>
 
-      <UCard v-else-if="timeline" class="text-center py-10">
-        <UIcon name="i-heroicons-information-circle" class="w-12 h-12 mx-auto text-gray-400 mb-4" />
-        <p class="text-gray-500">The timeline is empty. Check back later!</p>
-      </UCard>
+      <EmptyState
+        v-else-if="timeline"
+        icon="i-heroicons-information-circle"
+        title="No posts yet"
+        description="The timeline is empty. Check back later!"
+      />
     </div>
   </UContainer>
 </template>

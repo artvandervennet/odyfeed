@@ -91,7 +91,7 @@ const isLike = computed(() => webmention.type === 'like')
     </div>
 
     <div v-else class="flex items-center gap-3">
-      <div class="flex-shrink-0">
+      <div class="shrink-0">
         <UAvatar
             v-if="webmention.author?.photo"
             :src="webmention.author.photo"
