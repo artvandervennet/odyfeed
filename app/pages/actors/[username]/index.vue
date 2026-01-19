@@ -1,36 +1,179 @@
 <script setup lang="ts">
-import { useQuery } from '@pinia/colada'
-import { fetchActor } from '~/api/actors'
-import type { EnrichedPost } from '~~/shared/types/activitypub'
+import type { ASActor, ASNote, EnrichedPost } from '~~/shared/types/activitypub'
 import { useAuthStore } from '~/stores/authStore'
-import { queryKeys } from '~/utils/queryKeys'
 
 const route = useRoute()
 const username = route.params.username as string
 const auth = useAuthStore()
 
-const { getAvatarUrl } = useActorAvatar()
-
 const isOwnProfile = computed(() => auth.username === username)
 
-const { data: actor, isLoading: actorLoading, error: actorError } = useQuery({
-  key: queryKeys.actors.byUsername(username),
-  query: () => fetchActor(username),
-  staleTime: 1000 * 60 * 5,
+// const { data: actor, isLoading: actorLoading, error: actorError } = useQuery({
+//   key: queryKeys.actors.byUsername(username),
+//   query: () => fetchActor(username),
+//   staleTime: 1000 * 60 * 5,
+// })
+
+const actor = ref<ASActor>({
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/v1"
+  ],
+  "id": "https://odyfeed.example.com/actors/johndoe",
+  "type": "Person",
+  "name": "John Doe",
+  "preferredUsername": "johndoe",
+  "summary": "Software developer passionate about decentralized web technologies and open-source projects. Love hiking and photography in my spare time.",
+  "url": "https://odyfeed.example.com/@johndoe",
+  "inbox": "https://odyfeed.example.com/actors/johndoe/inbox",
+  "outbox": "https://odyfeed.example.com/actors/johndoe/outbox",
+  "following": "https://odyfeed.example.com/actors/johndoe/following",
+  "followers": "https://odyfeed.example.com/actors/johndoe/followers",
+  "icon": {
+    "type": "Image",
+    "url": "https://odyfeed.example.com/avatars/johndoe.jpg",
+    "mediaType": "image/jpeg"
+  },
+  "image": {
+    "type": "Image",
+    "url": "https://odyfeed.example.com/banners/johndoe-banner.jpg",
+    "mediaType": "image/jpeg"
+  },
+  "publicKey": {
+    "id": "https://odyfeed.example.com/actors/johndoe#main-key",
+    "owner": "https://odyfeed.example.com/actors/johndoe",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----"
+  },
+  "manuallyApprovesFollowers": false,
+  "discoverable": true,
+  "indexable": true,
+  "memorial": false,
+  "suspended": false,
+  "featured": "https://odyfeed.example.com/actors/johndoe/collections/featured",
+  "featuredTags": "https://odyfeed.example.com/actors/johndoe/collections/tags",
+  "endpoints": {
+    "sharedInbox": "https://odyfeed.example.com/inbox"
+  },
+  "tone": "friendly"
 })
 
-const { data: actorPosts, isLoading: postsLoading } = useQuery({
-  key: queryKeys.actors.posts(username),
-  query: async () => {
-    return await $fetch(`/api/actors/${username}/posts`, {
-      headers: {
-        'Accept': 'application/json',
-      }
-    })
+const actorLoading = ref(false)
+const actorError = false
+
+// const { data: actorPosts, isLoading: postsLoading } = useQuery({
+//   key: queryKeys.actors.posts(username),
+//   query: async () => {
+//     return await $fetch(`/api/actors/${username}/posts`, {
+//       headers: {
+//         'Accept': 'application/json',
+//       }
+//     })
+//   },
+//   staleTime: 1000 * 60 * 5,
+//   enabled: () => !!actor.value,
+// })
+
+const actorPosts = ref<ASNote[]>([
+  {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    id: "https://odyfeed.example.com/actors/johndoe/posts/1",
+    type: "Note",
+    attributedTo: "https://odyfeed.example.com/actors/johndoe",
+    content: "Just finished setting up my decentralized profile! Excited to be part of the open web movement. 🌐",
+    published: "2026-01-18T14:30:00Z",
+    to: ["https://www.w3.org/ns/activitystreams#Public"],
+    cc: ["https://odyfeed.example.com/actors/johndoe/followers"],
+    url: "https://odyfeed.example.com/@johndoe/posts/1",
+    likes: {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      id: "https://odyfeed.example.com/actors/johndoe/posts/1/likes",
+      type: "Collection",
+      totalItems: 12
+    }
   },
-  staleTime: 1000 * 60 * 5,
-  enabled: () => !!actor.value,
-})
+  {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    id: "https://odyfeed.example.com/actors/johndoe/posts/2",
+    type: "Note",
+    attributedTo: "https://odyfeed.example.com/actors/johndoe",
+    content: "Beautiful sunset hike today at Mount Rainier. The colors were absolutely stunning! Nature never ceases to amaze me. 🏔️📸",
+    published: "2026-01-17T20:15:00Z",
+    to: ["https://www.w3.org/ns/activitystreams#Public"],
+    cc: ["https://odyfeed.example.com/actors/johndoe/followers"],
+    url: "https://odyfeed.example.com/@johndoe/posts/2",
+    likes: {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      id: "https://odyfeed.example.com/actors/johndoe/posts/2/likes",
+      type: "Collection",
+      totalItems: 24
+    }
+  },
+  {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    id: "https://odyfeed.example.com/actors/johndoe/posts/3",
+    type: "Note",
+    attributedTo: "https://odyfeed.example.com/actors/johndoe",
+    content: "Working on a new open-source project for ActivityPub integration. Stay tuned for updates! If anyone wants to contribute, let me know.",
+    published: "2026-01-16T10:45:00Z",
+    to: ["https://www.w3.org/ns/activitystreams#Public"],
+    cc: ["https://odyfeed.example.com/actors/johndoe/followers"],
+    url: "https://odyfeed.example.com/@johndoe/posts/3",
+    likes: {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      id: "https://odyfeed.example.com/actors/johndoe/posts/3/likes",
+      type: "Collection",
+      totalItems: 8
+    },
+    replies: {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      id: "https://odyfeed.example.com/actors/johndoe/posts/3/replies",
+      type: "Collection",
+      totalItems: 3
+    }
+  },
+  {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    id: "https://odyfeed.example.com/actors/johndoe/posts/4",
+    type: "Note",
+    attributedTo: "https://odyfeed.example.com/actors/johndoe",
+    content: "Coffee and code on this rainy Sunday morning. Sometimes the best productivity comes from the simplest moments. ☕💻",
+    published: "2026-01-15T08:20:00Z",
+    to: ["https://www.w3.org/ns/activitystreams#Public"],
+    cc: ["https://odyfeed.example.com/actors/johndoe/followers"],
+    url: "https://odyfeed.example.com/@johndoe/posts/4",
+    likes: {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      id: "https://odyfeed.example.com/actors/johndoe/posts/4/likes",
+      type: "Collection",
+      totalItems: 15
+    }
+  },
+  {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    id: "https://odyfeed.example.com/actors/johndoe/posts/5",
+    type: "Note",
+    attributedTo: "https://odyfeed.example.com/actors/johndoe",
+    content: "Interesting discussion about data ownership and privacy in the digital age. We need more decentralized solutions that put users first.",
+    published: "2026-01-14T16:00:00Z",
+    to: ["https://www.w3.org/ns/activitystreams#Public"],
+    cc: ["https://odyfeed.example.com/actors/johndoe/followers"],
+    url: "https://odyfeed.example.com/@johndoe/posts/5",
+    likes: {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      id: "https://odyfeed.example.com/actors/johndoe/posts/5/likes",
+      type: "Collection",
+      totalItems: 19
+    },
+    replies: {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      id: "https://odyfeed.example.com/actors/johndoe/posts/5/replies",
+      type: "Collection",
+      totalItems: 7
+    }
+  }
+])
+
+const postsLoading = ref(false)
 
 const enrichedPosts = computed(() => {
   if (!actorPosts.value || !actor.value) return []
@@ -40,11 +183,7 @@ const enrichedPosts = computed(() => {
   })) as EnrichedPost[]
 })
 
-const avatarUrl = computed(() => getAvatarUrl(actor.value))
-
 const postsCount = computed(() => enrichedPosts.value?.length || 0)
-
-const isLoading = computed(() => actorLoading.value || postsLoading.value)
 
 useHead(() => ({
   title: actor.value ? `${actor.value.name} (@${actor.value.preferredUsername})` : 'Profile',
@@ -85,110 +224,19 @@ useHead(() => ({
 
       <template v-else-if="actor">
         <UCard class="mb-8 overflow-hidden">
-          <div class="relative">
-            <div class="h-32 sm:h-40 bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700" />
-
-            <div class="px-4 sm:px-6 pb-6">
-              <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-14 sm:-mt-16 relative">
-                <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-                  <div class="relative w-24 h-24 sm:w-28 sm:h-28">
-                    <UAvatar
-                      :src="avatarUrl"
-                      :alt="actor.preferredUsername"
-                      size="lg"
-                      class="w-full h-full ring-4 ring-white dark:ring-gray-900"
-                    />
-                  </div>
-
-                  <div class="flex-1 pt-2">
-                    <div class="flex items-center gap-2 mb-1 flex-wrap">
-                      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                        {{ actor.name }}
-                      </h1>
-                      <UBadge v-if="isOwnProfile" color="primary" variant="subtle" size="sm">
-                        Your Profile
-                      </UBadge>
-                      <UBadge v-else-if="actor.tone" color="neutral" variant="subtle" size="sm">
-                        {{ actor.tone }}
-                      </UBadge>
-                    </div>
-                    <p class="text-base text-gray-500 dark:text-gray-400">
-                      @{{ actor.preferredUsername }}
-                    </p>
-                  </div>
-                </div>
-
-                <div v-if="isOwnProfile" class="flex justify-start sm:justify-end">
-                  <UButton
-                    to="/profile"
-                    color="neutral"
-                    variant="solid"
-                    icon="i-heroicons-pencil-square"
-                    size="md"
-                  >
-                    Edit Profile
-                  </UButton>
-                </div>
-              </div>
-
-              <div v-if="actor.summary" class="mt-6">
-                <p class="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {{ actor.summary }}
-                </p>
-              </div>
-
-              <div class="flex gap-6 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                <div class="flex items-baseline gap-1.5">
-                  <span class="text-2xl font-bold text-gray-900 dark:text-white">
-                    {{ postsCount }}
-                  </span>
-                  <span class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ postsCount === 1 ? 'Post' : 'Posts' }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ActorProfileHeader :actor="actor" :is-own-profile="isOwnProfile">
+            <template #stats>
+              <ActorProfileStats :posts-count="postsCount" />
+            </template>
+          </ActorProfileHeader>
         </UCard>
 
-        <div class="max-w-2xl mx-auto">
-          <div class="flex items-center justify-between mb-6 px-1">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Posts</h2>
-          </div>
-
-          <template v-if="postsLoading">
-            <div class="space-y-4">
-              <USkeleton v-for="i in 3" :key="i" class="h-40 w-full rounded-lg" />
-            </div>
-          </template>
-
-          <template v-else-if="enrichedPosts.length > 0">
-            <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden divide-y divide-gray-200 dark:divide-gray-800">
-              <PostCard
-                v-for="post in enrichedPosts"
-                :key="post.id"
-                :post="post"
-                class="border-0"
-              />
-            </div>
-          </template>
-
-          <template v-else>
-            <UCard class="text-center py-12">
-              <div class="flex flex-col items-center gap-4">
-                <UIcon name="i-heroicons-document-text" class="w-16 h-16 text-gray-300 dark:text-gray-700" />
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No posts yet
-                  </h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ isOwnProfile ? "You haven't posted anything yet." : `${actor.name} hasn't posted anything yet.` }}
-                  </p>
-                </div>
-              </div>
-            </UCard>
-          </template>
-        </div>
+        <PostList
+            small
+          :posts="enrichedPosts"
+          :is-loading="postsLoading"
+          :empty="isOwnProfile ? `You haven't posted anything yet.` : `${username} hasn't posted anything yet.`"
+        />
       </template>
     </div>
   </UContainer>
