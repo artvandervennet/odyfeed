@@ -256,8 +256,8 @@ export default defineEventHandler(async (event) => {
 
 				for (const result of postResults) {
 					if (result.status === "created" && result.note) {
-						const eventId = result.eventId
-						const slug = `${eventId}.json`
+						const statusId = result.note.id.split('/').pop() || result.eventId
+						const slug = `${statusId}.json`
 
 						const activity = generatePostActivity(result.note, actorId)
 

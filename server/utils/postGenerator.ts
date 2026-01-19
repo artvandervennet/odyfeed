@@ -95,7 +95,7 @@ export const generatePostActivity = function (
 ): any {
 	return {
 		"@context": NAMESPACES.ACTIVITYSTREAMS,
-		id: `${note.id}/activity`,
+		id: note.id,
 		type: ACTIVITY_TYPES.CREATE,
 		actor: actorId,
 		published: note.published,
