@@ -5,6 +5,7 @@ import { generateAcceptActivity, sendActivityToInbox, dereferenceActor } from "~
 import { POD_CONTAINERS, ACTIVITY_TYPES } from "~~/shared/constants"
 import { logInfo, logError, logDebug } from "~~/server/utils/logger"
 import type { ASActivity } from "~~/shared/types/activitypub"
+import { generateUUID } from "~~/server/utils/crypto"
 
 export default defineEventHandler(async (event) => {
 	const { username } = validateActorParams(event)
@@ -51,8 +52,8 @@ export default defineEventHandler(async (event) => {
 
 	try {
 		const inboxContainer = `${podUrl}${POD_CONTAINERS.INBOX}`
-		const timestamp = Date.now()
-		const slug = `${timestamp}-${activity.type.toLowerCase()}.json`
+		const uuid = generateUUID()
+		const slug = `${uuid}.json`
 
 		const savedUrl = await saveActivityToPod(webId, inboxContainer, activity, slug)
 
@@ -111,19 +112,9 @@ export default defineEventHandler(async (event) => {
 
 				if (postStatusId) {
 					const outboxContainer = `${podUrl}${POD_CONTAINERS.OUTBOX}`
-					let postActivityUrl = `${outboxContainer}${postStatusId}.json`
+					const postActivityUrl = `${outboxContainer}${postStatusId}.json`
 
-					let updated = await addLikeToPost(webId, postActivityUrl, activity.actor)
-
-					if (!updated && postStatusId.includes('-')) {
-						const eventId = postStatusId.split('-').slice(0, 2).join('-')
-						const fallbackUrl = `${outboxContainer}${eventId}.json`
-						logInfo(`Trying fallback filename: ${fallbackUrl}`)
-						updated = await addLikeToPost(webId, fallbackUrl, activity.actor)
-						if (updated) {
-							postActivityUrl = fallbackUrl
-						}
-					}
+					const updated = await addLikeToPost(webId, postActivityUrl, activity.actor)
 
 					if (updated) {
 						logInfo(`✅ Updated post ${postStatusId} with like from ${activity.actor}`)
@@ -148,19 +139,9 @@ export default defineEventHandler(async (event) => {
 
 					if (postStatusId) {
 						const outboxContainer = `${podUrl}${POD_CONTAINERS.OUTBOX}`
-						let postActivityUrl = `${outboxContainer}${postStatusId}.json`
+						const postActivityUrl = `${outboxContainer}${postStatusId}.json`
 
-						let updated = await removeLikeFromPost(webId, postActivityUrl, activity.actor)
-
-						if (!updated && postStatusId.includes('-')) {
-							const eventId = postStatusId.split('-').slice(0, 2).join('-')
-							const fallbackUrl = `${outboxContainer}${eventId}.json`
-							logInfo(`Trying fallback filename for undo: ${fallbackUrl}`)
-							updated = await removeLikeFromPost(webId, fallbackUrl, activity.actor)
-							if (updated) {
-								postActivityUrl = fallbackUrl
-							}
-						}
+						const updated = await removeLikeFromPost(webId, postActivityUrl, activity.actor)
 
 						if (updated) {
 							logInfo(`✅ Updated post ${postStatusId} by removing like from ${activity.actor}`)

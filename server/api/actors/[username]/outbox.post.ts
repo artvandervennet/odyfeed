@@ -5,6 +5,7 @@ import { federateActivity } from "~~/server/utils/federation"
 import { POD_CONTAINERS, ACTIVITY_TYPES } from "~~/shared/constants"
 import { logInfo, logError } from "~~/server/utils/logger"
 import type { ASActivity } from "~~/shared/types/activitypub"
+import { generateUUID } from "~~/server/utils/crypto"
 
 export default defineEventHandler(async (event) => {
 	const { webId, username: authUsername } = requireAuth(event)
@@ -52,8 +53,8 @@ export default defineEventHandler(async (event) => {
 
 	try {
 		const outboxContainer = `${podUrl}${POD_CONTAINERS.OUTBOX}`
-		const timestamp = Date.now()
-		const slug = `${timestamp}-${activity.type.toLowerCase()}.json`
+		const uuid = generateUUID()
+		const slug = `${uuid}.json`
 
 		const savedUrl = await saveActivityToPod(webId, outboxContainer, activity, slug)
 

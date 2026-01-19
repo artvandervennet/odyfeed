@@ -2,6 +2,7 @@ import { OpenAI } from "openai";
 import type { MythActor, MythEvent, ASNote } from "~~/shared/types/activitypub";
 import { NAMESPACES, ACTIVITY_TYPES, ENDPOINT_PATHS, DEFAULTS } from "~~/shared/constants";
 import { logInfo, logError } from "./logger";
+import {generateUUID} from "~~/server/utils/crypto";
 
 interface PostGenerationResult {
 	eventId: string;
@@ -54,9 +55,8 @@ Houd het kort en krachtig. Gebruik niet te veel emoji's. Deze post moet lijken a
 
 		const content = completion.choices[0].message.content?.trim() || "";
 		const published = new Date().toISOString();
-		const timestamp = Date.now();
-		const uniqueStatusId = `${eventId}-${actor.preferredUsername}-${timestamp}`;
-		const postUrl = `${baseUrl}${ENDPOINT_PATHS.STATUS(uniqueStatusId)}`;
+		const uuid = generateUUID();
+		const postUrl = `${baseUrl}${ENDPOINT_PATHS.STATUS(uuid)}`;
 
 		const activityNote: ASNote = {
 			"@context": NAMESPACES.ACTIVITYSTREAMS,

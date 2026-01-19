@@ -56,8 +56,9 @@ export const createReplyActivity = function (
 	post: EnrichedPost,
 	content: string
 ): { replyNote: ASNote; createActivity: ASActivity } {
-	const timestamp = Date.now()
-	const replyId = `${outboxUrl}/${timestamp}-reply`
+	const replyUuid = crypto.randomUUID()
+	const createUuid = crypto.randomUUID()
+	const replyId = `${outboxUrl}/${replyUuid}`
 
 	const replyNote: ASNote = {
 		'@context': NAMESPACES.ACTIVITYSTREAMS,
@@ -73,7 +74,7 @@ export const createReplyActivity = function (
 	const createActivity: ASActivity = {
 		'@context': NAMESPACES.ACTIVITYSTREAMS,
 		type: ACTIVITY_TYPES.CREATE,
-		id: `${outboxUrl}/${timestamp}-create`,
+		id: `${outboxUrl}/${createUuid}`,
 		actor: actorId,
 		object: replyNote,
 		to: [NAMESPACES.PUBLIC, post.actor?.id || ''],

@@ -1,4 +1,4 @@
-import { generateKeyPairSync, createSign, createHash } from 'crypto'
+import { generateKeyPairSync, createSign, createHash, randomUUID } from 'crypto'
 
 export interface KeyPair {
   publicKey: string
@@ -66,5 +66,9 @@ export const signRequest = function (params: SignRequestParams): Record<string, 
   }
 
   return requestHeaders
+}
+
+export const generateUUID = function (): string {
+  return randomUUID()
 }
 

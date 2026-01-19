@@ -8,6 +8,7 @@ import {
 } from '@inrupt/solid-client'
 import { getAuthenticatedFetch } from './solidSession'
 import { logInfo, logError, logDebug } from './logger'
+import { generateUUID } from './crypto'
 import { POD_CONTAINERS } from '~~/shared/constants'
 import { AclPermissionType } from '~~/shared/types/solid'
 import { generateAclForPermissionType } from './aclGenerator'
@@ -100,7 +101,7 @@ export const saveActivityToPod = async function (
 		const activityJson = JSON.stringify(activity, null, 2)
 		const blob = new Blob([activityJson], { type: 'application/activity+json' })
 
-		const fileName = slug || `${Date.now()}-${activity.type?.toLowerCase() || 'activity'}.json`
+		const fileName = slug || `${generateUUID()}.json`
 
 		const savedFile = await saveFileInContainer(
 			containerPath,

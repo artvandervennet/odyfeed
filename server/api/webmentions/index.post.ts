@@ -3,6 +3,8 @@ import { fetchAndParseMicroformats } from '~~/server/utils/microformats'
 import type { WebmentionRequest } from '~~/shared/types/webmention'
 import type { ASNote, ASCollection, WebmentionObject } from '~~/shared/types/activitypub'
 import { FILE_PATHS, ACTIVITY_TYPES } from '~~/shared/constants'
+import { generateUUID } from '~~/server/utils/crypto'
+import { logError } from '~~/server/utils/logger'
 
 const WEBMENTIONS_DIR = 'webmentions'
 
@@ -188,6 +190,6 @@ const isValidUrl = function (url: string): boolean {
 }
 
 const generateWebmentionId = function (): string {
-  return `wm-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+  return `wm-${generateUUID()}`
 }
 

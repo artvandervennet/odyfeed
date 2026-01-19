@@ -16,7 +16,7 @@ export const useReplyMutation = defineMutation(() => {
 
 			const previousTimeline = queryCache.getQueryData<TimelineResponse>(queryKeys.timeline())
 
-			const optimisticReplyId = `${actorId}/outbox/${Date.now()}-reply`
+			const optimisticReplyId = `${actorId}/outbox/${crypto.randomUUID()}`
 
 			if (previousTimeline) {
 				queryCache.setQueryData(queryKeys.timeline(), {
