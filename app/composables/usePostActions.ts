@@ -17,7 +17,7 @@ export const usePostActions = function (post: ComputedRef<EnrichedPost>) {
 	const undoLikeMutation = useUndoLikeMutation()
 	const replyMutation = useReplyMutation()
 
-	const liked = computed(() => isPostLikedByUser(post.value, auth.webId))
+	const liked = computed(() => isPostLikedByUser(post.value, auth.actorId))
 	const likesCount = computed(() => getPostLikesCount(post.value))
 	const repliesCount = computed(() => getPostRepliesCount(post.value))
 

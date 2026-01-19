@@ -455,3 +455,136 @@ export const getPrivateKeyFromPod = async function (
 	}
 }
 
+export const updateActivityInPod = async function (
+	webId: string,
+	activityUrl: string,
+	updatedActivity: any
+): Promise<boolean> {
+	const authenticatedFetch = await getAuthenticatedFetch(webId)
+	if (!authenticatedFetch) {
+		logError(`Cannot authenticate for WebID: ${webId}`)
+		return false
+	}
+
+	try {
+		const activityJson = JSON.stringify(updatedActivity, null, 2)
+
+		const response = await authenticatedFetch(activityUrl, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/activity+json',
+			},
+			body: activityJson,
+		})
+
+		if (response.ok) {
+			logInfo(`Activity updated in Pod: ${activityUrl}`)
+			return true
+		} else {
+			logError(`Failed to update activity: ${response.status} ${response.statusText}`)
+			return false
+		}
+	} catch (error) {
+		logError(`Failed to update activity in Pod: ${activityUrl}`, error)
+		return false
+	}
+}
+
+export const addLikeToPost = async function (
+	webId: string,
+	postActivityUrl: string,
+	likerActorId: string
+): Promise<boolean> {
+	try {
+		const activity = await getActivityFromPod(webId, postActivityUrl)
+		if (!activity) {
+			logError(`Post activity not found: ${postActivityUrl}`)
+			return false
+		}
+
+		let noteToUpdate = activity
+		if (activity.type === 'Create' && activity.object) {
+			noteToUpdate = activity.object
+		}
+
+		if (!noteToUpdate.likes) {
+			noteToUpdate.likes = {
+				type: 'OrderedCollection',
+				totalItems: 0,
+				orderedItems: []
+			}
+		}
+
+		if (!noteToUpdate.likes.orderedItems) {
+			noteToUpdate.likes.orderedItems = []
+		}
+
+		if (!noteToUpdate.likes.orderedItems.includes(likerActorId)) {
+			noteToUpdate.likes.orderedItems.push(likerActorId)
+			noteToUpdate.likes.totalItems = (noteToUpdate.likes.totalItems || 0) + 1
+
+			if (activity.type === 'Create') {
+				activity.object = noteToUpdate
+			}
+
+			const updated = await updateActivityInPod(webId, postActivityUrl, activity)
+			if (updated) {
+				logInfo(`Added like from ${likerActorId} to post ${postActivityUrl}`)
+			}
+			return updated
+		} else {
+			logDebug(`Like from ${likerActorId} already exists on post ${postActivityUrl}`)
+			return true
+		}
+	} catch (error) {
+		logError(`Failed to add like to post ${postActivityUrl}`, error)
+		return false
+	}
+}
+
+export const removeLikeFromPost = async function (
+	webId: string,
+	postActivityUrl: string,
+	likerActorId: string
+): Promise<boolean> {
+	try {
+		const activity = await getActivityFromPod(webId, postActivityUrl)
+		if (!activity) {
+			logError(`Post activity not found: ${postActivityUrl}`)
+			return false
+		}
+
+		let noteToUpdate = activity
+		if (activity.type === 'Create' && activity.object) {
+			noteToUpdate = activity.object
+		}
+
+		if (!noteToUpdate.likes || !noteToUpdate.likes.orderedItems) {
+			logDebug(`No likes collection found on post ${postActivityUrl}`)
+			return true
+		}
+
+		const index = noteToUpdate.likes.orderedItems.indexOf(likerActorId)
+		if (index > -1) {
+			noteToUpdate.likes.orderedItems.splice(index, 1)
+			noteToUpdate.likes.totalItems = Math.max((noteToUpdate.likes.totalItems || 1) - 1, 0)
+
+			if (activity.type === 'Create') {
+				activity.object = noteToUpdate
+			}
+
+			const updated = await updateActivityInPod(webId, postActivityUrl, activity)
+			if (updated) {
+				logInfo(`Removed like from ${likerActorId} from post ${postActivityUrl}`)
+			}
+			return updated
+		} else {
+			logDebug(`Like from ${likerActorId} not found on post ${postActivityUrl}`)
+			return true
+		}
+	} catch (error) {
+		logError(`Failed to remove like from post ${postActivityUrl}`, error)
+		return false
+	}
+}
+

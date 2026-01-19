@@ -1,5 +1,5 @@
 import { validateActorParams, fetchUserMapping } from "~~/server/utils/actorEndpointHelpers"
-import { saveActivityToPod, getPrivateKeyFromPod } from "~~/server/utils/podStorage"
+import { saveActivityToPod, getPrivateKeyFromPod, addLikeToPost, removeLikeFromPost } from "~~/server/utils/podStorage"
 import { verifyHttpSignature } from "~~/server/utils/httpSignature"
 import { generateAcceptActivity, sendActivityToInbox, dereferenceActor } from "~~/server/utils/federation"
 import { POD_CONTAINERS, ACTIVITY_TYPES } from "~~/shared/constants"
@@ -97,6 +97,55 @@ export default defineEventHandler(async (event) => {
 					}
 				} else {
 					logError(`Could not find inbox for follower ${activity.actor}`)
+				}
+			}
+		}
+
+		if (activity.type === ACTIVITY_TYPES.LIKE) {
+			logInfo(`Received Like activity from ${activity.actor} for object ${activity.object}`)
+
+			if (typeof activity.object === 'string') {
+				const postUrl = activity.object
+				const urlParts = postUrl.split('/')
+				const postStatusId = urlParts[urlParts.length - 1]
+
+				if (postStatusId) {
+					const outboxContainer = `${podUrl}${POD_CONTAINERS.OUTBOX}`
+					const postActivityUrl = `${outboxContainer}${postStatusId}.json`
+
+					const updated = await addLikeToPost(webId, postActivityUrl, activity.actor)
+					if (updated) {
+						logInfo(`✅ Updated post ${postStatusId} with like from ${activity.actor}`)
+					} else {
+						logError(`Failed to update post ${postStatusId} with like`)
+					}
+				}
+			}
+		}
+
+		if (activity.type === ACTIVITY_TYPES.UNDO) {
+			logInfo(`Received Undo activity from ${activity.actor}`)
+
+			const undoObject = activity.object as any
+			if (undoObject && undoObject.type === ACTIVITY_TYPES.LIKE) {
+				logInfo(`Processing Undo Like from ${activity.actor} for object ${undoObject.object}`)
+
+				if (typeof undoObject.object === 'string') {
+					const postUrl = undoObject.object
+					const urlParts = postUrl.split('/')
+					const postStatusId = urlParts[urlParts.length - 1]
+
+					if (postStatusId) {
+						const outboxContainer = `${podUrl}${POD_CONTAINERS.OUTBOX}`
+						const postActivityUrl = `${outboxContainer}${postStatusId}.json`
+
+						const updated = await removeLikeFromPost(webId, postActivityUrl, activity.actor)
+						if (updated) {
+							logInfo(`✅ Updated post ${postStatusId} by removing like from ${activity.actor}`)
+						} else {
+							logError(`Failed to update post ${postStatusId} to remove like`)
+						}
+					}
 				}
 			}
 		}

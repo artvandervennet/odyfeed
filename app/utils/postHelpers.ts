@@ -1,21 +1,21 @@
 import type { EnrichedPost } from '~~/shared/types/activitypub'
 
-export const isPostLikedByUser = function (post: EnrichedPost, userWebId: string): boolean {
-	if (!userWebId) return false
+export const isPostLikedByUser = function (post: EnrichedPost, userActorId: string): boolean {
+	if (!userActorId) return false
 
 	const likes = post.likes
 	if (!likes) return false
 
 	if (Array.isArray(likes)) {
-		return likes.includes(userWebId)
+		return likes.includes(userActorId)
 	}
 
 	if (likes.orderedItems) {
-		return likes.orderedItems.includes(userWebId)
+		return likes.orderedItems.includes(userActorId)
 	}
 
 	if (likes.items) {
-		return likes.items.includes(userWebId)
+		return likes.items.includes(userActorId)
 	}
 
 	return false
