@@ -19,12 +19,6 @@ const auth = useAuthStore()
 <template>
   <div class="space-y-3">
     <div class="flex gap-3">
-<!--      <ActorAvatar-->
-<!--        v-if="auth.isLoggedIn"-->
-<!--        :avatar-url="auth.avatar"-->
-<!--        :username="auth.preferredUsername || 'You'"-->
-<!--        size="sm"-->
-<!--      />-->
       <div class="flex-1">
         <UTextarea
           v-model="replyContent"

@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 	if (username !== authUsername) {
 		throw createError({
 			statusCode: 403,
-			statusMessage: 'You can only post to your own outbox',
+			statusMessage: `You can only post to your own outbox (${username} !=== ${authUsername}) `,
 		})
 	}
 
