@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import {useAuthStore} from '~/stores/authStore'
-import AuthActions from "~/components/molecules/AuthActions.vue";
-import ThemeToggle from "~/components/molecules/ThemeToggle.vue";
-import UserMenu from "~/components/molecules/UserMenu.vue";
+import ThemeToggle from "~/components/atoms/ThemeToggle.vue";
 
 const auth = useAuthStore()
 
@@ -41,14 +39,14 @@ const logout = async function () {
         <div class="flex items-center gap-3">
           <ThemeToggle />
 
-          <AuthActions :is-logged-in="auth.isLoggedIn" :needs-registration="needsRegistration">
+          <ActorActions :is-logged-in="auth.isLoggedIn" :needs-registration="needsRegistration">
             <template #user-menu>
-              <UserMenu :user-profile="auth.userProfile" @logout="logout" />
+              <ActorMenu :user-profile="auth.userProfile" @logout="logout" />
             </template>
             <template #login-button>
               <LoginModal />
             </template>
-          </AuthActions>
+          </ActorActions>
         </div>
       </div>
     </UContainer>
