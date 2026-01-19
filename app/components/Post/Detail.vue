@@ -2,26 +2,29 @@
 import { useRepliesQuery } from '~/queries/replies'
 import { usePostWebmentionsQuery } from '~/queries/webmentions'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
-import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
-import { useReplyMutation } from '~/mutations/reply'
 import { useAuthStore } from '~/stores/authStore'
-import { isPostLikedByUser, getPostLikesCount, getPostRepliesCount, extractStatusIdFromPostUrl } from '~/utils/postHelpers'
+import { extractStatusIdFromPostUrl } from '~/utils/postHelpers'
+import { usePostActions } from '~/composables/usePostActions'
 
 const props = defineProps<{
   post: EnrichedPost
 }>()
 
 const auth = useAuthStore()
-const likeMutation = useLikeMutation()
-const undoLikeMutation = useUndoLikeMutation()
-const replyMutation = useReplyMutation()
 
 const showReplyForm = ref(false)
 const replyContent = ref('')
 
-const liked = computed(() => isPostLikedByUser(props.post, auth.webId))
-const likesCount = computed(() => getPostLikesCount(props.post))
-const repliesCount = computed(() => getPostRepliesCount(props.post))
+const postComputed = computed(() => props.post)
+const {
+  liked,
+  likesCount,
+  repliesCount,
+  isLikeLoading,
+  isReplyLoading,
+  handleLike,
+  handleReply,
+} = usePostActions(postComputed)
 
 const { data: replies, isLoading: repliesLoading } = useRepliesQuery()(props.post)
 
@@ -35,30 +38,10 @@ const { data: webmentions, isLoading: webmentionsLoading } = usePostWebmentionsQ
 
 const postUrl = computed(() => props.post.id)
 
-const handleLike = async function () {
-  if (!auth.isLoggedIn) {
-    console.warn('User must be logged in to like posts')
-    return
-  }
-
-  if (likeMutation.isLoading.value) return
-
-  if (liked.value) {
-    undoLikeMutation.mutate(props.post)
-  } else {
-    likeMutation.mutate(props.post)
-  }
-}
-
-const handleReply = async function () {
+const submitReply = function () {
   if (!replyContent.value.trim()) return
 
-  if (!auth.isLoggedIn) {
-    console.warn('User must be logged in to reply')
-    return
-  }
-
-  replyMutation.mutate({ post: props.post, content: replyContent.value })
+  handleReply(replyContent.value)
   replyContent.value = ''
   showReplyForm.value = false
 }
@@ -124,6 +107,8 @@ const toggleReplyForm = function () {
             size="md"
             :color="liked ? 'error' : 'neutral'"
             variant="ghost"
+            :loading="isLikeLoading"
+            :disabled="isLikeLoading"
             @click.stop="handleLike"
             class="flex-1"
         >
@@ -134,6 +119,7 @@ const toggleReplyForm = function () {
             size="md"
             color="neutral"
             variant="ghost"
+            :disabled="isReplyLoading"
             @click.stop="toggleReplyForm"
             class="flex-1"
         >
@@ -146,7 +132,8 @@ const toggleReplyForm = function () {
       <ReplyForm
           v-model="replyContent"
           placeholder="Post your reply..."
-          @submit="handleReply"
+          :disabled="isReplyLoading"
+          @submit="submitReply"
           @cancel="toggleReplyForm"
       />
     </div>

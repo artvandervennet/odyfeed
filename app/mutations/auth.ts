@@ -1,6 +1,7 @@
 import { defineMutation, useMutation, useQueryCache } from '@pinia/colada'
 import { registerNewUser, logoutUser } from '~/api/auth'
 import type { RegisterUserPayload, RegisterUserResponse } from '~/types'
+import { queryKeys } from '~/utils/queryKeys'
 
 export const useRegisterMutation = defineMutation(() => {
   const queryCache = useQueryCache()
@@ -10,8 +11,8 @@ export const useRegisterMutation = defineMutation(() => {
       return await registerNewUser(payload)
     },
     onSuccess: async () => {
-      await queryCache.invalidateQueries({ key: ['auth'] })
-      await queryCache.invalidateQueries({ key: ['user'] })
+      await queryCache.invalidateQueries({ key: queryKeys.auth.all() })
+      await queryCache.invalidateQueries({ key: queryKeys.user.all() })
     },
   })
 })
@@ -24,9 +25,9 @@ export const useLogoutMutation = defineMutation(() => {
       return await logoutUser()
     },
     onSuccess: async () => {
-      await queryCache.invalidateQueries({ key: ['auth'] })
-      await queryCache.invalidateQueries({ key: ['user'] })
-      await queryCache.invalidateQueries({ key: ['timeline'] })
+      await queryCache.invalidateQueries({ key: queryKeys.auth.all() })
+      await queryCache.invalidateQueries({ key: queryKeys.user.all() })
+      await queryCache.invalidateQueries({ key: queryKeys.timeline() })
       window.location.href = '/'
     },
   })

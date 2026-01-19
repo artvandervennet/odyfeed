@@ -1,36 +1,53 @@
 import { defineMutation, useMutation, useQueryCache } from '@pinia/colada'
-import { useAuthStore } from '~/stores/authStore'
 import { createLikeActivity, sendLikeActivity, createUndoLikeActivity, sendUndoActivity } from '~/api/activities'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
-import { useSolidPodStorage } from '~/composables/useSolidPodStorage'
 import { queryKeys } from '~/utils/queryKeys'
+import { validateAuth } from '~/utils/mutationHelpers'
 
 export const useLikeMutation = defineMutation(() => {
-	const auth = useAuthStore()
 	const queryCache = useQueryCache()
-	const podStorage = useSolidPodStorage()
 
 	return useMutation({
-		mutation: async (post: EnrichedPost) => {
-			if (!auth.isLoggedIn || !auth.actorId || !auth.outbox) {
-				throw new Error('Not authenticated')
+		onMutate: async (post: EnrichedPost) => {
+			await queryCache.cancelQueries({ key: queryKeys.timeline() })
+
+			const previousTimeline = queryCache.getQueryData<{ orderedItems: EnrichedPost[] }>(queryKeys.timeline())
+
+			if (previousTimeline) {
+				queryCache.setQueryData(queryKeys.timeline(), {
+					...previousTimeline,
+					orderedItems: previousTimeline.orderedItems.map(p =>
+						p.id === post.id
+							? {
+									...p,
+									likes: {
+										...p.likes,
+										totalItems: (p.likes?.totalItems || 0) + 1
+									}
+								}
+							: p
+					)
+				})
 			}
+
+			return { previousTimeline }
+		},
+		mutation: async (post: EnrichedPost) => {
+			const { actorId, outbox } = validateAuth()
 
 			if (!post.actor?.inbox) {
 				throw new Error('Target actor inbox not found')
 			}
 
-			const likeActivity = createLikeActivity(auth.actorId, auth.outbox, post)
-
-			await sendLikeActivity(post.actor.inbox, auth.outbox, likeActivity)
-
-			try {
-				await podStorage.saveLikeToPod(post.id, likeActivity)
-			} catch (error) {
-				console.warn('Failed to save like to Pod:', error)
-			}
+			const likeActivity = createLikeActivity(actorId, outbox, post)
+			await sendLikeActivity(post.actor.inbox, outbox, likeActivity)
 
 			return likeActivity
+		},
+		onError: (_error, _post, context) => {
+			if (context?.previousTimeline) {
+				queryCache.setQueryData(queryKeys.timeline(), context.previousTimeline)
+			}
 		},
 		onSuccess: async () => {
 			await queryCache.invalidateQueries({ key: queryKeys.timeline() })
@@ -39,31 +56,49 @@ export const useLikeMutation = defineMutation(() => {
 })
 
 export const useUndoLikeMutation = defineMutation(() => {
-	const auth = useAuthStore()
 	const queryCache = useQueryCache()
-	const podStorage = useSolidPodStorage()
 
 	return useMutation({
-		mutation: async (post: EnrichedPost) => {
-			if (!auth.isLoggedIn || !auth.actorId || !auth.outbox) {
-				throw new Error('Not authenticated')
+		onMutate: async (post: EnrichedPost) => {
+			await queryCache.cancelQueries({ key: queryKeys.timeline() })
+
+			const previousTimeline = queryCache.getQueryData<{ orderedItems: EnrichedPost[] }>(queryKeys.timeline())
+
+			if (previousTimeline) {
+				queryCache.setQueryData(queryKeys.timeline(), {
+					...previousTimeline,
+					orderedItems: previousTimeline.orderedItems.map(p =>
+						p.id === post.id
+							? {
+									...p,
+									likes: {
+										...p.likes,
+										totalItems: Math.max((p.likes?.totalItems || 0) - 1, 0)
+									}
+								}
+							: p
+					)
+				})
 			}
+
+			return { previousTimeline }
+		},
+		mutation: async (post: EnrichedPost) => {
+			const { actorId, outbox } = validateAuth()
 
 			if (!post.actor?.inbox) {
 				throw new Error('Target actor inbox not found')
 			}
 
-			const undoActivity = createUndoLikeActivity(auth.actorId, auth.outbox, post)
-
-			await sendUndoActivity(post.actor.inbox, auth.outbox, undoActivity)
-
-			try {
-				await podStorage.removeLikeFromPod(post.id)
-			} catch (error) {
-				console.warn('Failed to remove like from Pod:', error)
-			}
+			const undoActivity = createUndoLikeActivity(actorId, outbox, post)
+			await sendUndoActivity(post.actor.inbox, outbox, undoActivity)
 
 			return undoActivity
+		},
+		onError: (_error, _post, context) => {
+			if (context?.previousTimeline) {
+				queryCache.setQueryData(queryKeys.timeline(), context.previousTimeline)
+			}
 		},
 		onSuccess: async () => {
 			await queryCache.invalidateQueries({ key: queryKeys.timeline() })

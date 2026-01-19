@@ -3,6 +3,8 @@ defineProps<{
   likesCount: number
   repliesCount: number
   isLiked: boolean
+  isLikeLoading?: boolean
+  isReplyLoading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -18,7 +20,9 @@ const emit = defineEmits<{
         variant="ghost"
         color="secondary"
         size="xs"
-        icon="i-heroicons-chat-bubble-left">
+        icon="i-heroicons-chat-bubble-left"
+        :loading="isReplyLoading"
+        :disabled="isReplyLoading">
       {{ repliesCount }}
     </UButton>
     <UButton
@@ -26,7 +30,9 @@ const emit = defineEmits<{
         variant="ghost"
         :color="isLiked ? 'primary' : 'secondary'"
         size="xs"
-        :icon="isLiked ? 'i-heroicons-heart-20-solid' : 'i-heroicons-heart'">
+        :icon="isLiked ? 'i-heroicons-heart-20-solid' : 'i-heroicons-heart'"
+        :loading="isLikeLoading"
+        :disabled="isLikeLoading">
       {{ likesCount }}
     </UButton>
   </div>

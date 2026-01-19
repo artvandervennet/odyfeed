@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {useAuthStore} from '~/stores/authStore';
+import { useAuthStore } from '~/stores/authStore'
 
-const auth = useAuthStore();
-const colorMode = useColorMode();
+const auth = useAuthStore()
+const colorMode = useColorMode()
 
 const needsRegistration = computed(() => {
 	return auth.isAuthenticated && !auth.isLoggedIn
-});
+})
 
 const isDark = computed({
 	get() {
@@ -18,8 +18,8 @@ const isDark = computed({
 })
 
 const logout = async function () {
-	await auth.logout();
-};
+	await auth.logout()
+}
 </script>
 
 <template>
@@ -44,6 +44,13 @@ const logout = async function () {
           </ClientOnly>
 
           <template v-if="auth.isLoggedIn">
+            <UButton
+                to="/inbox"
+                icon="i-heroicons-inbox"
+                color="neutral"
+                variant="ghost"
+                aria-label="Inbox"
+            />
             <UDropdownMenu
                 :items="[
                 [

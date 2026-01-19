@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { EnrichedPost } from '~~/shared/types/activitypub'
-import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
-import { useReplyMutation } from '~/mutations/reply'
 import { useAuthStore } from '~/stores/authStore'
-import { isPostLikedByUser, getPostLikesCount, getPostRepliesCount, extractStatusIdFromPostUrl } from '~/utils/postHelpers'
+import { usePostActions } from '~/composables/usePostActions'
 
 const props = defineProps<{
   post: EnrichedPost
@@ -12,49 +10,26 @@ const props = defineProps<{
 }>()
 
 const auth = useAuthStore()
-const likeMutation = useLikeMutation()
-const undoLikeMutation = useUndoLikeMutation()
-const replyMutation = useReplyMutation()
 
 const showReplyForm = ref(false)
 const replyContent = ref('')
 
-const liked = computed(() => isPostLikedByUser(props.post, auth.webId))
-const likesCount = computed(() => getPostLikesCount(props.post))
-const repliesCount = computed(() => getPostRepliesCount(props.post))
+const postComputed = computed(() => props.post)
+const {
+  liked,
+  likesCount,
+  repliesCount,
+  isLikeLoading,
+  isReplyLoading,
+  handleLike,
+  handleReply,
+  postDetailUrl,
+} = usePostActions(postComputed)
 
-const postDetailUrl = computed(() => {
-  const username = props.post.actor?.preferredUsername
-  const statusId = extractStatusIdFromPostUrl(props.post.id)
-  return `/actors/${username}/status/${statusId}`
-})
-
-const handleLike = async function (event: Event) {
-  event.stopPropagation()
-
-  if (!auth.isLoggedIn) {
-    console.warn('User must be logged in to like posts')
-    return
-  }
-
-  if (likeMutation.isLoading.value || undoLikeMutation.isLoading.value) return
-
-  if (liked.value) {
-    undoLikeMutation.mutate(props.post)
-  } else {
-    likeMutation.mutate(props.post)
-  }
-}
-
-const handleReply = async function () {
+const submitReply = function () {
   if (!replyContent.value.trim()) return
 
-  if (!auth.isLoggedIn) {
-    console.warn('User must be logged in to reply')
-    return
-  }
-
-  replyMutation.mutate({ post: props.post, content: replyContent.value })
+  handleReply(replyContent.value)
   replyContent.value = ''
   showReplyForm.value = false
 }
@@ -98,7 +73,8 @@ const toggleReplyForm = function (event?: Event) {
     <div v-if="showReplyForm" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
       <ReplyForm
           v-model="replyContent"
-          @submit="handleReply"
+          :disabled="isReplyLoading"
+          @submit="submitReply"
           @cancel="() => toggleReplyForm()"
       />
     </div>
@@ -108,6 +84,8 @@ const toggleReplyForm = function (event?: Event) {
           :likes-count="likesCount"
           :replies-count="repliesCount"
           :is-liked="liked"
+          :is-like-loading="isLikeLoading"
+          :is-reply-loading="isReplyLoading"
           @like.stop="handleLike"
           @reply.stop="toggleReplyForm"
       />

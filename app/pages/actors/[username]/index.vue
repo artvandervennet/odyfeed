@@ -1,47 +1,50 @@
 <script setup lang="ts">
-import { useQuery } from '@pinia/colada';
-import { computed } from 'vue';
-import { useRoute } from '#app';
-import { fetchActor, fetchActorOutbox, fetchNoteByUrl } from '~/api/actors';
-import type { EnrichedPost } from '~~/shared/types/activitypub';
+import { useQuery } from '@pinia/colada'
+import { fetchActor, fetchActorOutbox, fetchNoteByUrl } from '~/api/actors'
+import type { EnrichedPost } from '~~/shared/types/activitypub'
+import { useAuthStore } from '~/stores/authStore'
+import { queryKeys } from '~/utils/queryKeys'
 
-const route = useRoute();
-const username = route.params.username as string;
+const route = useRoute()
+const username = route.params.username as string
+const auth = useAuthStore()
 
 const { getAvatarUrl } = useActorAvatar()
 
+const isOwnProfile = computed(() => auth.username === username)
+
 const { data: actor } = useQuery({
-  key: ['actors', username],
+  key: queryKeys.actors.byUsername(username),
   query: () => fetchActor(username)
-});
+})
 
 const { data: outbox } = useQuery({
-  key: ['outbox', username],
+  key: queryKeys.actors.outbox(username),
   query: () => fetchActorOutbox(username)
-});
+})
 
 const { data: actorPosts, isLoading: postsLoading } = useQuery({
-  key: ['actor-posts', username],
+  key: queryKeys.actors.posts(username),
   query: async () => {
-    const outboxData = await fetchActorOutbox(username);
-    if (!outboxData?.orderedItems) return [];
+    const outboxData = await fetchActorOutbox(username)
+    if (!outboxData?.orderedItems) return []
 
     const posts = await Promise.all(
       outboxData.orderedItems.map(url => fetchNoteByUrl(url))
-    );
+    )
 
-    return posts.filter(post => post.type === 'Note') as EnrichedPost[];
+    return posts.filter(post => post.type === 'Note') as EnrichedPost[]
   },
   staleTime: 1000 * 60 * 5,
-});
+})
 
 const enrichedPosts = computed(() => {
-  if (!actorPosts.value || !actor.value) return [];
+  if (!actorPosts.value || !actor.value) return []
   return actorPosts.value.map(post => ({
     ...post,
     actor: actor.value
-  })) as EnrichedPost[];
-});
+  })) as EnrichedPost[]
+})
 
 const avatarUrl = computed(() => getAvatarUrl(actor.value))
 </script>
@@ -53,13 +56,29 @@ const avatarUrl = computed(() => getAvatarUrl(actor.value))
           <ActorAvatar
               :avatar-url="avatarUrl"
               :username="actor.preferredUsername"
+              size="lg"
           />
           <div class="flex-1">
             <div class="flex items-center justify-between mb-2">
               <h1 class="text-2xl font-bold">{{ actor.name }}</h1>
-              <UBadge v-if="actor.tone" color="primary" variant="subtle">
-                {{ actor.tone }}
-              </UBadge>
+              <div class="flex items-center gap-2">
+                <UBadge v-if="isOwnProfile" color="primary" variant="subtle">
+                  Your Profile
+                </UBadge>
+                <UBadge v-else-if="actor.tone" color="neutral" variant="subtle">
+                  {{ actor.tone }}
+                </UBadge>
+                <UButton
+                  v-if="isOwnProfile"
+                  to="/profile"
+                  size="sm"
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-heroicons-pencil-square"
+                >
+                  Edit
+                </UButton>
+              </div>
             </div>
             <p class="text-gray-500 mb-4">@{{ actor.preferredUsername }}</p>
             <p v-if="actor.summary" class="text-sm dark:text-gray-300">

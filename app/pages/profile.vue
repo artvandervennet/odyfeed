@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {useAuthStore} from '~/stores/authStore'
+import { useAuthStore } from '~/stores/authStore'
 
 const auth = useAuthStore()
 
@@ -18,6 +18,10 @@ const extractUsernameFromWebId = function (webId: string) {
   } catch {
     return 'user'
   }
+}
+
+const handleLogout = async function () {
+  await auth.logout()
 }
 </script>
 
@@ -98,6 +102,19 @@ const extractUsernameFromWebId = function (webId: string) {
                 }}</span>
             </div>
           </div>
+        </UCard>
+
+        <UCard class="mt-4">
+          <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Account Actions</h2>
+          <UButton
+            color="error"
+            variant="soft"
+            icon="i-heroicons-arrow-right-on-rectangle"
+            block
+            @click="handleLogout"
+          >
+            Logout
+          </UButton>
         </UCard>
       </template>
     </div>

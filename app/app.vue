@@ -1,8 +1,8 @@
 <script setup lang="ts">
 try {
-	await useAuthStore().initSession();
+	await useAuthStore().initSession()
 } catch (error) {
-	console.error('Session initialization failed:', error);
+	console.error('Session initialization failed:', error)
 }
 </script>
 

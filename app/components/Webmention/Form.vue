@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { useQueryCache } from '@pinia/colada'
+import { useSendWebmentionMutation } from '~/mutations/webmention'
 
 const { targetUrl } = defineProps<{
   targetUrl: string
 }>()
 
 const sourceUrl = ref('')
-const isLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
-const queryCache = useQueryCache()
+
+const webmentionMutation = useSendWebmentionMutation()
 
 const handleSubmit = async function () {
   errorMessage.value = ''
@@ -25,25 +25,16 @@ const handleSubmit = async function () {
     return
   }
 
-  isLoading.value = true
-
   try {
-    const response = await $fetch('/api/webmention', {
-      method: 'POST',
-      body: {
-        source: sourceUrl.value,
-        target: targetUrl,
-      },
+    await webmentionMutation.mutateAsync({
+      source: sourceUrl.value,
+      target: targetUrl,
     })
 
     successMessage.value = 'Webmention sent successfully! It will appear shortly.'
     sourceUrl.value = ''
-
-    await queryCache.invalidateQueries({ key: ['webmentions'] })
   } catch (error: any) {
     errorMessage.value = error.data?.message || error.message || 'Failed to send webmention'
-  } finally {
-    isLoading.value = false
   }
 }
 
@@ -78,7 +69,7 @@ const isValidUrl = function (url: string): boolean {
             v-model="sourceUrl"
             type="url"
             placeholder="https://yoursite.com/your-post"
-            :disabled="isLoading"
+            :disabled="webmentionMutation.isLoading.value"
             required
           />
         </UFormGroup>
@@ -86,8 +77,8 @@ const isValidUrl = function (url: string): boolean {
         <div class="flex items-center gap-4">
           <UButton
             type="submit"
-            :loading="isLoading"
-            :disabled="!sourceUrl || isLoading"
+            :loading="webmentionMutation.isLoading.value"
+            :disabled="!sourceUrl || webmentionMutation.isLoading.value"
           >
             Send Webmention
           </UButton>

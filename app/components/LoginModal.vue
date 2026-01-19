@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import {useAuthStore} from '~/stores/authStore';
+import { useAuthStore } from '~/stores/authStore'
 
-const auth = useAuthStore();
+const auth = useAuthStore()
 
-const issuer = ref('https://login.inrupt.com');
-const customIssuer = ref('');
-const useCustom = ref(false);
-const isLoggingIn = ref(false);
-const errorMessage = ref('');
+const issuer = ref('https://login.inrupt.com')
+const customIssuer = ref('')
+const useCustom = ref(false)
+const isLoggingIn = ref(false)
+const errorMessage = ref('')
 
 const providers = [
   {
@@ -47,24 +47,24 @@ const showNgrokWarning = computed(() => {
 })
 
 const handleLogin = async function () {
-  isLoggingIn.value = true;
-  errorMessage.value = '';
+  isLoggingIn.value = true
+  errorMessage.value = ''
 
   try {
-    const selectedIssuer = useCustom.value ? customIssuer.value : issuer.value;
+    const selectedIssuer = useCustom.value ? customIssuer.value : issuer.value
 
     if (!selectedIssuer) {
-      errorMessage.value = 'Please enter a provider URL';
-      isLoggingIn.value = false;
-      return;
+      errorMessage.value = 'Please enter a provider URL'
+      isLoggingIn.value = false
+      return
     }
 
-    await auth.login(selectedIssuer);
+    await auth.login(selectedIssuer)
   } catch (error) {
-    errorMessage.value = 'Login failed. Please try again.';
-    isLoggingIn.value = false;
+    errorMessage.value = 'Login failed. Please try again.'
+    isLoggingIn.value = false
   }
-};
+}
 </script>
 
 <template>
