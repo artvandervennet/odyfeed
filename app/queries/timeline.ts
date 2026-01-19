@@ -1,5 +1,6 @@
 import { defineQuery, useQuery } from '@pinia/colada'
-import { fetchTimeline, type TimelineResponse } from '~/api/timeline'
+import { fetchTimeline } from '~/api/timeline'
+import type { TimelineResponse } from '~~/shared/types/api'
 
 export const useTimelineQuery = defineQuery(() => {
 	return useQuery<TimelineResponse>({
@@ -8,3 +9,5 @@ export const useTimelineQuery = defineQuery(() => {
 		staleTime: 1000 * 60 * 2,
 	})
 })
+
+

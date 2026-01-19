@@ -1,40 +1,30 @@
 import { defineMutation, useMutation, useQueryCache } from '@pinia/colada'
 import { createLikeActivity, sendLikeActivity, createUndoLikeActivity, sendUndoActivity } from '~/api/activities'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
-import type { TimelineResponse } from '~/api/timeline'
+import type { TimelineResponse } from '~~/shared/types/api'
+import type { TimelineMutationContext } from '~~/shared/types/mutations'
 import { queryKeys } from '~/utils/queryKeys'
-import { validateAuth } from '~/utils/mutationHelpers'
+import { validateAuth, createOptimisticUpdateHandlers, updateTimelineWithLike } from '~/utils/mutationHelpers'
 
 export const useLikeMutation = defineMutation(() => {
 	const queryCache = useQueryCache()
 
+	const optimisticHandlers = createOptimisticUpdateHandlers<TimelineResponse, EnrichedPost, TimelineMutationContext>(
+		queryCache,
+		{
+			queryKey: queryKeys.timeline(),
+			updateCacheFn: (currentData, post, actorId) => ({
+				...currentData!,
+				orderedItems: updateTimelineWithLike(currentData!.orderedItems, post.id, actorId, false)
+			}),
+			rollbackOnError: true,
+		}
+	)
+
 	return useMutation({
 		onMutate: async (post: EnrichedPost) => {
-			const { actorId } = validateAuth()
-
-			await queryCache.cancelQueries({ key: queryKeys.timeline() })
-
-			const previousTimeline = queryCache.getQueryData<TimelineResponse>(queryKeys.timeline())
-
-			if (previousTimeline) {
-				queryCache.setQueryData(queryKeys.timeline(), {
-					...previousTimeline,
-					orderedItems: previousTimeline.orderedItems.map(p =>
-						p.id === post.id
-							? {
-									...p,
-									likes: {
-										...p.likes,
-										totalItems: (p.likes?.totalItems || 0) + 1,
-										orderedItems: [...(p.likes?.orderedItems || []), actorId]
-									}
-								}
-							: p
-					)
-				})
-			}
-
-			return { previousTimeline }
+			const context = await optimisticHandlers.onMutate(post)
+			return { previousTimeline: context.previousData }
 		},
 		mutation: async (post: EnrichedPost) => {
 			const { actorId, outbox } = validateAuth()
@@ -48,47 +38,30 @@ export const useLikeMutation = defineMutation(() => {
 
 			return likeActivity
 		},
-		onError: (_error, _post, context) => {
-			if (context?.previousTimeline) {
-				queryCache.setQueryData(queryKeys.timeline(), context.previousTimeline)
-			}
-		},
-		onSuccess: async () => {
-			await queryCache.invalidateQueries({ key: queryKeys.timeline() })
-		},
+		onError: optimisticHandlers.onError,
+		onSuccess: optimisticHandlers.onSuccess,
 	})
 })
 
 export const useUndoLikeMutation = defineMutation(() => {
 	const queryCache = useQueryCache()
 
+	const optimisticHandlers = createOptimisticUpdateHandlers<TimelineResponse, EnrichedPost, TimelineMutationContext>(
+		queryCache,
+		{
+			queryKey: queryKeys.timeline(),
+			updateCacheFn: (currentData, post, actorId) => ({
+				...currentData!,
+				orderedItems: updateTimelineWithLike(currentData!.orderedItems, post.id, actorId, true)
+			}),
+			rollbackOnError: true,
+		}
+	)
+
 	return useMutation({
 		onMutate: async (post: EnrichedPost) => {
-			const { actorId } = validateAuth()
-
-			await queryCache.cancelQueries({ key: queryKeys.timeline() })
-
-			const previousTimeline = queryCache.getQueryData<TimelineResponse>(queryKeys.timeline())
-
-			if (previousTimeline) {
-				queryCache.setQueryData(queryKeys.timeline(), {
-					...previousTimeline,
-					orderedItems: previousTimeline.orderedItems.map(p =>
-						p.id === post.id
-							? {
-									...p,
-									likes: {
-										...p.likes,
-										totalItems: Math.max((p.likes?.totalItems || 0) - 1, 0),
-										orderedItems: (p.likes?.orderedItems || []).filter(id => id !== actorId)
-									}
-								}
-							: p
-					)
-				})
-			}
-
-			return { previousTimeline }
+			const context = await optimisticHandlers.onMutate(post)
+			return { previousTimeline: context.previousData }
 		},
 		mutation: async (post: EnrichedPost) => {
 			const { actorId, outbox } = validateAuth()
@@ -102,14 +75,10 @@ export const useUndoLikeMutation = defineMutation(() => {
 
 			return undoActivity
 		},
-		onError: (_error, _post, context) => {
-			if (context?.previousTimeline) {
-				queryCache.setQueryData(queryKeys.timeline(), context.previousTimeline)
-			}
-		},
-		onSuccess: async () => {
-			await queryCache.invalidateQueries({ key: queryKeys.timeline() })
-		},
+		onError: optimisticHandlers.onError,
+		onSuccess: optimisticHandlers.onSuccess,
 	})
 })
+
+
 

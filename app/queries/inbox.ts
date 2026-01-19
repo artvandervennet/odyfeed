@@ -1,6 +1,7 @@
 import { defineQuery, useQuery } from '@pinia/colada'
 import { useAuthStore } from '~/stores/authStore'
 import type { ASActivity, ASCollection } from '~~/shared/types/activitypub'
+import { extractCollectionItems } from '~~/shared/types/mappers'
 import { queryKeys } from '~/utils/queryKeys'
 
 export const useInboxQuery = defineQuery(() => {
@@ -25,7 +26,7 @@ export const useInboxQuery = defineQuery(() => {
 
 			const inboxCollection = response as ASCollection<ASActivity | string>
 
-			const items = inboxCollection.orderedItems || inboxCollection.items || []
+			const items = extractCollectionItems(inboxCollection)
 
 			const activities: ASActivity[] = []
 			for (const item of items) {
@@ -53,3 +54,5 @@ export const useInboxQuery = defineQuery(() => {
 		staleTime: 1000 * 60 * 2,
 	})
 })
+
+

@@ -1,9 +1,9 @@
 import { defineQuery, useQuery } from '@pinia/colada'
-import type { WebmentionCollection } from '~~/shared/types/webmention'
+import type { WebmentionCollectionResponse } from '~~/shared/types/api'
 import { queryKeys } from '~/utils/queryKeys'
 
 export const useSiteWebmentionsQuery = defineQuery(() => {
-  return useQuery<WebmentionCollection>({
+  return useQuery<WebmentionCollectionResponse>({
     key: queryKeys.webmentions.site(),
     query: async () => {
       const response = await fetch('/api/webmentions/site')
@@ -18,7 +18,7 @@ export const useSiteWebmentionsQuery = defineQuery(() => {
 
 export const usePostWebmentionsQuery = defineQuery(() => {
   return (username: string, statusId: string) => {
-    return useQuery<WebmentionCollection>({
+    return useQuery<WebmentionCollectionResponse>({
       key: queryKeys.webmentions.byPost(username, statusId),
       query: async () => {
         const response = await fetch(`/api/webmentions/posts/${username}/${statusId}`)
@@ -31,3 +31,5 @@ export const usePostWebmentionsQuery = defineQuery(() => {
     })
   }
 })
+
+

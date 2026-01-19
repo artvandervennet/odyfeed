@@ -1,5 +1,13 @@
-import type { EnrichedPost, MythActor } from '~~/shared/types/activitypub'
+export type {
+  AuthStatusResponse as BackendAuthStatus,
+  UserDataResponse as UserData,
+  RegisterUserRequest as RegisterUserPayload,
+  RegisterUserResponse,
+  UserSessionData as LocalUserSession,
+  UserProfileResponse as UserProfile,
+} from '~~/shared/types/api'
 
+export type { EnrichedPost, MythActor } from '~~/shared/types/activitypub'
 
 export interface WebIdMapping {
   webId: string
@@ -17,43 +25,3 @@ export interface UserRegistration {
   summary?: string
 }
 
-export interface LocalUserSession {
-  webId: string
-  username: string
-  actorId: string
-  inbox: string
-  outbox: string
-}
-
-export interface BackendAuthStatus {
-  authenticated: boolean
-  webId: string | null
-  username: string | null
-  hasValidToken: boolean
-  podUrl: string | null
-}
-
-export interface UserData {
-  username: string
-  actorId: string
-}
-
-export interface RegisterUserPayload {
-  username: string
-  name?: string
-  summary?: string
-}
-
-export interface RegisterUserResponse {
-  username: string
-  actorId: string
-  inbox: string
-  outbox: string
-}
-
-export interface UserProfile {
-  preferredUsername?: string
-  name?: string
-  avatar?: string
-  summary?: string
-}

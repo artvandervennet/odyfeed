@@ -1,11 +1,12 @@
 import { defineQuery, useQuery } from '@pinia/colada'
 import { getAuthStatus, getUserByWebId } from '~/api/auth'
 import { fetchActor } from '~/api/actors'
-import type { BackendAuthStatus, UserData, UserProfile } from '~/types'
+import type { AuthStatusResponse, UserDataResponse, UserProfileResponse } from '~~/shared/types/api'
+import { transformActorToProfile } from '~~/shared/types/mappers'
 import { queryKeys } from '~/utils/queryKeys'
 
 export const useAuthStatusQuery = defineQuery(() => {
-  return useQuery<BackendAuthStatus>({
+  return useQuery<AuthStatusResponse>({
     key: queryKeys.auth.status(),
     query: () => getAuthStatus(),
     staleTime: 1000 * 60 * 5,
@@ -15,7 +16,7 @@ export const useAuthStatusQuery = defineQuery(() => {
 
 export const useUserDataQuery = defineQuery(() => {
   return (webId: string) => {
-    return useQuery<UserData>({
+    return useQuery<UserDataResponse>({
       key: queryKeys.user.data(webId),
       query: () => getUserByWebId(webId),
       enabled: () => !!webId,
@@ -26,20 +27,16 @@ export const useUserDataQuery = defineQuery(() => {
 
 export const useUserProfileQuery = defineQuery(() => {
   return (username: string) => {
-    return useQuery<UserProfile>({
+    return useQuery<UserProfileResponse>({
       key: queryKeys.user.profile(username),
       query: async () => {
         const actor = await fetchActor(username)
-        const avatarUrl = actor.icon?.url
-        return {
-          preferredUsername: actor.preferredUsername,
-          name: actor.name,
-          avatar: avatarUrl,
-          summary: actor.summary,
-        }
+        return transformActorToProfile(actor)
       },
       enabled: () => !!username,
       staleTime: 1000 * 60 * 5,
     })
   }
 })
+
+

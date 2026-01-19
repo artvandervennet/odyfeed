@@ -1,4 +1,6 @@
+import { defineQuery, useQuery } from '@pinia/colada'
 import type { EnrichedPost, ASNote } from '~~/shared/types/activitypub'
+import { extractCollectionItems, enrichNoteWithActor, extractUsernameFromActorUrl } from '~~/shared/types/mappers'
 import { fetchNoteByUrl, fetchActor } from '~/api/actors'
 import { queryKeys } from '~/utils/queryKeys'
 
@@ -7,9 +9,9 @@ export const useRepliesQuery = defineQuery(() => {
 		return useQuery<EnrichedPost[]>({
 			key: queryKeys.replies(post.id),
 			query: async () => {
-				if (!post.replies?.orderedItems && !post.replies?.items) return []
+				const replyUrls = extractCollectionItems(post.replies)
 
-				const replyUrls = post.replies.orderedItems || post.replies.items || []
+				if (replyUrls.length === 0) return []
 
 				const replies = await Promise.all(
 					replyUrls.map(url => fetchNoteByUrl(url)),
@@ -17,13 +19,9 @@ export const useRepliesQuery = defineQuery(() => {
 
 				return await Promise.all(
 					replies.map(async (reply) => {
-						const actorUrl = reply.attributedTo
-						const username = actorUrl.split('/').pop() || ''
+						const username = extractUsernameFromActorUrl(reply.attributedTo)
 						const actor = await fetchActor(username)
-						return {
-							...reply,
-							actor,
-						} as EnrichedPost
+						return enrichNoteWithActor(reply, actor)
 					}),
 				)
 			},
@@ -31,4 +29,6 @@ export const useRepliesQuery = defineQuery(() => {
 		})
 	}
 })
+
+
 

@@ -1,12 +1,12 @@
 import { defineMutation, useMutation, useQueryCache } from '@pinia/colada'
 import { registerNewUser, logoutUser } from '~/api/auth'
-import type { RegisterUserPayload, RegisterUserResponse } from '~/types'
+import type { RegisterUserRequest, RegisterUserResponse } from '~~/shared/types/api'
 import { queryKeys } from '~/utils/queryKeys'
 
 export const useRegisterMutation = defineMutation(() => {
   const queryCache = useQueryCache()
 
-  return useMutation<RegisterUserResponse, RegisterUserPayload>({
+  return useMutation<RegisterUserResponse, RegisterUserRequest>({
     mutation: async (payload) => {
       return await registerNewUser(payload)
     },
@@ -32,3 +32,5 @@ export const useLogoutMutation = defineMutation(() => {
     },
   })
 })
+
+

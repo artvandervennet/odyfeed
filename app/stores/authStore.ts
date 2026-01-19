@@ -4,18 +4,18 @@ import { useAuthStatusQuery, useUserDataQuery, useUserProfileQuery } from '~/que
 import { useRegisterMutation, useLogoutMutation } from '~/mutations/auth'
 import { startLoginRedirect } from '~/api/auth'
 import type {
-  LocalUserSession,
-  BackendAuthStatus,
-  UserProfile,
-  RegisterUserPayload,
-} from '~/types'
+  UserSessionData,
+  AuthStatusResponse,
+  UserProfileResponse,
+  RegisterUserRequest,
+} from '~~/shared/types/api'
 import { ENDPOINT_PATHS } from '~~/shared/constants'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
-  const localUser = ref<LocalUserSession | null>(null)
-  const backendAuthStatus = ref<BackendAuthStatus | null>(null)
-  const userProfile = ref<UserProfile>({})
+  const localUser = ref<UserSessionData | null>(null)
+  const backendAuthStatus = ref<AuthStatusResponse | null>(null)
+  const userProfile = ref<UserProfileResponse>({})
 
   // Queries
   const { data: authStatusData, refetch: refetchAuthStatus } = useAuthStatusQuery()
@@ -49,6 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       if (data.value) {
         localUser.value = {
+          id: data.value.actorId,
           webId,
           username: data.value.username,
           actorId: data.value.actorId,
@@ -155,7 +156,7 @@ export const useAuthStore = defineStore('auth', () => {
       username,
     })
 
-    const payload: RegisterUserPayload = {
+    const payload: RegisterUserRequest = {
       username,
       name: profile?.name,
       summary: profile?.summary,
@@ -166,6 +167,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       if (data) {
         localUser.value = {
+          id: data.actorId,
           webId: backendStatus.webId,
           username: data.username,
           actorId: data.actorId,

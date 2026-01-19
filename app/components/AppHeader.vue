@@ -74,7 +74,7 @@ const logout = async function () {
                   { label: 'Setup Pod', icon: 'i-heroicons-cog-6-tooth', to: '/setup' }
                 ],
                 [
-                  { label: 'Logout', icon: 'i-heroicons-arrow-right-on-rectangle', click: logout }
+                  { label: 'Logout', icon: 'i-heroicons-arrow-right-on-rectangle', onSelect: logout }
                 ]
               ]"
             >
