@@ -1,6 +1,7 @@
 import { defineMutation, useMutation, useQueryCache } from '@pinia/colada'
 import { createReplyActivity, sendReplyActivity } from '~/api/activities'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
+import type { TimelineResponse } from '~/api/timeline'
 import { queryKeys } from '~/utils/queryKeys'
 import { validateAuth } from '~/utils/mutationHelpers'
 
@@ -8,10 +9,14 @@ export const useReplyMutation = defineMutation(() => {
 	const queryCache = useQueryCache()
 
 	return useMutation({
-		onMutate: async ({ post }: { post: EnrichedPost; content: string }) => {
+		onMutate: async ({ post, content }: { post: EnrichedPost; content: string }) => {
+			const { actorId } = validateAuth()
+
 			await queryCache.cancelQueries({ key: queryKeys.timeline() })
 
-			const previousTimeline = queryCache.getQueryData<{ orderedItems: EnrichedPost[] }>(queryKeys.timeline())
+			const previousTimeline = queryCache.getQueryData<TimelineResponse>(queryKeys.timeline())
+
+			const optimisticReplyId = `${actorId}/outbox/${Date.now()}-reply`
 
 			if (previousTimeline) {
 				queryCache.setQueryData(queryKeys.timeline(), {
@@ -22,7 +27,8 @@ export const useReplyMutation = defineMutation(() => {
 									...p,
 									replies: {
 										...p.replies,
-										totalItems: (p.replies?.totalItems || 0) + 1
+										totalItems: (p.replies?.totalItems || 0) + 1,
+										orderedItems: [...(p.replies?.orderedItems || []), optimisticReplyId]
 									}
 								}
 							: p
@@ -61,6 +67,7 @@ export const useReplyMutation = defineMutation(() => {
 		},
 		onSuccess: async () => {
 			await queryCache.invalidateQueries({ key: queryKeys.timeline() })
+			await queryCache.invalidateQueries({ key: ['replies'] })
 		},
 	})
 })

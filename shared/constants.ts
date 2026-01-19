@@ -83,6 +83,7 @@ export const ENDPOINT_PATHS = {
   ACTORS_FOLLOWERS: (username: string) => `/api/actors/${username}/followers`,
   ACTORS_FOLLOWING: (username: string) => `/api/actors/${username}/following`,
   ACTOR_STATUS: (username: string, statusId: string) => `/api/actors/${username}/status/${statusId}`,
+  STATUS: (statusId: string) => `/api/status/${statusId}`,
 } as const;
 
 export const DEFAULTS = {

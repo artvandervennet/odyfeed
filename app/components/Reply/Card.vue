@@ -24,9 +24,8 @@ const isLoading = computed(() =>
 const avatarUrl = computed(() => getAvatarUrl(props.reply.actor))
 
 const postDetailUrl = computed(() => {
-  const username = props.reply.actor?.preferredUsername
   const statusId = extractStatusIdFromPostUrl(props.reply.id)
-  return `/actors/${username}/status/${statusId}`
+  return `/status/${statusId}`
 })
 
 const handleLike = async function (event: Event) {

@@ -1,5 +1,5 @@
 import { createDataStorage } from '~~/server/utils/fileStorage'
-import { parseActors } from '~~/server/utils/rdf'
+import { parseActors, parseEvents } from '~~/server/utils/rdf'
 import { FILE_PATHS, POD_CONTAINERS } from '~~/shared/constants'
 import { logError, logInfo } from '~~/server/utils/logger'
 import { listActivitiesFromPod, getActivityFromPod } from '~~/server/utils/podStorage'
@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
 	try {
 		const storage = createDataStorage()
 		const mythActors = parseActors()
+		const mythEvents = parseEvents()
 		const mappingsPath = FILE_PATHS.WEBID_MAPPINGS
 
 		logInfo('[Timeline] Starting timeline fetch from Solid Pods')
@@ -89,6 +90,11 @@ export default defineEventHandler(async (event) => {
 
 						const note = extractedNote as ASNote
 
+						if (note.inReplyTo) {
+							logInfo(`[Timeline] Skipping reply to ${note.inReplyTo}`)
+							continue
+						}
+
 						const matchingMythActor = mythActors.find(
 							(a) => a.preferredUsername === username
 						)
@@ -127,7 +133,19 @@ export default defineEventHandler(async (event) => {
 			return dateB - dateA
 		})
 
-		logInfo(`[Timeline] Returning ${allPosts.length} total posts from ${registeredUsers.length} user(s)`)
+		const groupedByEvent = mythEvents.map(event => {
+			const eventPosts = allPosts.filter(post => {
+				const postEventUrl = (post as any)['myth:aboutEvent']
+				return postEventUrl === event.id
+			})
+
+			return {
+				event,
+				posts: eventPosts,
+			}
+		}).filter(group => group.posts.length > 0)
+
+		logInfo(`[Timeline] Returning ${allPosts.length} total posts grouped into ${groupedByEvent.length} events`)
 
 		setHeader(event, 'Content-Type', 'application/json')
 		setHeader(event, 'Cache-Control', 'public, max-age=60')
@@ -135,6 +153,7 @@ export default defineEventHandler(async (event) => {
 		return {
 			orderedItems: allPosts,
 			totalItems: allPosts.length,
+			groupedByEvent,
 		}
 	} catch (error) {
 		logError('[Timeline] Failed to fetch timeline', error)

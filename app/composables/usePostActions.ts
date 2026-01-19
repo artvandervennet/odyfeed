@@ -55,9 +55,8 @@ export const usePostActions = function (post: ComputedRef<EnrichedPost>) {
 	}
 
 	const postDetailUrl = computed(() => {
-		const username = post.value.actor?.preferredUsername
 		const statusId = extractStatusIdFromPostUrl(post.value.id)
-		return `/actors/${username}/status/${statusId}`
+		return `/status/${statusId}`
 	})
 
 	return {

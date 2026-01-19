@@ -1,6 +1,7 @@
 import { defineMutation, useMutation, useQueryCache } from '@pinia/colada'
 import { createLikeActivity, sendLikeActivity, createUndoLikeActivity, sendUndoActivity } from '~/api/activities'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
+import type { TimelineResponse } from '~/api/timeline'
 import { queryKeys } from '~/utils/queryKeys'
 import { validateAuth } from '~/utils/mutationHelpers'
 
@@ -9,9 +10,11 @@ export const useLikeMutation = defineMutation(() => {
 
 	return useMutation({
 		onMutate: async (post: EnrichedPost) => {
+			const { actorId } = validateAuth()
+
 			await queryCache.cancelQueries({ key: queryKeys.timeline() })
 
-			const previousTimeline = queryCache.getQueryData<{ orderedItems: EnrichedPost[] }>(queryKeys.timeline())
+			const previousTimeline = queryCache.getQueryData<TimelineResponse>(queryKeys.timeline())
 
 			if (previousTimeline) {
 				queryCache.setQueryData(queryKeys.timeline(), {
@@ -22,7 +25,8 @@ export const useLikeMutation = defineMutation(() => {
 									...p,
 									likes: {
 										...p.likes,
-										totalItems: (p.likes?.totalItems || 0) + 1
+										totalItems: (p.likes?.totalItems || 0) + 1,
+										orderedItems: [...(p.likes?.orderedItems || []), actorId]
 									}
 								}
 							: p
@@ -60,9 +64,11 @@ export const useUndoLikeMutation = defineMutation(() => {
 
 	return useMutation({
 		onMutate: async (post: EnrichedPost) => {
+			const { actorId } = validateAuth()
+
 			await queryCache.cancelQueries({ key: queryKeys.timeline() })
 
-			const previousTimeline = queryCache.getQueryData<{ orderedItems: EnrichedPost[] }>(queryKeys.timeline())
+			const previousTimeline = queryCache.getQueryData<TimelineResponse>(queryKeys.timeline())
 
 			if (previousTimeline) {
 				queryCache.setQueryData(queryKeys.timeline(), {
@@ -73,7 +79,8 @@ export const useUndoLikeMutation = defineMutation(() => {
 									...p,
 									likes: {
 										...p.likes,
-										totalItems: Math.max((p.likes?.totalItems || 0) - 1, 0)
+										totalItems: Math.max((p.likes?.totalItems || 0) - 1, 0),
+										orderedItems: (p.likes?.orderedItems || []).filter(id => id !== actorId)
 									}
 								}
 							: p

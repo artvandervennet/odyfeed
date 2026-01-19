@@ -52,25 +52,22 @@ Houd het kort en krachtig. Gebruik niet te veel emoji's. Deze post moet lijken a
 				messages: [{ role: "user", content: prompt }],
 			});
 
-			const content = completion.choices[0].message.content?.trim() || "";
-			const published = new Date().toISOString();
-			const postUrl = `${baseUrl}${ENDPOINT_PATHS.ACTOR_STATUS(actor.preferredUsername, eventId)}`;
+		const content = completion.choices[0].message.content?.trim() || "";
+		const published = new Date().toISOString();
+		const timestamp = Date.now();
+		const uniqueStatusId = `${eventId}-${actor.preferredUsername}-${timestamp}`;
+		const postUrl = `${baseUrl}${ENDPOINT_PATHS.STATUS(uniqueStatusId)}`;
 
-			const activityNote: ASNote = {
-				"@context": [
-					NAMESPACES.ACTIVITYSTREAMS,
-					{
-						myth: `${baseUrl}/vocab#`,
-					},
-				],
-				id: postUrl,
-				type: ACTIVITY_TYPES.NOTE,
-				published,
-				attributedTo: `${baseUrl}${ENDPOINT_PATHS.ACTORS_PROFILE(actor.preferredUsername)}`,
-				content,
-				to: [NAMESPACES.PUBLIC],
-				"myth:aboutEvent": eventObj.id,
-			};
+		const activityNote: ASNote = {
+			"@context": NAMESPACES.ACTIVITYSTREAMS,
+			id: postUrl,
+			type: ACTIVITY_TYPES.NOTE,
+			published,
+			attributedTo: `${baseUrl}${ENDPOINT_PATHS.ACTORS_PROFILE(actor.preferredUsername)}`,
+			content,
+			to: [NAMESPACES.PUBLIC],
+			"myth:aboutEvent": eventObj.id,
+		};
 
 			results.push({
 				eventId,

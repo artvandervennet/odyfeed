@@ -7,8 +7,8 @@ export const fetchActor = async function (username: string): Promise<MythActor> 
   })
 }
 
-export const fetchActorStatus = async function (username: string, statusId: string): Promise<ASNote> {
-  return await $fetch(`/api/actors/${username}/status/${statusId}`, {
+export const fetchActorStatus = async function (statusId: string): Promise<ASNote> {
+  return await $fetch(`/api/status/${statusId}`, {
     headers: apiHeaders,
   })
 }
