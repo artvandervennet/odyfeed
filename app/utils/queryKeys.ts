@@ -9,7 +9,7 @@ export const queryKeys = {
 		all: () => ['user'] as const,
 	},
 	timeline: () => ['timeline'] as const,
-	post: (statusId: string) => ['post', statusId] as const,
+	post: (username: string, statusId: string) => ['post', username, statusId] as const,
 	replies: (postId: string) => ['replies', postId] as const,
 	webmentions: {
 		post: (postId: string) => ['webmentions', postId] as const,

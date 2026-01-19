@@ -58,7 +58,10 @@ export const createReplyActivity = function (
 ): { replyNote: ASNote; createActivity: ASActivity } {
 	const replyUuid = crypto.randomUUID()
 	const createUuid = crypto.randomUUID()
-	const replyId = `${outboxUrl}/${replyUuid}`
+
+	const username = actorId.split('/').slice(-1)[0]
+	const baseUrl = actorId.split('/api/actors/')[0]
+	const replyId = `${baseUrl}/api/actors/${username}/status/${replyUuid}`
 
 	const replyNote: ASNote = {
 		'@context': NAMESPACES.ACTIVITYSTREAMS,

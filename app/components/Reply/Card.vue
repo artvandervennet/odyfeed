@@ -2,7 +2,7 @@
 import type { EnrichedPost } from '~~/shared/types/activitypub'
 import { useLikeMutation, useUndoLikeMutation } from '~/mutations/like'
 import { useAuthStore } from '~/stores/authStore'
-import { isPostLikedByUser, getPostLikesCount, getPostRepliesCount, extractStatusIdFromPostUrl } from '~/utils/postHelpers'
+import { isPostLikedByUser, getPostLikesCount, getPostRepliesCount, extractUsernameAndStatusIdFromPostUrl } from '~/utils/postHelpers'
 
 const props = defineProps<{
   reply: EnrichedPost
@@ -24,8 +24,8 @@ const isLoading = computed(() =>
 const avatarUrl = computed(() => getAvatarUrl(props.reply.actor))
 
 const postDetailUrl = computed(() => {
-  const statusId = extractStatusIdFromPostUrl(props.reply.id)
-  return `/status/${statusId}`
+  const { username, statusId } = extractUsernameAndStatusIdFromPostUrl(props.reply.id)
+  return `/actors/${username}/status/${statusId}`
 })
 
 const handleLike = async function (event: Event) {

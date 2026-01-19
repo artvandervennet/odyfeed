@@ -122,7 +122,7 @@ export const extractStatusIdFromPodUrl = function (podUrl: string): string {
 }
 
 export const buildActivityUrl = function (baseUrl: string, username: string, statusId: string): string {
-	return `${baseUrl}/api/status/${statusId}`
+	return `${baseUrl}/api/actors/${username}/status/${statusId}`
 }
 
 export const transformActivityUrls = function (

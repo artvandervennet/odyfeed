@@ -8,7 +8,7 @@ import {
 	isPostLikedByUser,
 	getPostLikesCount,
 	getPostRepliesCount,
-	extractStatusIdFromPostUrl
+	extractUsernameAndStatusIdFromPostUrl
 } from '~/utils/postHelpers'
 
 export const usePostActions = function (post: ComputedRef<EnrichedPost>) {
@@ -55,8 +55,8 @@ export const usePostActions = function (post: ComputedRef<EnrichedPost>) {
 	}
 
 	const postDetailUrl = computed(() => {
-		const statusId = extractStatusIdFromPostUrl(post.value.id)
-		return `/status/${statusId}`
+		const { username, statusId } = extractUsernameAndStatusIdFromPostUrl(post.value.id)
+		return `/actors/${username}/status/${statusId}`
 	})
 
 	return {

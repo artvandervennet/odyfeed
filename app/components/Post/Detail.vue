@@ -3,7 +3,7 @@ import { useRepliesQuery } from '~/queries/replies'
 import { usePostWebmentionsQuery } from '~/queries/webmentions'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
 import { useAuthStore } from '~/stores/authStore'
-import { extractStatusIdFromPostUrl } from '~/utils/postHelpers'
+import { extractUsernameAndStatusIdFromPostUrl } from '~/utils/postHelpers'
 import { usePostActions } from '~/composables/usePostActions'
 
 const props = defineProps<{
@@ -28,12 +28,11 @@ const {
 
 const { data: replies, isLoading: repliesLoading } = useRepliesQuery()(props.post)
 
-const username = computed(() => props.post.actor?.preferredUsername || '')
-const statusId = computed(() => extractStatusIdFromPostUrl(props.post.id))
+const { username, statusId } = extractUsernameAndStatusIdFromPostUrl(props.post.id)
 
 const { data: webmentions, isLoading: webmentionsLoading } = usePostWebmentionsQuery()(
-  username.value,
-  statusId.value
+  username,
+  statusId
 )
 
 const postUrl = computed(() => props.post.id)

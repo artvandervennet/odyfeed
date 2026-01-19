@@ -31,6 +31,17 @@ export const getPostRepliesCount = function (post: EnrichedPost): number {
 	return post.replies?.totalItems || 0
 }
 
-export const extractStatusIdFromPostUrl = function (postUrl: string): string {
-	return postUrl.split('/').pop() || ''
+export const extractUsernameAndStatusIdFromPostUrl = function (postUrl: string): { username: string; statusId: string } {
+	const parts = postUrl.split('/')
+	const statusIndex = parts.lastIndexOf('status')
+
+	if (statusIndex >= 1) {
+		return {
+			username: parts[statusIndex - 1] || '',
+			statusId: parts[statusIndex + 1] || ''
+		}
+	}
+
+	return { username: '', statusId: '' }
 }
+
