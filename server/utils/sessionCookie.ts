@@ -36,5 +36,9 @@ export const getSessionCookie = function (event: H3Event): string | undefined {
 }
 
 export const clearSessionCookie = function (event: H3Event): void {
-	deleteCookie(event, SESSION_COOKIE_NAME)
+	deleteCookie(event, SESSION_COOKIE_NAME, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === 'production',
+		sameSite: 'lax',
+	})
 }
