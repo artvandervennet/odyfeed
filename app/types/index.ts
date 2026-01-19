@@ -7,7 +7,7 @@ export type {
   UserProfileResponse as UserProfile,
 } from '~~/shared/types/api'
 
-export type { EnrichedPost, MythActor } from '~~/shared/types/activitypub'
+export type { EnrichedPost, ASActor } from '~~/shared/types/activitypub'
 
 export interface WebIdMapping {
   webId: string

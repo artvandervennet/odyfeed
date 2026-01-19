@@ -1,5 +1,7 @@
 <script setup>
 import { useTimelineQuery } from "~/queries/timeline"
+import LoadingCard from "~/components/atoms/LoadingCard.vue";
+import EmptyState from "~/components/atoms/EmptyState.vue";
 
 const { data: timeline, isLoading } = useTimelineQuery()
 
@@ -31,13 +33,10 @@ const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.o
             <div class="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
           </div>
 
-          <div class="space-y-0 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-            <PostCard
-              v-for="post in group.posts"
-              :key="post.id"
-              :post="post"
-            />
-          </div>
+          <PostList
+              :posts="group.posts"
+              :empty="'No posts yet.'"
+          />
         </div>
       </div>
 

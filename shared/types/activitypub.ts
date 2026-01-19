@@ -42,6 +42,7 @@ export interface ASActor extends ASObject {
   endpoints?: {
     sharedInbox?: string;
   };
+  tone?: string;
 }
 
 export interface WebmentionObject extends ASObject {
@@ -129,5 +130,5 @@ export interface MythEvent {
 }
 
 export interface EnrichedPost extends ASNote {
-  actor?: ASActor | MythActor;
+  actor?: ASActor;
 }

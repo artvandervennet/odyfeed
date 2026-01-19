@@ -55,6 +55,7 @@ export const createActorProfile = function (data: ActorProfileData): ASActor {
 		image: isMatchedActor ? matchingActor!.image : undefined,
 		url: actorId,
 		published: new Date().toISOString(),
+		tone: isMatchedActor ? matchingActor!.tone : undefined,
 	}
 
 	if (publicKey) {

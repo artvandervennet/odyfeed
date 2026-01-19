@@ -20,7 +20,10 @@ function parseTurtleFile(filename: string): Map<string, Map<string, string | str
 
 	for (const quad of quads) {
 		const subject = quad.subject.value;
-		const predicate = quad.predicate.value.split("#").pop() || quad.predicate.value.split("/").pop();
+		const predicateUri = quad.predicate.value;
+		const predicate = predicateUri.includes("#")
+			? predicateUri.split("#").pop()
+			: predicateUri.split("/").pop();
 		const object = quad.object.value;
 
 		if (!resources.has(subject)) {

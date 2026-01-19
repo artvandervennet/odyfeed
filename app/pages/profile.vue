@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import EmptyState from "~/components/atoms/EmptyState.vue";
+
 const auth = useAuth()
 const { isLoggedIn, userProfile, webId, logout, inbox, outbox, actorId } = auth
 

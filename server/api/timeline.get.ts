@@ -1,11 +1,11 @@
 import { createDataStorage } from '~~/server/utils/fileStorage'
 import { parseActors, parseEvents } from '~~/server/utils/rdf'
-import { FILE_PATHS, POD_CONTAINERS } from '~~/shared/constants'
+import { FILE_PATHS, POD_CONTAINERS, DEFAULTS } from '~~/shared/constants'
 import { logError, logInfo } from '~~/server/utils/logger'
 import { listActivitiesFromPod, getActivityFromPod } from '~~/server/utils/podStorage'
 import { extractNoteFromActivity } from '~~/server/utils/authHelpers'
-import { extractPodUrlFromWebId } from '~~/server/utils/actorHelpers'
-import type { ASNote, EnrichedPost, ASActivity, MythActor } from '~~/shared/types/activitypub'
+import { extractPodUrlFromWebId, createActorProfile } from '~~/server/utils/actorHelpers'
+import type { ASNote, EnrichedPost, ASActivity, ASActor } from '~~/shared/types/activitypub'
 
 interface WebIdMappings {
 	[webId: string]: {
@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
 		const mythActors = parseActors()
 		const mythEvents = parseEvents()
 		const mappingsPath = FILE_PATHS.WEBID_MAPPINGS
+		const baseUrl = process.env.BASE_URL || DEFAULTS.BASE_URL
 
 		logInfo('[Timeline] Starting timeline fetch from Solid Pods')
 
@@ -97,16 +98,16 @@ export default defineEventHandler(async (event) => {
 							(a) => a.preferredUsername === username
 						)
 
-						const actorProfile: MythActor = matchingMythActor || {
-							id: userMapping.actorId,
-							preferredUsername: username,
-							name: username,
-							summary: '',
-							tone: '',
-							avatar: '',
-							inbox: '',
-							outbox: '',
-						}
+						const actorProfile: ASActor = createActorProfile({
+							username,
+							baseUrl,
+							isMatchedActor: !!matchingMythActor,
+							matchingActor: matchingMythActor,
+							webId,
+							avatar: matchingMythActor?.avatar,
+							name: matchingMythActor?.name || username,
+							summary: matchingMythActor?.summary,
+						})
 
 						const enrichedPost: EnrichedPost = {
 							...note,

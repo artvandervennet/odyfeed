@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import type {MythActor, ASActor} from '~~/shared/types/activitypub'
+import type {ASActor} from '~~/shared/types/activitypub'
+import {computed} from "vue";
 
 interface Props {
-  actor: MythActor | ASActor
+  actor: ASActor
   showTone?: boolean
-  clickable?: boolean
   size?: 'xs' | 'sm' | 'md' | 'lg'
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  clickable: true,
   size: 'sm',
 })
 
@@ -21,31 +20,30 @@ const actorProfileUrl = computed(() => {
 })
 
 const avatarUrl = computed(() => getAvatarUrl(props.actor))
-const actorTone = computed(() => ('tone' in props.actor ? props.actor.tone : undefined))
-const displayName = computed(() => props.actor.preferredUsername || 'Unknown')
+const actorTone = computed(() => props.actor.tone)
+const displayName = computed(() => props.actor.name || 'Unknown')
+const handle = computed(() => props.actor.preferredUsername || 'unknown')
 </script>
 
 <template>
   <div class="flex items-center gap-3 min-w-0">
-    <component :is="clickable ? 'NuxtLink' : 'div'" :to="clickable ? actorProfileUrl : undefined">
+    <NuxtLink :to="actorProfileUrl">
       <ActorAvatar :avatar-url="avatarUrl" :username="displayName" :size="size"/>
-    </component>
+    </NuxtLink>
 
     <div class="flex flex-col min-w-0 flex-1">
       <div class="flex items-center gap-2">
-        <component
-            :is="clickable ? 'NuxtLink' : 'span'"
-            :to="clickable ? actorProfileUrl : undefined"
-            class="font-bold truncate"
-            :class="{ 'hover:underline': clickable }"
+        <NuxtLink
+            :to="actorProfileUrl"
+            class="font-bold truncate hover:underline"
         >
           {{ displayName }}
-        </component>
+        </NuxtLink>
         <span v-if="showTone && actorTone" class="text-xs italic text-gray-400 shrink-0">
 					{{ actorTone }}
 				</span>
       </div>
-      <span class="text-sm text-gray-500 truncate"> @{{ displayName }} </span>
+      <span class="text-sm text-gray-500 truncate"> @{{ handle }} </span>
     </div>
   </div>
 </template>

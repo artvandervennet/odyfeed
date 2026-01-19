@@ -1,21 +1,17 @@
 <script setup lang="ts">
-import type {MythActor, ASActor} from '~~/shared/types/activitypub'
-import UserCard from "~/components/molecules/UserCard.vue";
+import type { ASActor } from '~~/shared/types/activitypub'
 
 interface Props {
-  actor: MythActor | ASActor
+  actor: ASActor
   showTone?: boolean
-  clickable?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  clickable: true,
-})
+defineProps<Props>()
 </script>
 
 <template>
   <div class="flex items-start justify-between w-full gap-2">
-    <UserCard :actor="actor" :show-tone="showTone" :clickable="clickable"/>
+    <ActorCard :actor="actor" :show-tone="showTone"/>
   </div>
 </template>
 

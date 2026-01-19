@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { EnrichedPost } from '~~/shared/types/activitypub'
-import { useAuthStore } from '~/stores/authStore'
-import { usePostActions } from '~/composables/usePostActions'
+import type {EnrichedPost} from '~~/shared/types/activitypub'
+import {useAuthStore} from '~/stores/authStore'
+import {usePostActions} from '~/composables/usePostActions'
 
 const props = defineProps<{
-  post: EnrichedPost
-  showReplies?: boolean
-  isDetailView?: boolean
+  post?: EnrichedPost
+  reply?: EnrichedPost
+  level?: number
 }>()
 
 const auth = useAuthStore()
@@ -14,13 +14,12 @@ const auth = useAuthStore()
 const showReplyForm = ref(false)
 const replyContent = ref('')
 
-const postComputed = computed(() => props.post)
+const currentPost = computed(() => props.post || props.reply!)
+const postComputed = computed(() => currentPost.value)
 const {
   liked,
   likesCount,
   repliesCount,
-  isLikeLoading,
-  isReplyLoading,
   handleLike,
   handleReply,
   postDetailUrl,
@@ -34,9 +33,7 @@ const submitReply = function () {
   showReplyForm.value = false
 }
 
-const toggleReplyForm = function (event?: Event) {
-  if (event) event.stopPropagation()
-
+const toggleReplyForm = function () {
   if (!auth.isLoggedIn) {
     console.warn('User must be logged in to reply')
     return
@@ -51,43 +48,46 @@ const toggleReplyForm = function (event?: Event) {
 
 <template>
   <article
-      class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors cursor-pointer p-4"
-      @click.stop="navigateTo(postDetailUrl)">
-    <div>
+      class="relative border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors cursor-pointer p-4"
+      :class="{ 'pl-12 ml-4 border-l-2 border-gray-200 dark:border-gray-700': props.level && props.level > 0 }">
+    <NuxtLink
+        :to="postDetailUrl"
+        class="absolute inset-0 z-0"
+        aria-label="View post details"
+    />
+
+    <div class="relative z-10">
       <ActorInfo
-          v-if="props.post.actor"
-          :actor="props.post.actor"
+          v-if="currentPost.actor"
+          :actor="currentPost.actor"
           :show-tone="true"
           :clickable="true"
-          @click.stop
       />
     </div>
 
     <div class="mt-3">
       <PostContent
-          :content="props.post.content"
-          :published="props.post.published!"
+          :content="currentPost.content"
+          :published="currentPost.published!"
       />
     </div>
 
-    <div v-if="showReplyForm" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-      <ReplyForm
+    <div v-if="showReplyForm" class="relative z-10 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <PostForm
           v-model="replyContent"
-          :disabled="isReplyLoading"
-          @submit="submitReply"
-          @cancel="() => toggleReplyForm()"
+          @submit.stop="submitReply"
+          @cancel.stop="() => toggleReplyForm()"
       />
     </div>
 
-    <div class="mt-3">
+    <div class="relative z-10 mt-3">
       <PostStats
           :likes-count="likesCount"
           :replies-count="repliesCount"
           :is-liked="liked"
-          :is-like-loading="isLikeLoading"
-          :is-reply-loading="isReplyLoading"
           @like.stop="handleLike"
           @reply.stop="toggleReplyForm"
+          :disabled="!auth.isLoggedIn"
       />
     </div>
   </article>

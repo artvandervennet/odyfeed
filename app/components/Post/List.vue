@@ -2,8 +2,10 @@
 import type { EnrichedPost } from '~~/shared/types/activitypub'
 
 defineProps<{
-  replies: EnrichedPost[] | undefined
+  posts: EnrichedPost[] | undefined
   isLoading?: boolean
+  empty: string
+  small?: boolean
 }>()
 </script>
 
@@ -22,17 +24,25 @@ defineProps<{
       </div>
     </div>
 
-    <div v-else-if="replies && replies.length > 0">
-      <ReplyCard
-        v-for="reply in replies"
-        :key="reply.id"
-        :reply="reply"
+    <div v-else-if="!small && posts && posts.length > 0" class="space-y-0 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+      <PostCard
+          v-for="post in posts"
+          :key="post.id"
+          :post="post"
+      />
+    </div>
+
+    <div v-else-if="posts && posts.length > 0">
+      <PostCard
+        v-for="post in posts"
+        :key="post.id"
+        :reply="post"
       />
     </div>
 
     <div v-else class="text-center py-16 px-4 border-b border-gray-200 dark:border-gray-800">
       <UIcon name="i-heroicons-chat-bubble-left" class="w-12 h-12 mx-auto text-gray-400 mb-3 opacity-50" />
-      <p class="text-sm text-gray-500 dark:text-gray-400">No replies yet. Be the first to reply!</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">{{empty}}</p>
     </div>
   </div>
 </template>

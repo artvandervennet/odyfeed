@@ -9,8 +9,7 @@ import {usePostActions} from '~/composables/usePostActions'
 const props = defineProps<{
   post: EnrichedPost
 }>()
-
-const auth = useAuthStore()
+const {isLoggedIn} = useAuthStore()
 
 const showReplyForm = ref(false)
 const replyContent = ref('')
@@ -20,8 +19,6 @@ const {
   liked,
   likesCount,
   repliesCount,
-  isLikeLoading,
-  isReplyLoading,
   handleLike,
   handleReply,
 } = usePostActions(postComputed)
@@ -46,11 +43,6 @@ const submitReply = function () {
 }
 
 const toggleReplyForm = function () {
-  if (!auth.isLoggedIn) {
-    console.warn('User must be logged in to reply')
-    return
-  }
-
   showReplyForm.value = !showReplyForm.value
   if (!showReplyForm.value) {
     replyContent.value = ''
@@ -69,24 +61,11 @@ const toggleReplyForm = function () {
         />
       </div>
 
-      <div class="mt-4">
-        <div
-            class="e-content prose prose-base max-w-none dark:prose-invert text-base leading-relaxed mb-4 whitespace-pre-wrap wrap-break-word">
-          {{ props.post.content }}
-        </div>
-        <a :href="postUrl" class="u-url">
-          <time :datetime="props.post.published" class="dt-published text-sm text-gray-500 dark:text-gray-400">
-            {{
-              new Date(props.post.published!).toLocaleString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })
-            }}
-          </time>
-        </a>
+      <div class="mt-5">
+        <PostContent
+            :content="props.post.content"
+            :published="props.post.published!"
+        />
       </div>
 
       <div class="flex items-center gap-6 py-4 border-y border-gray-200 dark:border-gray-800 mt-4">
@@ -106,10 +85,9 @@ const toggleReplyForm = function () {
             size="md"
             :color="liked ? 'error' : 'neutral'"
             variant="ghost"
-            :loading="isLikeLoading"
-            :disabled="isLikeLoading"
             @click.stop="handleLike"
             class="flex-1"
+            :disabled="!isLoggedIn"
         >
           {{ liked ? 'Unlike' : 'Like' }}
         </UButton>
@@ -118,9 +96,9 @@ const toggleReplyForm = function () {
             size="md"
             color="neutral"
             variant="ghost"
-            :disabled="isReplyLoading"
             @click.stop="toggleReplyForm"
             class="flex-1"
+            :disabled="!isLoggedIn"
         >
           Reply
         </UButton>
@@ -128,12 +106,11 @@ const toggleReplyForm = function () {
     </article>
 
     <div v-if="showReplyForm" class="p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
-      <ReplyForm
+      <PostForm
           v-model="replyContent"
-          placeholder="Post your reply..."
-          :disabled="isReplyLoading"
           @submit="submitReply"
           @cancel="toggleReplyForm"
+          :disabled="!isLoggedIn"
       />
     </div>
 
@@ -142,7 +119,7 @@ const toggleReplyForm = function () {
       <h2 class="text-base font-bold text-gray-900 dark:text-gray-100">Replies</h2>
     </div>
 
-    <ReplyList :replies="replies || []" :is-loading="repliesLoading"/>
+    <PostList :posts="replies || []" :is-loading="repliesLoading" empty="No replies yet. Be the first to reply!"/>
 
     <WebmentionList
         :webmentions="webmentions?.items || []"

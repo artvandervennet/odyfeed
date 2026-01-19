@@ -45,7 +45,7 @@
           </li>
           <li class="flex items-start gap-2">
             <UIcon name="i-heroicons-check-circle" class="w-5 h-5 text-primary-500 mt-0.5 shrink-0"/>
-            <span><strong>Modern Architecture:</strong> Built with Vue 3, Nuxt 3, and TypeScript</span>
+            <span><strong>Modern Architecture:</strong> Built with Nuxt 4, and TypeScript</span>
           </li>
         </ul>
       </UCard>

@@ -1,16 +1,16 @@
-import type { ASNote, ASActor, EnrichedPost, MythActor } from './activitypub'
+import type { ASNote, ASActor, EnrichedPost } from './activitypub'
 import type { UserProfileResponse } from './api'
 
-export const transformActorToProfile = function (actor: ASActor | MythActor): UserProfileResponse {
+export const transformActorToProfile = function (actor: ASActor): UserProfileResponse {
   return {
-    preferredUsername: 'preferredUsername' in actor ? actor.preferredUsername : undefined,
+    preferredUsername: actor.preferredUsername,
     name: actor.name,
     avatar: actor.icon?.url,
     summary: actor.summary,
   }
 }
 
-export const enrichNoteWithActor = function (note: ASNote, actor: ASActor | MythActor): EnrichedPost {
+export const enrichNoteWithActor = function (note: ASNote, actor: ASActor): EnrichedPost {
   return {
     ...note,
     actor,
@@ -19,7 +19,7 @@ export const enrichNoteWithActor = function (note: ASNote, actor: ASActor | Myth
 
 export const enrichNotesWithActors = async function (
   notes: ASNote[],
-  fetchActor: (url: string) => Promise<ASActor | MythActor>
+  fetchActor: (url: string) => Promise<ASActor>
 ): Promise<EnrichedPost[]> {
   return await Promise.all(
     notes.map(async (note) => {

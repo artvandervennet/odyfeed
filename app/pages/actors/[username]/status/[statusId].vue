@@ -2,7 +2,7 @@
 import { useQuery } from '@pinia/colada'
 import { usePostQuery } from '~/queries/post'
 import { fetchActor } from '~/api/actors'
-import type { EnrichedPost, MythActor } from '~~/shared/types/activitypub'
+import type { EnrichedPost } from '~~/shared/types/activitypub'
 
 const route = useRoute()
 const username = route.params.username as string
@@ -10,7 +10,7 @@ const statusId = route.params.statusId as string
 
 const { data: post, isLoading, error } = usePostQuery()(username, statusId)
 
-const { data: actor } = useQuery<MythActor>({
+const { data: actor } = useQuery<ASActor>({
   key: ['actor', username],
   query: () => fetchActor(username),
 })

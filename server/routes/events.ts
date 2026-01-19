@@ -3,7 +3,7 @@ import { resolve } from "path";
 
 export default defineEventHandler((event) => {
 	try {
-		const filePath = resolve(process.cwd(), "public/index.ttl");
+		const filePath = resolve(process.cwd(), "public/events.ttl");
 		const content = readFileSync(filePath, "utf-8");
 
 		setHeader(event, "Content-Type", "text/turtle; charset=utf-8");

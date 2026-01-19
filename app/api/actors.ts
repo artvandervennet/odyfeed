@@ -1,7 +1,7 @@
-import type { ASNote, ASCollection, MythActor } from '~~/shared/types/activitypub'
+import type { ASNote, ASCollection, ASActor } from '~~/shared/types/activitypub'
 import { apiHeaders } from '~/utils/fetch'
 
-export const fetchActor = async function (username: string): Promise<MythActor> {
+export const fetchActor = async function (username: string): Promise<ASActor> {
   return await $fetch(`/api/actors/${username}`, {
     headers: apiHeaders,
   })
