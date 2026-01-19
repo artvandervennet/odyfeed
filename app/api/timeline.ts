@@ -4,7 +4,7 @@ import { apiHeaders } from '~/utils/fetch'
 export interface TimelineResponse {
   orderedItems: EnrichedPost[]
   totalItems: number
-  groupedByEvent?: Array<{
+  groupedByEvent: Array<{
     event: MythEvent
     posts: EnrichedPost[]
   }>

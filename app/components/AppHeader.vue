@@ -1,24 +1,26 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/authStore'
+import {useAuthStore} from '~/stores/authStore'
 
 const auth = useAuthStore()
 const colorMode = useColorMode()
 
 const needsRegistration = computed(() => {
-	return auth.isAuthenticated && !auth.isLoggedIn
+  return auth.isAuthenticated && !auth.isLoggedIn
 })
 
 const isDark = computed({
-	get() {
-		return colorMode.value === 'dark'
-	},
-	set(_isDark) {
-		colorMode.preference = _isDark ? 'dark' : 'light'
-	}
+  get() {
+    return colorMode.value === 'dark'
+  },
+  set(_isDark) {
+    colorMode.preference = _isDark ? 'dark' : 'light'
+  },
 })
 
 const logout = async function () {
-	await auth.logout()
+  console.log('logging out')
+  await auth.logout()
+  window.location.href = '/'
 }
 </script>
 
@@ -35,8 +37,8 @@ const logout = async function () {
 
           <nav class="hidden sm:flex items-center gap-4">
             <NuxtLink
-              to="/about"
-              class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                to="/about"
+                class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               About
             </NuxtLink>
@@ -45,13 +47,13 @@ const logout = async function () {
 
         <div class="flex items-center gap-3">
           <ClientOnly v-if="!colorMode?.forced">
-          <UButton
-              :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
-              color="neutral"
-              variant="ghost"
-              :aria-label="`Switch to ${isDark ? 'light' : 'dark'} mode`"
-              @click="isDark = !isDark"
-          />
+            <UButton
+                :icon="isDark ? 'i-lucide-moon' : 'i-lucide-sun'"
+                color="neutral"
+                variant="ghost"
+                :aria-label="`Switch to ${isDark ? 'light' : 'dark'} mode`"
+                @click="isDark = !isDark"
+            />
           </ClientOnly>
 
           <template v-if="auth.isLoggedIn">
@@ -98,7 +100,7 @@ const logout = async function () {
           </template>
 
           <template v-else>
-            <LoginModal />
+            <LoginModal/>
           </template>
 
         </div>

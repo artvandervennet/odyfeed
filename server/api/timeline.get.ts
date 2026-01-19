@@ -28,15 +28,16 @@ export default defineEventHandler(async (event) => {
 
 		logInfo('[Timeline] Starting timeline fetch from Solid Pods')
 
-		if (!storage.exists(mappingsPath)) {
-			logInfo('[Timeline] No registered users found - returning empty timeline')
-			setHeader(event, 'Content-Type', 'application/json')
-			setHeader(event, 'Cache-Control', 'public, max-age=60')
-			return {
-				orderedItems: [],
-				totalItems: 0,
-			}
+	if (!storage.exists(mappingsPath)) {
+		logInfo('[Timeline] No registered users found - returning empty timeline')
+		setHeader(event, 'Content-Type', 'application/json')
+		setHeader(event, 'Cache-Control', 'public, max-age=60')
+		return {
+			orderedItems: [],
+			totalItems: 0,
+			groupedByEvent: [],
 		}
+	}
 
 		const mappings = storage.read<WebIdMappings>(mappingsPath)
 		const registeredUsers = Object.entries(mappings)
