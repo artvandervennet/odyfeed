@@ -6,7 +6,7 @@ const {webmentionCount, hasWebmentions, recentWebmentions, isLoading} = useWebme
 
 <template>
 
-  <UContainer>
+  <UContainer class="pb-15">
     <div class="max-w-2xl mx-auto flex flex-col gap-6">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
