@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
 				const activity = await getActivityFromPod(webId, activityUrl)
 
 				if (!activity) {
-					logError(`[Posts] Failed to fetch activity: ${activityUrl}`)
+					logError(`[Posts] Failed to fetch activity (possibly auth issue): ${activityUrl}`)
 					continue
 				}
 
@@ -69,7 +69,7 @@ export default defineEventHandler(async (event) => {
 		logError(`[Posts] Failed to fetch posts for ${username}`, error)
 		throw createError({
 			statusCode: 500,
-			statusMessage: 'Failed to fetch posts',
+			statusMessage: 'Failed to fetch posts - session may be expired',
 		})
 	}
 })

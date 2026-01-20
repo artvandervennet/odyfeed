@@ -126,6 +126,7 @@ export const getActivityFromPod = async function (
 ): Promise<any | null> {
 	const authenticatedFetch = await getAuthenticatedFetch(webId)
 	if (!authenticatedFetch) {
+		logError(`[Pod Storage] Cannot authenticate for WebID: ${webId} - session may be expired`)
 		return null
 	}
 
@@ -133,8 +134,13 @@ export const getActivityFromPod = async function (
 		const file = await getFile(activityUrl, { fetch: authenticatedFetch })
 		const text = await file.text()
 		return JSON.parse(text)
-	} catch (error) {
-		logError(`Failed to get activity from Pod: ${activityUrl}`, error)
+	} catch (error: any) {
+		// Log more details about authentication failures
+		if (error.statusCode === 401 || error.statusCode === 403) {
+			logError(`[Pod Storage] Authentication failed (${error.statusCode}) fetching activity from Pod: ${activityUrl} for webId: ${webId}`)
+		} else {
+			logError(`Failed to get activity from Pod: ${activityUrl}`, error)
+		}
 		return null
 	}
 }
@@ -164,6 +170,7 @@ export const listActivitiesFromPod = async function (
 ): Promise<string[]> {
 	const authenticatedFetch = await getAuthenticatedFetch(webId)
 	if (!authenticatedFetch) {
+		logError(`[Pod Storage] Cannot authenticate for WebID: ${webId} - session may be expired`)
 		return []
 	}
 
@@ -171,8 +178,13 @@ export const listActivitiesFromPod = async function (
 		const dataset = await getSolidDataset(containerUrl, { fetch: authenticatedFetch })
 		const urls = getContainedResourceUrlAll(dataset)
 		return urls.filter(url => !url.endsWith('/'))
-	} catch (error) {
-		logError(`Failed to list activities from Pod: ${containerUrl}`, error)
+	} catch (error: any) {
+		// Log more details about authentication failures
+		if (error.statusCode === 401 || error.statusCode === 403) {
+			logError(`[Pod Storage] Authentication failed (${error.statusCode}) listing activities from Pod: ${containerUrl} for webId: ${webId}`)
+		} else {
+			logError(`Failed to list activities from Pod: ${containerUrl}`, error)
+		}
 		return []
 	}
 }

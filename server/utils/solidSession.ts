@@ -38,12 +38,21 @@ export const hydrateSession = async function (webId: string): Promise<Session | 
 	if (activeSessions.has(webId)) {
 		const existingSession = activeSessions.get(webId)!
 		if (existingSession.info.isLoggedIn) {
-			logInfo(`✅ Reusing existing authenticated session for ${webId}`)
+			logDebug(`✅ Reusing existing authenticated session for ${webId}`)
 			return existingSession
 		}
 		// Session exists but not logged in anymore, remove it
-		logDebug(`Removing stale session for ${webId}`)
+		logInfo(`Removing stale session for ${webId} - no longer logged in`)
 		activeSessions.delete(webId)
+
+		// Also clean up the sessionId mapping if it exists
+		const entries = Array.from(sessionIdToWebId.entries())
+		for (const [sessionId, mappedWebId] of entries) {
+			if (mappedWebId === webId) {
+				sessionIdToWebId.delete(sessionId)
+				break
+			}
+		}
 	}
 
 	const userData = await getUserSession(webId)
@@ -65,7 +74,7 @@ export const hydrateSession = async function (webId: string): Promise<Session | 
 	try {
 		// Use persistent storage for token rotation
 		const storage = getSharedSolidStorage()
-		const session = new Session({ storage })
+		const session = new Session({ storage, keepAlive: true })
 
 		// Listen for token refresh events
 		session.events.on('newTokens', (tokenSet: any) => {
@@ -102,6 +111,14 @@ export const hydrateSession = async function (webId: string): Promise<Session | 
 		return null
 	} catch (error) {
 		logError(`Error hydrating session for ${webId}`, error)
+
+		// If it's a token/auth error, the session may be expired - clear it from cache
+		const errorMessage = (error as Error).message?.toLowerCase() || ''
+		if (errorMessage.includes('token') || errorMessage.includes('auth') || errorMessage.includes('expired')) {
+			logInfo(`[Session] Detected expired/invalid session for ${webId}, clearing from cache`)
+			activeSessions.delete(webId)
+		}
+
 		return null
 	}
 }
@@ -120,10 +137,20 @@ export const getAuthenticatedFetch = async function (webId: string): Promise<typ
 
 export const clearSessionCache = function (webId: string): void {
 	activeSessions.delete(webId)
+
+	// Also clean up the sessionId mapping
+	const entries = Array.from(sessionIdToWebId.entries())
+	for (const [sessionId, mappedWebId] of entries) {
+		if (mappedWebId === webId) {
+			sessionIdToWebId.delete(sessionId)
+		}
+	}
+
 	logInfo(`Session cache cleared for ${webId}`)
 }
 
 export const clearAllSessionCaches = function (): void {
 	activeSessions.clear()
+	sessionIdToWebId.clear()
 	logInfo('All session caches cleared')
 }

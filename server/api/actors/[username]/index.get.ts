@@ -39,12 +39,14 @@ export default defineEventHandler(async (event) => {
 			setActivityPubHeaders(event)
 			return profileData as ASActor
 		}
+
+		logError(`Profile data not found or invalid for ${username} at ${activityPubProfileUrl}`)
 	} catch (error) {
 		logError(`Failed to fetch profile from Pod for ${username}`, error)
 	}
 
 	throw createError({
 		statusCode: 404,
-		statusMessage: 'Actor not found',
+		statusMessage: 'Actor profile not found or session expired',
 	})
 })
