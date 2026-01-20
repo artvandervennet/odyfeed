@@ -142,7 +142,7 @@ const baseUrl = import.meta.baseURL
                 <div class="e-content text-gray-600 dark:text-gray-400 mb-4">
                   <p class="mb-2">
                     Check out <a
-                      href="https://stargazer.kilianleroy.ikdoeict.be/"
+                      href="https://stargazer.kilianleroy.ikdoeict.be/extra"
                       class="u-in-reply-to text-primary-600 dark:text-primary-400 hover:underline"
                       rel="external">Stargazer by Kilian Leroy</a>,
                     an amazing related project exploring similar decentralized web technologies and concepts.
