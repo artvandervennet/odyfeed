@@ -730,7 +730,7 @@ OdyFeed/
 │   │   └── oidc.ts               # OIDC-specific types
 │   └── utils/
 │       ├── fetch.ts              # HTTP headers helpers
-│       ├── mutationHelpers.ts    # Mutation utilities
+│       ├── authHelper.ts    # Mutation utilities
 │       ├── oidc.ts               # PKCE challenge generation
 │       ├── postHelpers.ts        # Post formatting utilities
 │       ├── queryKeys.ts          # Query key factory

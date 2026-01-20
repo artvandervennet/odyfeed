@@ -75,8 +75,8 @@ const toggleReplyForm = function () {
     <div v-if="showReplyForm" class="relative z-10 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
       <PostForm
           v-model="replyContent"
-          @submit.stop="submitReply"
-          @cancel.stop="() => toggleReplyForm()"
+          @submit="submitReply"
+          @cancel="() => toggleReplyForm()"
       />
     </div>
 
@@ -85,8 +85,8 @@ const toggleReplyForm = function () {
           :likes-count="likesCount"
           :replies-count="repliesCount"
           :is-liked="liked"
-          @like.stop="handleLike"
-          @reply.stop="toggleReplyForm"
+          @like="handleLike"
+          @reply="toggleReplyForm"
           :disabled="!auth.isLoggedIn"
       />
     </div>

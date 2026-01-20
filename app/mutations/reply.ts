@@ -3,7 +3,7 @@ import { createReplyActivity, sendReplyActivity } from '~/api/activities'
 import type { TimelineResponse } from '~~/shared/types/api'
 import type { ReplyMutationPayload } from '~~/shared/types/mutations'
 import { queryKeys } from '~/utils/queryKeys'
-import { validateAuth, updateTimelineWithReply } from '~/utils/mutationHelpers'
+import { validateAuth } from '~/utils/authHelper'
 
 export const useReplyMutation = defineMutation(() => {
 	const queryCache = useQueryCache()
@@ -19,10 +19,30 @@ export const useReplyMutation = defineMutation(() => {
 			const optimisticReplyId = `${actorId}/outbox/${crypto.randomUUID()}`
 
 			if (previousTimeline) {
-				queryCache.setQueryData(queryKeys.timeline(), {
+				const updatedTimeline: TimelineResponse = {
 					...previousTimeline,
-					orderedItems: updateTimelineWithReply(previousTimeline.orderedItems, post.id, optimisticReplyId)
-				})
+					orderedItems: previousTimeline.orderedItems.map(item => {
+						if (item.id !== post.id) return item
+
+						const currentReplies = item.replies || {
+							id: `${item.id}/replies`,
+							type: 'OrderedCollection' as const,
+							totalItems: 0,
+							orderedItems: []
+						}
+
+						return {
+							...item,
+							replies: {
+								...currentReplies,
+								totalItems: (currentReplies.totalItems || 0) + 1,
+								orderedItems: [...(currentReplies.orderedItems || []), optimisticReplyId]
+							}
+						}
+					})
+				}
+
+				queryCache.setQueryData(queryKeys.timeline(), updatedTimeline)
 			}
 
 			return { previousTimeline }

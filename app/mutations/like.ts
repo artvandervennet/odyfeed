@@ -2,29 +2,48 @@ import { defineMutation, useMutation, useQueryCache } from '@pinia/colada'
 import { createLikeActivity, sendLikeActivity, createUndoLikeActivity, sendUndoActivity } from '~/api/activities'
 import type { EnrichedPost } from '~~/shared/types/activitypub'
 import type { TimelineResponse } from '~~/shared/types/api'
-import type { TimelineMutationContext } from '~~/shared/types/mutations'
 import { queryKeys } from '~/utils/queryKeys'
-import { validateAuth, createOptimisticUpdateHandlers, updateTimelineWithLike } from '~/utils/mutationHelpers'
+import { validateAuth } from '~/utils/authHelper'
 
 export const useLikeMutation = defineMutation(() => {
 	const queryCache = useQueryCache()
 
-	const optimisticHandlers = createOptimisticUpdateHandlers<TimelineResponse, EnrichedPost, TimelineMutationContext>(
-		queryCache,
-		{
-			queryKey: queryKeys.timeline(),
-			updateCacheFn: (currentData, post, actorId) => ({
-				...currentData!,
-				orderedItems: updateTimelineWithLike(currentData!.orderedItems, post.id, actorId, false)
-			}),
-			rollbackOnError: true,
-		}
-	)
-
 	return useMutation({
 		onMutate: async (post: EnrichedPost) => {
-			const context = await optimisticHandlers.onMutate(post)
-			return { previousTimeline: context.previousData }
+			const { actorId } = validateAuth()
+
+			await queryCache.cancelQueries({ key: queryKeys.timeline() as any })
+
+			const previousTimeline = queryCache.getQueryData<TimelineResponse>(queryKeys.timeline() as any)
+
+			if (previousTimeline) {
+				const updatedTimeline: TimelineResponse = {
+					...previousTimeline,
+					orderedItems: previousTimeline.orderedItems.map(item => {
+						if (item.id !== post.id) return item
+
+						const currentLikes = item.likes || {
+							id: `${item.id}/likes`,
+							type: 'OrderedCollection' as const,
+							totalItems: 0,
+							orderedItems: []
+						}
+
+						return {
+							...item,
+							likes: {
+								...currentLikes,
+								totalItems: (currentLikes.totalItems || 0) + 1,
+								orderedItems: [...(currentLikes.orderedItems || []), actorId]
+							}
+						}
+					})
+				}
+
+				queryCache.setQueryData(queryKeys.timeline() as any, updatedTimeline)
+			}
+
+			return { previousTimeline }
 		},
 		mutation: async (post: EnrichedPost) => {
 			const { actorId, outbox } = validateAuth()
@@ -38,30 +57,56 @@ export const useLikeMutation = defineMutation(() => {
 
 			return likeActivity
 		},
-		onError: optimisticHandlers.onError,
-		onSuccess: optimisticHandlers.onSuccess,
+		onError: (_error, _post, context) => {
+			if (context?.previousTimeline) {
+				queryCache.setQueryData(queryKeys.timeline() as any, context.previousTimeline)
+			}
+		},
+		onSuccess: async () => {
+			await queryCache.invalidateQueries({ key: queryKeys.timeline() as any })
+		},
 	})
 })
 
 export const useUndoLikeMutation = defineMutation(() => {
 	const queryCache = useQueryCache()
 
-	const optimisticHandlers = createOptimisticUpdateHandlers<TimelineResponse, EnrichedPost, TimelineMutationContext>(
-		queryCache,
-		{
-			queryKey: queryKeys.timeline(),
-			updateCacheFn: (currentData, post, actorId) => ({
-				...currentData!,
-				orderedItems: updateTimelineWithLike(currentData!.orderedItems, post.id, actorId, true)
-			}),
-			rollbackOnError: true,
-		}
-	)
-
 	return useMutation({
 		onMutate: async (post: EnrichedPost) => {
-			const context = await optimisticHandlers.onMutate(post)
-			return { previousTimeline: context.previousData }
+			const { actorId } = validateAuth()
+
+			await queryCache.cancelQueries({ key: queryKeys.timeline() as any })
+
+			const previousTimeline = queryCache.getQueryData<TimelineResponse>(queryKeys.timeline() as any)
+
+			if (previousTimeline) {
+				const updatedTimeline: TimelineResponse = {
+					...previousTimeline,
+					orderedItems: previousTimeline.orderedItems.map(item => {
+						if (item.id !== post.id) return item
+
+						const currentLikes = item.likes || {
+							id: `${item.id}/likes`,
+							type: 'OrderedCollection' as const,
+							totalItems: 0,
+							orderedItems: []
+						}
+
+						return {
+							...item,
+							likes: {
+								...currentLikes,
+								totalItems: Math.max((currentLikes.totalItems || 0) - 1, 0),
+								orderedItems: (currentLikes.orderedItems || []).filter(id => id !== actorId)
+							}
+						}
+					})
+				}
+
+				queryCache.setQueryData(queryKeys.timeline() as any, updatedTimeline)
+			}
+
+			return { previousTimeline }
 		},
 		mutation: async (post: EnrichedPost) => {
 			const { actorId, outbox } = validateAuth()
@@ -75,8 +120,14 @@ export const useUndoLikeMutation = defineMutation(() => {
 
 			return undoActivity
 		},
-		onError: optimisticHandlers.onError,
-		onSuccess: optimisticHandlers.onSuccess,
+		onError: (_error, _post, context) => {
+			if (context?.previousTimeline) {
+				queryCache.setQueryData(queryKeys.timeline() as any, context.previousTimeline)
+			}
+		},
+		onSuccess: async () => {
+			await queryCache.invalidateQueries({ key: queryKeys.timeline() as any })
+		},
 	})
 })
 
