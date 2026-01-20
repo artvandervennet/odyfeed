@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
 	if (!storage.exists(mappingsPath)) {
 		logInfo('[Timeline] No registered users found - returning empty timeline')
 		setHeader(event, 'Content-Type', 'application/json')
+		setHeader(event, 'Cache-Control', 'no-cache, no-store, must-revalidate')
 		return {
 			orderedItems: [],
 			totalItems: 0,
@@ -146,6 +147,7 @@ export default defineEventHandler(async (event) => {
 		logInfo(`[Timeline] Returning ${allPosts.length} total posts grouped into ${groupedByEvent.length} events`)
 
 		setHeader(event, 'Content-Type', 'application/json')
+		setHeader(event, 'Cache-Control', 'no-cache, no-store, must-revalidate')
 
 		return {
 			orderedItems: allPosts,

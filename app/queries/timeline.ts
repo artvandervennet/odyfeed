@@ -6,7 +6,8 @@ export const useTimelineQuery = defineQuery(() => {
 	return useQuery<TimelineResponse>({
 		key: ['timeline'],
 		query: () => fetchTimeline(),
-		staleTime: 1000 * 60 * 2,
+		staleTime: 1000 * 30,
+		refetchOnMount: true,
 	})
 })
 

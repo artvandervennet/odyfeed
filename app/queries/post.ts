@@ -7,7 +7,8 @@ export const usePostQuery = defineQuery(() => {
 		return useQuery<EnrichedPost>({
 			key: queryKeys.post(username, statusId),
 			query: () => fetchActorStatus(username, statusId),
-			staleTime: 1000 * 60 * 5,
+			staleTime: 1000 * 30,
+			refetchOnMount: true,
 		})
 	}
 })
