@@ -53,16 +53,6 @@ const isValidUrl = function (url: string): boolean {
       <form @submit.prevent="handleSubmit" class="space-y-2" target-url="">
         <div class="flex items-center gap-1.5">
           <h3 class="text-sm font-semibold">Send a Webmention</h3>
-          <UTooltip
-            text="Notify this post that you mentioned it on your website"
-            :popper="{ placement: 'top' }"
-          >
-            <UIcon
-              name="i-heroicons-information-circle"
-              class="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help"
-              aria-label="What is a webmention?"
-            />
-          </UTooltip>
         </div>
 
         <div class="space-y-1.5">
