@@ -8,6 +8,14 @@ import type { ASActivity, ASNote } from "~~/shared/types/activitypub"
 import { generateUUID } from "~~/server/utils/crypto"
 
 export default defineEventHandler(async (event) => {
+	if (event.method === 'OPTIONS') {
+		setHeader(event, 'Access-Control-Allow-Origin', '*')
+		setHeader(event, 'Access-Control-Allow-Methods', 'POST, OPTIONS')
+		setHeader(event, 'Access-Control-Allow-Headers', 'Content-Type, Signature, Date, Digest')
+		setHeader(event, 'Access-Control-Max-Age', 86400)
+		return ''
+	}
+
 	const { username } = validateActorParams(event)
 	const { webId, podUrl, actorId } = fetchUserMapping(username)
 

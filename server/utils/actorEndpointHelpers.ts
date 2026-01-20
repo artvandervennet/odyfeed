@@ -112,6 +112,9 @@ export const validatePageParam = function (pageParam: string | undefined): numbe
 
 export const setActivityPubHeaders = function (event: H3Event, cacheMaxAge = 300): void {
 	setHeader(event, 'Content-Type', 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"')
+	setHeader(event, 'Access-Control-Allow-Origin', '*')
+	setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+	setHeader(event, 'Access-Control-Allow-Headers', 'Content-Type, Signature, Date, Digest')
 }
 
 export const extractStatusIdFromPodUrl = function (podUrl: string): string {
