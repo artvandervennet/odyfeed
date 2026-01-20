@@ -5,22 +5,7 @@ import EmptyState from "~/components/atoms/EmptyState.vue"
 import ScrollProgressBar from "~/components/atoms/ScrollProgressBar.vue"
 import { useEventProgress } from "~/composables/useEventProgress"
 
-// const { data: timeline, isLoading } = useTimelineQuery()
-const isLoading = ref(false)
-const timeline = ref({
-  orderedItems: [],
-  totalItems: 15,
-  groupedByEvent: Array.from({ length: 15 }, (_, i) => ({
-    event: {
-      id: `evt-${i}`,
-      title: `Event ${i + 1}`,
-      description: `Description for event ${i + 1}. ` + "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ".repeat(5),
-      sequence: i,
-      published: new Date().toISOString()
-    },
-    posts: []
-  }))
-})
+const { data: timeline, isLoading } = useTimelineQuery()
 
 const { currentEventIndex, totalEvents, registerEventElement } = useEventProgress(timeline)
 
