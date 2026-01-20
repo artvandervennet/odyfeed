@@ -26,6 +26,7 @@
     "@vueuse/core": "^14.1.0",
     "eslint": "^9.39.2",
     "fs-extra": "^11.3.3",
+    "microformats-parser": "^2.0.4",
     "n3": "^1.26.0",
     "nuxt": "^4.2.2",
     "openai": "^6.15.0",
