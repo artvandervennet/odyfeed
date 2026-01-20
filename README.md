@@ -1,666 +1,176 @@
-# OdyFeed
+# OdyFeed 🏛️
 
-**A Decentralized Social Network Bridging ActivityPub Federation and Solid Pod Data Storage**
+> A decentralized social network that brings Greek mythology to the modern web through ActivityPub federation, Solid Pod storage, and Webmentions.
 
-OdyFeed is an experimental social networking platform that demonstrates the convergence of two W3C standards: **ActivityPub** (for federated communication) and **Solid** (for decentralized personal data storage). Unlike traditional social networks or pure ActivityPub implementations, OdyFeed stores user data in personal Solid Pods while maintaining compatibility with the broader Fediverse.
+Experience the Odyssey like never before—where Odysseus, Poseidon, and Athena share their stories across the federated web, all while your data remains sovereign in your personal Solid Pod.
+
+[![Nuxt](https://img.shields.io/badge/Nuxt-4.2-00DC82?style=flat&logo=nuxt.js)](https://nuxt.com/)
+[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?style=flat&logo=vue.js)](https://vuejs.org/)
+[![ActivityPub](https://img.shields.io/badge/ActivityPub-W3C-purple?style=flat)](https://www.w3.org/TR/activitypub/)
+[![Solid](https://img.shields.io/badge/Solid-Protocol-7C4DFF?style=flat)](https://solidproject.org/)
 
 ---
 
 ## Table of Contents
 
-1. [High-Level Architecture & Philosophy](#high-level-architecture--philosophy)
-2. [Architectural Decision Records: The "Why"](#architectural-decision-records-the-why)
-3. [Deep Dive: ActivityPub Implementation](#deep-dive-activitypub-implementation)
-4. [Deep Dive: Solid Pod Integration](#deep-dive-solid-pod-integration)
-5. [Data Flow: End-to-End Example](#data-flow-end-to-end-example)
-6. [Project Structure](#project-structure)
-7. [Setup & Development](#setup--development)
-8. [Environment Configuration](#environment-configuration)
-9. [Troubleshooting & Common Pitfalls](#troubleshooting--common-pitfalls)
-10. [Testing & Verification](#testing--verification)
+1. [What is OdyFeed?](#what-is-odyfeed)
+2. [Features](#features)
+3. [Setup & Development](#setup--development)
+   - [Prerequisites](#prerequisites)
+   - [Environment Variables](#environment-variables)
+   - [Installation](#installation)
+   - [Running the Application](#running-the-application)
+4. [Project Structure](#project-structure)
+   - [Frontend Architecture](#frontend-architecture)
+   - [Backend Architecture](#backend-architecture)
+   - [Shared Resources](#shared-resources)
+5. [Technologies Deep Dive](#technologies-deep-dive)
+   - [ActivityPub Federation](#activitypub-federation)
+   - [Solid Pod Integration](#solid-pod-integration)
+   - [Webmentions](#webmentions)
+   - [Linked Data (RDF)](#linked-data-rdf)
+6. [Common Pitfalls & Troubleshooting](#common-pitfalls--troubleshooting)
+7. [Testing & Verification](#testing--verification)
+8. [Deployment Considerations](#deployment-considerations)
+9. [Contributing](#contributing)
+10. [Resources & Further Reading](#resources--further-reading)
 
 ---
 
-## High-Level Architecture & Philosophy
+## What is OdyFeed?
 
-### What Does OdyFeed Do?
+**OdyFeed** is an educational demonstration of modern decentralized web technologies, showcasing how to build a federated social network that respects user privacy and data sovereignty. It combines three powerful protocols:
 
-OdyFeed is a **social media platform** where:
-- Users authenticate using **Solid OIDC** (OpenID Connect) against their chosen Solid Pod provider
-- User profiles, posts, and social graph data are stored in **personal Solid Pods** (not on a centralized server)
-- The application federates with other ActivityPub servers (Mastodon, Pleroma, etc.) through standardized protocols
-- The Nuxt server acts as a **proxy/gateway** that translates between Solid Pod storage and ActivityPub federation
+- **🌐 ActivityPub**: For federated social networking (compatible with Mastodon, Pleroma, and other fediverse platforms)
+- **🔒 Solid Pods**: For user-controlled data storage with fine-grained access control
+- **💬 Webmentions**: For decentralized comments and interactions across the web
 
-### Why This Architecture?
+The application tells the story of Homer's Odyssey through the eyes of mythological characters (Odysseus, Poseidon, Athena), who "post" about events as they unfold. Users can authenticate with their Solid Pod, create posts, interact with content, and federate with other ActivityPub servers—all while maintaining full control over their data.
 
-#### The Problem
-Modern social networks face a trilemma:
-1. **Centralization**: User data is owned by corporations (Facebook, Twitter)
-2. **Federation without Ownership**: ActivityPub servers (Mastodon) federate but still control your data centrally on their instance
-3. **Data Ownership without Network Effects**: Solid gives you a personal data pod, but lacks social networking infrastructure
+### Why OdyFeed?
 
-#### The Solution: OdyFeed's Hybrid Approach
+This project was created as a learning resource and proof-of-concept for:
 
-OdyFeed combines the best of both worlds:
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Identity & Auth** | Solid OIDC | Decentralized authentication, WebID-based identity |
-| **Data Storage** | Solid Pods (LDP) | User owns their data (posts, likes, follows) in their personal pod |
-| **Social Protocol** | ActivityPub | Federated communication with existing Fediverse instances |
-| **Application Layer** | Nuxt 3 (SSR disabled) | Client-side SPA with Nitro server as AP/Solid gateway |
-
-#### Why Nuxt?
-- **Unified Codebase**: Single TypeScript project for client and server
-- **Nitro Server**: Lightweight H3-based server perfect for handling ActivityPub HTTP signatures and Solid authentication
-- **SSR Disabled**: Client-side rendering ensures sensitive operations (Pod access) happen with user authentication tokens
-- **Type Safety**: Shared types between client and server reduce integration bugs
-
-#### Why Combine ActivityPub + Solid?
-**ActivityPub** provides:
-- ✅ Standardized federation protocol (existing network effects with Mastodon, Pleroma, etc.)
-- ✅ Push-based delivery (server-to-server communication)
-- ✅ Well-defined Actor/Inbox/Outbox model
-
-**Solid** provides:
-- ✅ True data ownership (user controls storage location)
-- ✅ Fine-grained access control (ACLs on Pod resources)
-- ✅ Interoperability (other apps can read your OdyFeed data with permission)
-
-**The Gap**: ActivityPub servers expect centralized storage; Solid Pods are personal data stores. OdyFeed bridges this gap by:
-1. Storing all user content in Solid Pods (RDF/JSON-LD)
-2. Serving ActivityPub endpoints that dynamically read from Pods
-3. Signing requests with private keys stored in Pods
-4. Translating between Solid's RDF-based data model and ActivityPub's JSON-LD
+- Understanding ActivityPub federation mechanics (inbox/outbox, HTTP signatures, actor discovery)
+- Implementing Solid OIDC authentication and Pod storage operations
+- Working with RDF/Turtle and Linked Data principles
+- Building a modern web application with Vue 3, Nuxt, and TypeScript
+- Exploring decentralized web standards in a practical context
 
 ---
 
-## System Architecture Diagram
+## Features
 
-```mermaid
-graph TB
-    subgraph "Client (Browser)"
-        A[Nuxt SPA]
-        A1[Auth Store]
-        A2[Pinia Colada Queries]
-        A3[Vue Components]
-    end
+### Core Functionality
 
-    subgraph "Nuxt Nitro Server (Gateway)"
-        B[API Routes]
-        B1[/api/auth/*]
-        B2[/api/actors/:username/*]
-        B3[/api/timeline]
-        B4[/api/webmentions]
-        
-        C[Server Utils]
-        C1[solidSession.ts]
-        C2[federation.ts]
-        C3[podStorage.ts]
-        C4[httpSignature.ts]
-    end
+✅ **Federated Social Networking**
+- Full ActivityPub implementation (Follow, Like, Reply, Announce)
+- HTTP Signature verification for secure federation
+- Compatible with Mastodon and other fediverse platforms
 
-    subgraph "User's Solid Pod"
-        D[Pod Storage]
-        D1[/social/inbox/]
-        D2[/social/outbox/]
-        D3[/profile/activitypub]
-        D4[/settings/keys.json]
-    end
+✅ **Solid Pod Integration**
+- OAuth 2.0 / OIDC authentication with any Solid provider
+- Automatic Pod container creation with proper ACL permissions
+- Activity storage in user's Pod (inbox/outbox as JSON-LD files)
+- Profile data stored as RDF/Turtle
 
-    subgraph "ActivityPub Federation"
-        E[Remote Instances]
-        E1[Mastodon]
-        E2[Pleroma]
-        E3[Other AP Servers]
-    end
+✅ **Webmention Support**
+- Receive webmentions on posts
+- Parse microformats2 (h-entry, h-card)
+- Automatic validation and storage
 
-    subgraph "Solid OIDC Provider"
-        F[Identity Provider]
-        F1[login.inrupt.com]
-        F2[solidcommunity.net]
-    end
+✅ **Mythological Narrative**
+- Pre-defined actors (Greek gods) with unique personalities
+- Story events from the Odyssey served as Linked Data
+- AI-generated posts (OpenAI) that match character tone
+- Timeline grouped by narrative events
 
-    A --> B
-    A1 -->|Auth Token| B1
-    A2 -->|Fetch Data| B2
-    A2 -->|Fetch Timeline| B3
-    
-    B1 -->|OAuth Flow| F
-    B1 <-->|DPoP Tokens| C1
-    C1 <-->|Authenticated Fetch| D
-    
-    B2 -->|Read Profile| C3
-    B2 -->|Read Posts| C3
-    C3 <-->|@inrupt/solid-client| D
-    
-    B2 -->|Federate Activity| C2
-    C2 -->|HTTP Signature| C4
-    C2 -->|POST to Inbox| E
-    
-    E -->|POST Follow/Like| B2
-    B2 -->|Verify Signature| C4
-    B2 -->|Save to Inbox| C3
-    C3 -->|Store Activity| D1
-    
-    D4 -->|Private Key| C4
-    
-    style D fill:#90EE90
-    style F fill:#87CEEB
-    style E fill:#FFB6C1
-    style B fill:#FFE4B5
-```
+✅ **Modern Web UI**
+- Vue 3 Composition API with `<script setup>`
+- Nuxt 4 with SSR disabled (client-side rendering)
+- Nuxt UI components with Tailwind CSS
+- Dark mode support
+- Responsive design
 
 ---
 
-## Architectural Decision Records: The "Why"
+## Setup & Development
 
-### ADR-001: Why Store ActivityPub Data in Solid Pods?
+### Prerequisites
 
-**Decision**: Use Solid Pods as the primary data store instead of a traditional database.
+Ensure you have the following installed:
 
-**Context**: 
-- ActivityPub servers typically use PostgreSQL/MySQL to store user data
-- Solid provides standardized RDF-based storage with built-in access control
+- **Node.js** v18+ (LTS recommended)
+- **pnpm** v8+ (Package manager)
+- **A Solid Pod** (get one from [solidcommunity.net](https://solidcommunity.net/) or [inrupt.net](https://inrupt.net/))
 
-**Consequences**:
-- ✅ **Pro**: Users truly own their data and can move between OdyFeed instances
-- ✅ **Pro**: Data can be accessed by other Solid-compatible apps
-- ✅ **Pro**: No database migrations or server-side storage costs
-- ❌ **Con**: Performance overhead (network latency to fetch from Pod)
-- ❌ **Con**: Complexity in translating RDF ↔ ActivityPub JSON-LD
+### Environment Variables
 
-**Rationale**: The long-term value of data portability and user sovereignty outweighs the performance trade-offs for a proof-of-concept platform.
+Create a `.env` file in the root directory:
 
----
+```bash
+# Application Base URL
+# CRITICAL: This must match your deployment domain!
+# For local development:
+BASE_URL=http://localhost:3000
 
-### ADR-002: Why Use @inrupt/solid-client-authn-node for Server-Side Auth?
+# For production (example):
+# BASE_URL=https://odyfeed.example.com
 
-**Decision**: Use Inrupt's Node.js Solid authentication library with persistent DPoP key storage.
+# OpenAI API Key (optional, for AI-generated posts)
+# Get your key from https://platform.openai.com/api-keys
+OPENAI_API_KEY=sk-your-api-key-here
 
-**Context**:
-- Solid uses DPoP (Demonstrating Proof of Possession) tokens tied to cryptographic keys
-- Server must maintain authenticated sessions to read/write user Pods
-- DPoP keys must persist across requests to avoid "accountId mismatch" errors
-
-**Consequences**:
-- ✅ **Pro**: Official library with robust OIDC + DPoP handling
-- ✅ **Pro**: Automatic token refresh with `Session.events.on('newTokens')`
-- ❌ **Con**: Complex session hydration (see `server/utils/solidSession.ts`)
-- ❌ **Con**: Memory management for active sessions
-
-**Implementation Details**:
-```typescript
-// Persistent storage ensures DPoP keys survive across requests
-const storage = getSharedSolidStorage() // Disk-backed storage
-const session = new Session({ storage, keepAlive: true })
+# ActivityPub Pagination (optional, defaults to 20)
+ACTIVITYPUB_PAGE_SIZE=20
 ```
 
----
+#### Important Notes
 
-### ADR-003: Why RSA-SHA256 for HTTP Signatures?
+- **BASE_URL**: The `clientid.jsonld` file is automatically generated from this value. Solid providers use this URL for OAuth redirects.
+- **OPENAI_API_KEY**: Only required if you want AI-generated posts during user registration. The app works without it, but sample posts will use fallback content.
 
-**Decision**: Use RSA-2048 key pairs and `rsa-sha256` algorithm for ActivityPub HTTP Signatures.
+### Installation
 
-**Context**:
-- ActivityPub federation requires cryptographic proof of message origin
-- Most implementations (Mastodon, Pleroma) support `rsa-sha256`
+```powershell
+# Clone the repository
+git clone https://github.com/yourusername/OdyFeed.git
+cd OdyFeed
 
-**Library Choice**: Native Node.js `crypto` module instead of third-party libraries.
+# Install dependencies
+pnpm install
 
-**Rationale**:
-- Reduces dependencies and supply chain attack surface
-- `crypto.createSign()` and `crypto.createVerify()` are battle-tested
-- Custom implementation allows fine-grained control over signature format
-
-**Security Note**: Private keys are stored in the user's Solid Pod at `/settings/keys.json` with ACL restricted to the Pod owner.
-
----
-
-### ADR-004: Why JSON-LD Instead of Pure RDF/Turtle?
-
-**Decision**: Store ActivityPub activities as JSON-LD in Pods (not Turtle).
-
-**Context**:
-- Solid natively supports Turtle (RDF serialization)
-- ActivityPub uses JSON-LD (RDF in JSON format)
-
-**Rationale**:
-- Preserves ActivityPub structure without lossy RDF conversion
-- Easier debugging (JSON is human-readable)
-- Direct pass-through from Pod → ActivityPub inbox
-- Profile metadata still uses Turtle for Solid compatibility
-
----
-
-### ADR-005: Why SSR Disabled (Client-Side Only)?
-
-**Decision**: Nuxt configured with `ssr: false` in `nuxt.config.ts`.
-
-**Context**:
-- Solid authentication requires browser-based OAuth flows
-- Sensitive Pod operations need user's access tokens
-
-**Consequences**:
-- ✅ **Pro**: Authentication state managed client-side (no server session complexity for UI)
-- ✅ **Pro**: Access tokens never sent to Nuxt server (better security model)
-- ❌ **Con**: No SEO benefits for public posts
-- ❌ **Con**: Initial page load requires JavaScript
-
-**Mitigation**: Public ActivityPub endpoints (`/api/actors/:username`) still work server-side for federation.
-
----
-
-## Deep Dive: ActivityPub Implementation
-
-### The Actor Model
-
-**What is an Actor?**
-In ActivityPub, an "Actor" represents a user/service that can send and receive activities. Each actor has:
-- A unique `id` (URL, e.g., `https://odyfeed.example.com/api/actors/alice`)
-- An `inbox` (receives messages from others)
-- An `outbox` (publishes activities to followers)
-- A public key (for HTTP signature verification)
-
-**OdyFeed's Actor Profile Structure**:
-```typescript
-interface ASActor {
-  "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "https://odyfeed.example.com/api/actors/alice",
-  "type": "Person",
-  "preferredUsername": "alice",
-  "name": "Alice Wonder",
-  "inbox": "https://odyfeed.example.com/api/actors/alice/inbox",
-  "outbox": "https://odyfeed.example.com/api/actors/alice/outbox",
-  "publicKey": {
-    "id": "https://odyfeed.example.com/api/actors/alice#main-key",
-    "owner": "https://odyfeed.example.com/api/actors/alice",
-    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\n..."
-  }
-}
+# Verify installation
+pnpm run dev
 ```
 
-**Key Implementation Files**:
-- `server/api/actors/[username]/index.get.ts` - Serves actor profile
-- `server/utils/actorHelpers.ts` - `createActorProfile()` function
-- `server/utils/crypto.ts` - RSA key pair generation
+### Running the Application
 
----
+#### Development Mode
 
-### Inbox/Outbox Flow
-
-#### Inbox (Receiving Activities)
-
-**Endpoint**: `POST /api/actors/:username/inbox`
-
-**Flow**:
-1. Remote server sends activity (e.g., Follow, Like) with HTTP Signature
-2. `verifyHttpSignature()` fetches sender's public key and validates signature
-3. Activity is saved to user's Solid Pod at `/social/inbox/:activityId.json`
-4. Special handling for Follow requests: auto-send Accept activity
-
-**Code Walkthrough** (`server/api/actors/[username]/inbox.post.ts`):
-```typescript
-// 1. Verify HTTP Signature
-const { verified, actorId } = await verifyHttpSignature(event, bodyString)
-if (!verified) throw createError({ statusCode: 401 })
-
-// 2. Save to Solid Pod
-const savedUrl = await saveActivityToPod(webId, inboxContainer, activity, slug)
-
-// 3. Handle Follow activities
-if (activity.type === 'Follow') {
-  const acceptActivity = generateAcceptActivity(activity, actorId, actorId)
-  const followerActor = await dereferenceActor(activity.actor)
-  await sendActivityToInbox(followerActor.inbox, acceptActivity, actorId, privateKey)
-}
+```powershell
+pnpm run dev
 ```
 
-**HTTP Signature Verification** (`server/utils/httpSignature.ts`):
-- Parses `Signature` header to extract `keyId`, `algorithm`, `headers`, `signature`
-- Fetches public key from remote actor's profile
-- Reconstructs signing string from HTTP headers
-- Verifies signature using `crypto.createVerify()`
+The application will be available at `http://localhost:3000`.
 
----
+#### Production Build
 
-#### Outbox (Sending Activities)
+```powershell
+# Build the application
+pnpm run build
 
-**Endpoint**: `POST /api/actors/:username/outbox`
-
-**Flow**:
-1. Client sends activity (e.g., Create Note, Like) to outbox
-2. Activity is saved to Solid Pod at `/social/outbox/:activityId.json`
-3. Server extracts recipients from `to` and `cc` fields
-4. For each recipient, dereference their actor profile to get inbox URL
-5. Sign request with user's private key
-6. POST activity to each recipient's inbox
-
-**Code Walkthrough** (`server/api/actors/[username]/outbox.post.ts`):
-```typescript
-// 1. Validate ownership
-if (username !== authUsername) throw createError({ statusCode: 403 })
-
-// 2. Save to Pod
-const savedUrl = await saveActivityToPod(webId, outboxContainer, activity, slug)
-
-// 3. Get private key from Pod
-const privateKey = await getPrivateKeyFromPod(webId, podUrl)
-
-// 4. Federate to recipient inboxes
-const federationResult = await federateActivity(activity, actorId, privateKey)
+# Preview production build
+pnpm run preview
 ```
 
-**Federation Logic** (`server/utils/federation.ts`):
-```typescript
-export const federateActivity = async function (
-  activity: ASActivity,
-  senderActorId: string,
-  privateKey: string
-) {
-  // Resolve all recipient inbox URLs
-  const inboxes = await resolveRecipientInboxes(to, cc)
-  
-  // Send to each inbox in parallel
-  const results = await Promise.allSettled(
-    inboxes.map(inbox => sendActivityToInbox(inbox, activity, senderActorId, privateKey))
-  )
-  
-  return { total, successful, failed }
-}
+#### Generate Static Site (Not Recommended)
+
+```powershell
+pnpm run generate
 ```
 
----
-
-### HTTP Signature Generation
-
-**Signing Algorithm** (RFC 8017 - PKCS#1 v2.2):
-```typescript
-// server/utils/crypto.ts
-export const signRequest = function (params: SignRequestParams) {
-  const { privateKey, keyId, url, method, body } = params
-  
-  // 1. Build signing string
-  const stringToSign = `(request-target): ${method.toLowerCase()} ${path}\nhost: ${host}\ndate: ${date}\ndigest: ${digest}`
-  
-  // 2. Sign with RSA-SHA256
-  const signer = createSign('sha256')
-  signer.update(stringToSign)
-  const signature = signer.sign(privateKey, 'base64')
-  
-  // 3. Build Signature header
-  return {
-    'Host': host,
-    'Date': date,
-    'Digest': `SHA-256=${digest}`,
-    'Signature': `keyId="${keyId}",algorithm="rsa-sha256",headers="${headers}",signature="${signature}"`
-  }
-}
-```
-
-**Why These Headers?**
-- `(request-target)`: Prevents replay attacks on different endpoints
-- `Host`: Prevents attacks redirecting to different domains
-- `Date`: Prevents replay attacks (many servers reject >5min old signatures)
-- `Digest`: Ensures body integrity (prevents tampering)
-
----
-
-### ActivityPub Collections
-
-**Paginated Collections** (Inbox/Outbox/Followers):
-
-OdyFeed implements ordered collections per ActivityPub spec:
-```json
-{
-  "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "https://odyfeed.example.com/api/actors/alice/outbox",
-  "type": "OrderedCollection",
-  "totalItems": 42,
-  "first": "https://odyfeed.example.com/api/actors/alice/outbox?page=1"
-}
-```
-
-**Page Response**:
-```json
-{
-  "id": "https://odyfeed.example.com/api/actors/alice/outbox?page=1",
-  "type": "OrderedCollectionPage",
-  "partOf": "https://odyfeed.example.com/api/actors/alice/outbox",
-  "orderedItems": [ /* activities */ ],
-  "next": "https://odyfeed.example.com/api/actors/alice/outbox?page=2"
-}
-```
-
-**Implementation**: `server/utils/actorEndpointHelpers.ts` - `buildCollection()` helper
-
----
-
-## Deep Dive: Solid Pod Integration
-
-### Solid OIDC Authentication Flow
-
-**Phase 1: Client-Side Login Initiation** (`app/stores/authStore.ts`):
-1. User selects Solid provider (e.g., `login.inrupt.com`)
-2. Client fetches OIDC configuration from `/.well-known/openid-configuration`
-3. Client redirects to Nuxt server's `/api/auth/login?issuer=...`
-
-**Phase 2: Server-Side OAuth Flow** (`server/api/auth/login.get.ts`):
-```typescript
-const session = new Session({ storage: persistentStorage })
-await session.login({
-  oidcIssuer: issuer,
-  redirectUrl: `${baseUrl}/api/auth/callback`,
-  clientName: "OdyFeed",
-  handleRedirect: (url) => sendRedirect(event, url)
-})
-```
-
-**Critical Detail**: The `Session` object stores DPoP (Demonstrating Proof of Possession) cryptographic keys in `storage`. These keys MUST persist across the OAuth callback to avoid "accountId mismatch" errors.
-
-**Phase 3: OAuth Callback** (`server/api/auth/callback.get.ts`):
-```typescript
-// Recover the SAME session instance (with DPoP keys)
-const session = pendingSessions.get(tempSessionId)
-
-// Complete OAuth flow
-await session.handleIncomingRedirect(url.toString())
-
-// Extract tokens
-const { webId, sessionId } = session.info
-```
-
-**Phase 4: Session Persistence**:
-- Session data stored in `data/sessions/` directory
-- WebID-to-username mapping stored in `data/users/webid-mappings.json`
-- Solid session data (including DPoP keys) stored in `data/solid-sessions/`
-
----
-
-### Pod Container Structure
-
-When a user registers, OdyFeed initializes these containers in their Solid Pod:
-
-```
-<POD_URL>/
-├── social/
-│   ├── inbox/          # Incoming ActivityPub activities
-│   ├── outbox/         # Outgoing ActivityPub activities
-│   ├── followers/      # List of followers
-│   ├── following/      # List of accounts user follows
-│   └── activities/     # Private activity metadata
-├── profile/
-│   ├── card            # RDF profile (vCard, FOAF)
-│   └── activitypub     # ActivityPub Actor JSON-LD
-└── settings/
-    ├── keys.json       # Private RSA key
-    ├── publicTypeIndex.ttl
-    └── privateTypeIndex.ttl
-```
-
-**Implementation**: `server/utils/podStorage.ts` - `ensurePodContainers()`
-
----
-
-### Access Control (ACL)
-
-Each container has specific permissions:
-
-| Container | Permission Type | Public Read? | Public Write? |
-|-----------|----------------|--------------|---------------|
-| `/social/inbox/` | PublicAppendPrivateRead | ❌ No | ✅ Append only |
-| `/social/outbox/` | PublicReadOwnerWrite | ✅ Yes | ❌ Owner only |
-| `/profile/` | PublicReadOwnerWrite | ✅ Yes | ❌ Owner only |
-| `/settings/` | PrivateOwnerOnly | ❌ No | ❌ Owner only |
-
-**Why PublicAppendPrivateRead for Inbox?**
-- Remote ActivityPub servers need to POST activities (append)
-- Only the owner should read their inbox (privacy)
-- Prevents inbox snooping by third parties
-
-**ACL Generation** (`server/utils/aclGenerator.ts`):
-```turtle
-@prefix acl: <http://www.w3.org/ns/auth/acl#>.
-@prefix foaf: <http://xmlns.com/foaf/0.1/>.
-
-<#public>
-  a acl:Authorization;
-  acl:accessTo <./>;
-  acl:agentClass foaf:Agent;
-  acl:mode acl:Append.
-
-<#owner>
-  a acl:Authorization;
-  acl:accessTo <./>;
-  acl:agent <https://pod.example/user#me>;
-  acl:mode acl:Read, acl:Write, acl:Control.
-```
-
----
-
-### Reading/Writing to Pods
-
-**Library**: `@inrupt/solid-client` for LDP (Linked Data Platform) operations
-
-**Write Example** (Saving Activity):
-```typescript
-// server/utils/podStorage.ts
-const authenticatedFetch = await getAuthenticatedFetch(webId)
-const activityBlob = new Blob([JSON.stringify(activity)], { type: 'application/ld+json' })
-const savedFile = await saveFileInContainer(
-  containerUrl,
-  activityBlob,
-  { slug, fetch: authenticatedFetch }
-)
-```
-
-**Read Example** (Fetching Activity):
-```typescript
-const file = await getFile(activityUrl, { fetch: authenticatedFetch })
-const text = await file.text()
-const activity = JSON.parse(text)
-```
-
-**List Container** (Inbox/Outbox pagination):
-```typescript
-const dataset = await getSolidDataset(containerUrl, { fetch: authenticatedFetch })
-const urls = getContainedResourceUrlAll(dataset)
-```
-
----
-
-### Session Hydration (Server-Side Pod Access)
-
-**Challenge**: Server needs to access user's Pod without the user being actively logged in.
-
-**Solution**: Store refresh tokens and hydrate sessions on-demand.
-
-**Implementation** (`server/utils/solidSession.ts`):
-```typescript
-export const hydrateSession = async function (webId: string) {
-  const userData = await getUserSession(webId)
-  const storage = getSharedSolidStorage()
-  const session = new Session({ storage })
-  
-  await session.login({
-    oidcIssuer: userData.issuer,
-    clientId: userData.clientId,
-    clientSecret: userData.clientSecret,
-    refreshToken: userData.refreshToken,
-  })
-  
-  // Listen for token refresh
-  session.events.on('newTokens', (tokenSet) => {
-    saveUserSession(webId, { ...userData, refreshToken: tokenSet.refreshToken })
-  })
-  
-  activeSessions.set(webId, session)
-  return session
-}
-```
-
-**Token Refresh**: Solid providers issue short-lived access tokens (~15min). The `Session` object automatically refreshes tokens using the refresh token before they expire.
-
----
-
-### RDF Ontology Used
-
-**Profile Data** (Turtle format):
-```turtle
-@prefix foaf: <http://xmlns.com/foaf/0.1/>.
-@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
-
-<#me>
-  a foaf:Person;
-  foaf:name "Alice Wonder";
-  vcard:hasEmail <mailto:alice@example.com>.
-```
-
-**ActivityPub Profile** (JSON-LD in Pod):
-```json
-{
-  "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "https://odyfeed.example.com/api/actors/alice",
-  "type": "Person",
-  "name": "Alice Wonder"
-}
-```
-
-**Why Both Formats?**
-- **Turtle**: Solid ecosystem interoperability (other Solid apps can read vCard data)
-- **JSON-LD**: ActivityPub compatibility (direct serving to federation)
-
----
-
-## Data Flow: End-to-End Example
-
-### Scenario: Alice Likes Bob's Post
-
-```mermaid
-sequenceDiagram
-    participant A as Alice (Client)
-    participant N as Nuxt Server
-    participant AP as Alice's Pod
-    participant BN as Bob's Nuxt Server
-    participant BP as Bob's Pod
-
-    A->>N: POST /api/actors/alice/outbox<br/>{type: "Like", object: "https://bob.example/post/123"}
-    N->>N: Authenticate Alice
-    N->>AP: Save Like activity to /social/outbox/
-    AP-->>N: Saved
-    N->>AP: Get Alice's private key from /settings/keys.json
-    AP-->>N: Private key
-    N->>N: Sign request with HTTP Signature
-    N->>BN: POST /api/actors/bob/inbox<br/>Signature: keyId="alice#main-key"...
-    BN->>BN: Verify HTTP Signature
-    BN->>N: Dereference Alice's actor (fetch public key)
-    N-->>BN: Alice's actor profile with publicKey
-    BN->>BN: Signature valid ✅
-    BN->>BP: Save Like to /social/inbox/
-    BP-->>BN: Saved
-    BN-->>N: 202 Accepted
-    N-->>A: Success
-```
+> ⚠️ **Note**: Since OdyFeed uses Solid authentication (client-side only), static generation has limited use. Keep `ssr: false` in `nuxt.config.ts`.
 
 ---
 
@@ -668,54 +178,49 @@ sequenceDiagram
 
 ```
 OdyFeed/
-├── app/                          # Nuxt client-side application
-│   ├── api/                      # Client API wrappers
-│   │   ├── activities.ts         # Create Like/Reply activities
-│   │   ├── actors.ts             # Fetch actor profiles
-│   │   ├── auth.ts               # Registration API
-│   │   └── timeline.ts           # Fetch timeline posts
-│   ├── assets/css/               # Global styles
-│   ├── components/               # Vue components
-│   │   ├── atoms/                # Base UI components
-│   │   ├── molecules/            # Composite components
-│   │   ├── organisms/            # Complex layouts
-│   │   ├── Actor/                # Actor-related components
+├── app/                          # Frontend application
+│   ├── api/                      # Client-side API functions
+│   │   ├── activities.ts         # ActivityPub activity creators
+│   │   ├── actors.ts             # Actor profile fetching
+│   │   ├── auth.ts               # Authentication API calls
+│   │   └── timeline.ts           # Timeline data fetching
+│   ├── assets/
+│   │   └── css/
+│   │       └── main.css          # Global styles & CSS variables
+│   ├── components/
+│   │   ├── Actor/                # Actor-specific components
+│   │   ├── atoms/                # Atomic UI components
+│   │   ├── Form/                 # Form components
 │   │   ├── Post/                 # Post display components
-│   │   ├── Reply/                # Reply components
-│   │   ├── Webmention/           # Webmention display
-│   │   ├── AppHeader.vue         # Navigation header
-│   │   ├── AppFooter.vue         # Page footer
-│   │   ├── LoginModal.vue        # Solid OIDC login UI
-│   │   └── RegistrationModal.vue # User registration form
-│   ├── composables/              # Reusable composition functions
-│   │   ├── useAuth.ts            # Authentication state wrapper
-│   │   ├── useAuthProviders.ts   # Solid provider list
-│   │   ├── useFormValidation.ts  # Form validation logic
-│   │   ├── useModal.ts           # Modal state management
-│   │   ├── usePostActions.ts     # Like/reply/delete actions
-│   │   └── useWebmentions.ts     # Webmention data
+│   │   ├── Webmention/           # Webmention components
+│   │   ├── AppHeader.vue
+│   │   ├── AppFooter.vue
+│   │   └── ...
+│   ├── composables/              # Vue composables (reusable logic)
+│   │   ├── useAuth.ts            # Authentication state & actions
+│   │   ├── useAuthProviders.ts   # Solid provider discovery
+│   │   ├── useModal.ts           # Modal management
+│   │   ├── usePostActions.ts     # Like/Reply/Share actions
+│   │   └── ...
 │   ├── layouts/
-│   │   └── default.vue           # Default page layout
+│   │   └── default.vue           # Default layout with header/footer
 │   ├── middleware/
-│   │   └── auth.ts               # Route protection
+│   │   └── auth.ts               # Route authentication guard
 │   ├── mutations/                # Pinia Colada mutations (writes)
-│   │   ├── auth.ts               # Login/register mutations
-│   │   ├── like.ts               # Like post mutation
-│   │   ├── reply.ts              # Reply to post mutation
-│   │   └── webmention.ts         # Send webmention mutation
-│   ├── pages/                    # Route pages
+│   │   ├── auth.ts               # Login/logout/register mutations
+│   │   ├── like.ts               # Like/unlike mutations
+│   │   ├── reply.ts              # Reply creation mutation
+│   │   └── webmention.ts         # Webmention sending mutation
+│   ├── pages/                    # Nuxt pages (routes)
 │   │   ├── index.vue             # Home timeline
 │   │   ├── about.vue             # About page
-│   │   ├── callback.vue          # OAuth callback handler
-│   │   ├── inbox.vue             # User inbox view
-│   │   ├── profile.vue           # User profile page
+│   │   ├── inbox.vue             # User inbox
+│   │   ├── profile.vue           # User profile
 │   │   ├── register.vue          # Registration page
-│   │   ├── setup.vue             # Initial setup wizard
-│   │   └── actors/
-│   │       └── [username].vue    # Public actor profile
+│   │   └── ...
 │   ├── plugins/
-│   │   ├── auth-session.client.ts # Auth session initialization
-│   │   └── solid-vcard.client.ts  # Solid vCard web component
+│   │   ├── auth-session.client.ts # Initialize auth session
+│   │   └── solid-vcard.client.ts  # Register Solid vCard web component
 │   ├── queries/                  # Pinia Colada queries (reads)
 │   │   ├── auth.ts               # Auth status query
 │   │   ├── inbox.ts              # User inbox query
@@ -726,257 +231,659 @@ OdyFeed/
 │   ├── stores/
 │   │   └── authStore.ts          # Pinia auth state (central store)
 │   ├── types/
-│   │   ├── index.ts              # Shared types
+│   │   ├── index.ts              # Type definitions
 │   │   └── oidc.ts               # OIDC-specific types
 │   └── utils/
-│       ├── fetch.ts              # HTTP headers helpers
-│       ├── authHelper.ts    # Mutation utilities
-│       ├── oidc.ts               # PKCE challenge generation
-│       ├── postHelpers.ts        # Post formatting utilities
+│       ├── authHelper.ts         # Auth utility functions
+│       ├── fetch.ts              # Custom fetch wrapper
+│       ├── oidc.ts               # OIDC utilities
+│       ├── postHelpers.ts        # Post formatting helpers
 │       ├── queryKeys.ts          # Query key factory
 │       ├── rdf.ts                # RDF parsing (client-side)
-│       └── solidHelpers.ts       # Solid utility functions
+│       └── solidHelpers.ts       # Solid Pod helpers
 │
-├── server/                       # Nuxt Nitro server (ActivityPub gateway)
-│   ├── api/                      # API endpoints
+├── server/                       # Backend (Nitro API)
+│   ├── api/
 │   │   ├── actors/
 │   │   │   └── [username]/
-│   │   │       ├── index.get.ts  # Actor profile (ActivityPub Actor object)
-│   │   │       ├── inbox.get.ts  # Inbox collection (requires auth)
-│   │   │       ├── inbox.post.ts # Receive federated activities
-│   │   │       ├── outbox.get.ts # Outbox collection (public)
-│   │   │       ├── outbox.post.ts # Send new activities
-│   │   │       ├── posts.get.ts  # List user's posts
-│   │   │       ├── followers.get.ts # Followers collection
-│   │   │       ├── following.get.ts # Following collection
+│   │   │       ├── index.get.ts       # Actor profile endpoint
+│   │   │       ├── inbox.get.ts       # Get user inbox (private)
+│   │   │       ├── inbox.post.ts      # Receive federated activities
+│   │   │       ├── outbox.get.ts      # Get user outbox (public)
+│   │   │       ├── outbox.post.ts     # Send activities (federation)
 │   │   │       └── status/
-│   │   │           └── [statusId].get.ts # Single post
+│   │   │           └── [id].get.ts    # Individual post endpoint
 │   │   ├── auth/
-│   │   │   ├── callback.get.ts   # OAuth callback handler
-│   │   │   ├── login.get.ts      # Initiate OIDC login
-│   │   │   ├── logout.post.ts    # Logout endpoint
-│   │   │   ├── me.get.ts         # Get current user
-│   │   │   ├── register.post.ts  # Register new user
-│   │   │   └── status.get.ts     # Auth status check
-│   │   ├── timeline.get.ts       # Aggregated timeline
+│   │   │   ├── callback.get.ts        # OAuth callback handler
+│   │   │   ├── login.post.ts          # Initiate Solid login
+│   │   │   ├── logout.post.ts         # Clear session
+│   │   │   ├── register.post.ts       # Register new user
+│   │   │   └── status.get.ts          # Check auth status
+│   │   ├── timeline.get.ts            # Aggregated timeline
 │   │   └── webmentions/
-│   │       ├── index.get.ts      # List webmentions
-│   │       └── index.post.ts     # Receive webmention
-│   ├── middleware/               # Server middleware
-│   │   └── auth.ts               # Inject auth context
-│   └── utils/                    # Server utilities
-│       ├── aclGenerator.ts       # Generate Solid ACL rules
-│       ├── actorEndpointHelpers.ts # ActivityPub collection builders
-│       ├── actorHelpers.ts       # Actor profile generation
-│       ├── authHelpers.ts        # Auth validation
-│       ├── crypto.ts             # RSA key generation, HTTP signing
-│       ├── federation.ts         # ActivityPub federation logic
-│       ├── fileStorage.ts        # Local file storage wrapper
-│       ├── httpSignature.ts      # HTTP Signature verification
-│       ├── logger.ts             # Structured logging
-│       ├── microformats.ts       # Webmention microformat parsing
-│       ├── podStorage.ts         # Solid Pod read/write operations
-│       ├── postGenerator.ts      # Generate mythological posts
-│       ├── rdf.ts                # RDF/Turtle parsing
-│       ├── sessionCookie.ts      # Session cookie management
-│       ├── sessionStorage.ts     # Session persistence
-│       ├── solidSession.ts       # Solid Session hydration
-│       ├── solidStorage.ts       # Solid storage backend
-│       └── typeIndexGenerator.ts # Generate Solid Type Indexes
+│   │       ├── index.get.ts           # List webmentions
+│   │       └── index.post.ts          # Receive webmention
+│   ├── middleware/
+│   │   ├── auth.ts                    # Inject auth context
+│   │   └── errorHandler.ts            # Global error logging
+│   ├── routes/
+│   │   ├── .well-known/
+│   │   │   └── webfinger.ts           # WebFinger endpoint (federation)
+│   │   ├── actors.ts                  # Serve actors.ttl
+│   │   ├── clientid.jsonld.ts         # OIDC client document
+│   │   ├── events.ts                  # Serve events.ttl
+│   │   └── vocab.ts                   # Serve vocabulary
+│   └── utils/                         # Server utilities
+│       ├── aclGenerator.ts            # Generate Solid ACL rules
+│       ├── actorEndpointHelpers.ts    # ActivityPub helpers
+│       ├── actorHelpers.ts            # Actor profile generation
+│       ├── authHelpers.ts             # Auth validation
+│       ├── crypto.ts                  # RSA key generation, HTTP signing
+│       ├── federation.ts              # ActivityPub federation logic
+│       ├── fileStorage.ts             # Local file storage wrapper
+│       ├── httpSignature.ts           # HTTP Signature verification
+│       ├── logger.ts                  # Structured logging
+│       ├── microformats.ts            # Webmention microformat parsing
+│       ├── podStorage.ts              # Solid Pod read/write operations
+│       ├── postGenerator.ts           # Generate mythological posts (AI)
+│       ├── rdf.ts                     # RDF/Turtle parsing
+│       ├── sessionCookie.ts           # Session cookie management
+│       ├── sessionStorage.ts          # Session persistence
+│       ├── solidSession.ts            # Solid Session hydration
+│       ├── solidStorage.ts            # Solid storage backend
+│       └── typeIndexGenerator.ts      # Generate Solid Type Indexes
 │
 ├── shared/                       # Shared between client & server
 │   ├── constants.ts              # Namespaces, endpoints, defaults
 │   └── types/
 │       ├── activitypub.ts        # ActivityPub interfaces
 │       ├── api.ts                # API request/response types
+│       ├── base.ts               # Base types
+│       ├── index.ts              # Type exports
+│       ├── mappers.ts            # Data transformation utilities
+│       ├── mutations.ts          # Mutation payload types
 │       ├── solid.ts              # Solid ACL types
-│       ├── webmention.ts         # Webmention types
-│       └── mappers.ts            # Data transformation utilities
-│
-├── data/                         # Runtime data (not in version control)
-│   ├── sessions/                 # User session metadata
-│   ├── solid-sessions/           # Solid session storage (DPoP keys)
-│   └── users/
-│       └── webid-mappings.json   # WebID → username → actorId mappings
+│       └── webmention.ts         # Webmention types
 │
 ├── public/                       # Static assets
 │   ├── actors.ttl                # Mythological actors (Greek gods)
-│   ├── events.ttl                # Mythological events
+│   ├── events.ttl                # Mythological events (Odyssey)
 │   ├── vocab.ttl                 # Custom RDF vocabulary
 │   ├── favicon.ico
 │   └── robots.txt
 │
-├── logs/                         # Application logs
-│   └── activitypub.log
+├── data/                         # Runtime data (not in version control)
+│   ├── sessions/                 # User session metadata
+│   ├── solid-sessions/           # Solid session storage (DPoP keys)
+│   ├── posts/                    # Published posts (JSON-LD)
+│   └── users/
+│       └── webid-mappings.json   # WebID → username → actorId mappings
 │
+├── logs/
+│   └── activitypub.log           # Application logs
+│
+├── .env                          # Environment variables
+├── .env.example                  # Environment template
 ├── nuxt.config.ts                # Nuxt configuration
-├── tsconfig.json                 # TypeScript configuration
-├── package.json                  # Dependencies
-└── .env                          # Environment variables
+├── package.json
+├── pnpm-lock.yaml
+├── tsconfig.json
+└── eslint.config.mjs
 ```
 
-### Key Directories Explained
+### Frontend Architecture
 
-#### ActivityPub Logic: `server/api/actors/`
-All ActivityPub federation endpoints live here. The `[username]` dynamic route handles:
-- Actor profile serving
-- Inbox/Outbox collections
-- Individual status (post) retrieval
+**Framework**: Nuxt 4 (Vue 3 + Composition API)
 
-#### Solid Integration: `server/utils/podStorage.ts` + `solidSession.ts`
-- `podStorage.ts`: High-level Pod operations (save/read activities, create containers)
-- `solidSession.ts`: Session management, token refresh, authenticated fetch
+**Key Patterns**:
+- **Composition API**: All components use `<script setup>` for cleaner, more maintainable code
+- **Pinia Colada**: Data fetching with queries (reads) and mutations (writes)
+- **Composables**: Reusable logic extracted into `composables/` directory
+- **Atomic Design**: Components organized by complexity (atoms → molecules → organisms)
 
-#### Federation Core: `server/utils/federation.ts`
-- `dereferenceActor()`: Fetch remote actor profiles
-- `resolveRecipientInboxes()`: Find all inboxes for a list of recipients
-- `sendActivityToInbox()`: Sign and POST activities
-- `federateActivity()`: Orchestrate delivery to multiple inboxes
+**State Management**:
+- **Pinia**: Central auth store (`authStore.ts`)
+- **Pinia Colada**: Query caching with automatic invalidation
 
-#### Client Data Layer: `app/queries/` + `app/mutations/`
-- **Queries** (Pinia Colada): Cached data fetching with automatic refetching
-- **Mutations**: Optimistic updates and cache invalidation
-- Separation of concerns: queries are read-only, mutations modify state
+**Styling**:
+- **Nuxt UI**: Pre-built components with Tailwind CSS
+- **Modern CSS**: Native nesting, CSS variables, logical properties
+- **Dark Mode**: Full theme support
+
+### Backend Architecture
+
+**Framework**: Nitro (Nuxt's server engine)
+
+**Key Responsibilities**:
+1. **ActivityPub Federation**: Handle inbox/outbox, HTTP signatures, actor serving
+2. **Solid Pod Operations**: Read/write to user Pods, manage sessions
+3. **Webmention Processing**: Receive, validate, store webmentions
+4. **API Endpoints**: Serve timeline, auth, and data endpoints
+
+**Data Storage**:
+- **Solid Pods**: User data (posts, profile, activities)
+- **Local Filesystem**: Sessions, mappings, webmentions, published posts
+- **In-Memory**: Active session cache (DPoP keys)
+
+### Shared Resources
+
+**Constants** (`shared/constants.ts`):
+- Namespaces (ActivityStreams, Solid, FOAF, etc.)
+- Activity types (Note, Like, Follow, etc.)
+- File paths, Pod containers, endpoint paths
+
+**Types** (`shared/types/`):
+- TypeScript interfaces for ActivityPub objects
+- Solid Pod ACL configurations
+- API request/response types
+- Webmention structures
 
 ---
 
-## Setup & Development
+## Technologies Deep Dive
 
-### Prerequisites
+### ActivityPub Federation
 
-- **Node.js**: v18.0.0 or higher (v20.x recommended)
-- **pnpm**: v8.0.0 or higher (faster than npm)
-- **Solid Pod**: Create an account at one of these providers:
-  - [Inrupt PodSpaces](https://login.inrupt.com) (recommended for testing)
-  - [SolidCommunity.net](https://solidcommunity.net)
-  - [SolidWeb.org](https://solidweb.org)
+ActivityPub is a W3C recommendation for decentralized social networking. OdyFeed implements both the Client-to-Server (C2S) and Server-to-Server (S2S) protocols.
 
-### Installation
+#### How It Works
 
-```powershell
-# 1. Clone repository
-git clone https://github.com/yourusername/OdyFeed.git
-cd OdyFeed
+1. **Actor Discovery**: Each user has a unique actor ID (e.g., `https://odyfeed.example.com/api/actors/alice`)
+2. **Inbox/Outbox**: Actors have an inbox (receive) and outbox (send) for activities
+3. **Federation**: Activities are sent to remote servers with HTTP Signatures for authentication
+4. **Collections**: Followers, following, and posts are served as ActivityStreams Collections
 
-# 2. Install dependencies
-pnpm install
+#### Core Endpoints
 
-# 3. Create environment file
-Copy-Item .env.example .env
+| Endpoint | Method | Description | Public? |
+|----------|--------|-------------|---------|
+| `/api/actors/:username` | GET | Actor profile (Person object) | ✅ Yes |
+| `/api/actors/:username/inbox` | GET | User's inbox (paginated) | ❌ Auth required |
+| `/api/actors/:username/inbox` | POST | Receive activities from remote servers | ✅ Yes (with HTTP Signature) |
+| `/api/actors/:username/outbox` | GET | User's outbox (paginated) | ✅ Yes |
+| `/api/actors/:username/outbox` | POST | Send activities (Like, Reply, etc.) | ❌ Auth required |
+| `/api/actors/:username/status/:id` | GET | Individual post | ✅ Yes |
+| `/.well-known/webfinger` | GET | WebFinger discovery | ✅ Yes |
 
-# 4. Edit .env file
-# Set BASE_URL to http://localhost:3000 for local development
-notepad .env
+#### HTTP Signatures
+
+All federated activities are signed using RSA-SHA256. Each actor has a public/private key pair stored in their Solid Pod (`/settings/keys.json`).
+
+**Signature Process**:
+1. Generate request digest (SHA-256 hash of body)
+2. Create signing string from HTTP headers
+3. Sign with RSA private key
+4. Include `Signature` header with request
+
+**Example Signature Header**:
+```
+Signature: keyId="https://odyfeed.example.com/api/actors/alice#main-key",
+           algorithm="rsa-sha256",
+           headers="(request-target) host date digest content-type",
+           signature="Base64EncodedSignature=="
 ```
 
-### Development Server
+**Implementation**: See `server/utils/crypto.ts` and `server/utils/httpSignature.ts`
 
-```powershell
-pnpm dev
+#### Inbox Flow (Receiving Activities)
+
+```typescript
+// server/api/actors/[username]/inbox.post.ts
+
+1. Receive activity from remote server
+   ↓
+2. Verify HTTP Signature
+   - Fetch sender's public key from their actor profile
+   - Validate signature matches body and headers
+   ↓
+3. Save activity to user's Solid Pod
+   - Store at /social/inbox/{activityId}.json
+   ↓
+4. Process activity based on type
+   - Follow → Auto-send Accept activity
+   - Like → Update post likes collection
+   - Create (Reply) → Add to post replies
+   ↓
+5. Return 202 Accepted
 ```
 
-Visit `http://localhost:3000`
+#### Outbox Flow (Sending Activities)
 
-**First-Time Setup**:
-1. Click "Login" in the header
-2. Select a Solid provider (e.g., Inrupt PodSpaces)
-3. Authorize OdyFeed to access your Pod
-4. Fill in registration form:
-   - Username (alphanumeric, lowercase)
-   - Display name
-   - Bio (optional)
-5. Click "Create Profile"
+```typescript
+// server/api/actors/[username]/outbox.post.ts
 
-**What Happens Behind the Scenes**:
-- Pod containers are created (`/social/`, `/profile/`, `/settings/`)
-- RSA key pair is generated and private key saved to Pod
-- Actor profile is saved to Pod and mapped to your WebID
-- Sample posts are generated (optional, for testing)
-
----
-
-## Environment Configuration
-
-### `.env` File
-
-```bash
-# Application Base URL
-# CRITICAL: Must match your deployment URL for OAuth callbacks to work
-BASE_URL=http://localhost:3000
-
-# OpenAI API Key (optional - for AI-generated content)
-# Get your key from: https://platform.openai.com/api-keys
-OPENAI_API_KEY=sk-...
-
-# ActivityPub Pagination (optional)
-ACTIVITYPUB_PAGE_SIZE=20
+1. Client sends activity to user's outbox
+   ↓
+2. Validate user owns the outbox (auth check)
+   ↓
+3. Save activity to user's Solid Pod
+   - Store at /social/outbox/{activityId}.json
+   ↓
+4. Extract recipients (to, cc fields)
+   ↓
+5. Dereference recipient actors
+   - Fetch each recipient's actor profile
+   - Extract their inbox URL
+   ↓
+6. Federate activity to each inbox
+   - Sign request with user's private key
+   - POST to remote inbox
+   - Handle delivery failures gracefully
+   ↓
+7. Return federation results
+   {
+     id: savedUrl,
+     federated: { total: 5, successful: 4, failed: 1 }
+   }
 ```
 
-### Production Deployment Considerations
+**Implementation**: See `server/utils/federation.ts`
 
-#### HTTPS is MANDATORY
-ActivityPub federation requires HTTPS. Most servers will reject connections to `http://` URLs.
+#### Mastodon Compatibility
 
-**Options**:
-1. **Reverse proxy** (Nginx/Caddy with Let's Encrypt)
-2. **Platform-provided HTTPS** (Vercel, Netlify, Railway)
-3. **Tunnel for testing** (ngrok, Cloudflare Tunnel)
+OdyFeed is compatible with Mastodon and other fediverse platforms. To ensure interoperability:
 
-#### ngrok Example (Development/Testing)
+**Required Features**:
+- ✅ WebFinger endpoint (`/.well-known/webfinger`)
+- ✅ Actor profile with `publicKey` field
+- ✅ HTTP Signatures on all federated requests
+- ✅ `Content-Type: application/ld+json; profile="https://www.w3.org/ns/activitystreams"`
+- ✅ Proper `@context` with Mastodon extensions (toot namespace)
 
-```powershell
-# Terminal 1: Start Nuxt dev server
-pnpm dev
-
-# Terminal 2: Start ngrok tunnel
-ngrok http 3000
-```
-
-**Update `.env`**:
-```bash
-BASE_URL=https://your-random-id.ngrok-free.app
-```
-
-**Restart dev server** after changing `BASE_URL` (clientid.json is regenerated).
-
-#### CORS Considerations with Solid Providers
-
-**Problem**: Solid Pod providers may block CORS requests from ngrok domains.
-
-**Solution 1** (Recommended): Use Inrupt PodSpaces - they whitelist common tunnel domains.
-
-**Solution 2**: Deploy to a real domain (even a subdomain works).
-
-**Solution 3**: For testing, use localhost with a local Solid server (Community Solid Server).
-
----
-
-### clientid.json (Auto-Generated)
-
-The `public/clientid.json` file is automatically generated from `BASE_URL`:
-
+**Mastodon-Specific Context Extensions**:
 ```json
 {
-  "client_id": "https://your-domain.com/clientid.json",
-  "redirect_uris": ["https://your-domain.com/api/auth/callback"],
-  "client_name": "OdyFeed",
-  "client_uri": "https://your-domain.com",
-  "logo_uri": "https://your-domain.com/favicon.ico",
-  "tos_uri": "https://your-domain.com/terms",
-  "policy_uri": "https://your-domain.com/privacy",
-  "software_id": "odyfeed",
-  "software_version": "1.0.0",
-  "token_endpoint_auth_method": "client_secret_basic",
-  "grant_types": ["authorization_code", "refresh_token"],
-  "response_types": ["code"]
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    {
+      "toot": "http://joinmastodon.org/ns#",
+      "sensitive": "as:sensitive",
+      "votersCount": "toot:votersCount"
+    }
+  ]
 }
 ```
 
-This file is served at `/clientid.json` and tells Solid providers how to configure OAuth for OdyFeed.
+**Testing Federation with Mastodon**:
+1. Deploy OdyFeed to a public HTTPS domain
+2. From Mastodon, search for `@yourname@yourdomain.com`
+3. Follow the OdyFeed user
+4. OdyFeed should auto-accept the follow
+5. Post from OdyFeed should appear in your Mastodon timeline
+
+**Common Issues**:
+- **WebFinger must use HTTPS**: Mastodon won't federate with HTTP-only servers
+- **Clock skew**: HTTP Signature validation fails if server time is off by >5 minutes
+- **Missing headers**: Ensure `Date`, `Digest`, and `Host` headers are present
 
 ---
 
-## Troubleshooting & Common Pitfalls
+### Solid Pod Integration
+
+Solid (Social Linked Data) is a web decentralization project that allows users to store their data in personal online data stores called Pods.
+
+#### Authentication (OIDC)
+
+OdyFeed uses Solid-OIDC (OpenID Connect) for authentication.
+
+**Flow**:
+```
+1. User enters their WebID (e.g., https://alice.solidcommunity.net/profile/card#me)
+   ↓
+2. Discover OIDC issuer from WebID
+   - Fetch WebID document (Turtle/JSON-LD)
+   - Extract solid:oidcIssuer predicate
+   ↓
+3. Initiate OAuth flow
+   - Redirect to issuer with client_id (clientid.jsonld URL)
+   - Request scopes: openid, webid, offline_access
+   ↓
+4. User authenticates at Solid provider
+   ↓
+5. Provider redirects back with authorization code
+   - Callback: /api/auth/callback?code=...&state=...
+   ↓
+6. Exchange code for tokens
+   - Access token, ID token, refresh token
+   - DPoP (Demonstrating Proof-of-Possession) bound tokens
+   ↓
+7. Hydrate session on server
+   - Store session in data/sessions/
+   - Store Solid session (with DPoP keys) in data/solid-sessions/
+   - Create authenticated fetch function
+   ↓
+8. Access user's Pod with authenticated fetch
+```
+
+**Implementation**: See `server/api/auth/` and `server/utils/solidSession.ts`
+
+#### Permissions (ACL - Access Control Lists)
+
+Each container in the user's Pod has specific permissions:
+
+| Container | Permission Type | Public Read? | Public Write? | Public Append? |
+|-----------|----------------|--------------|---------------|----------------|
+| `/social/inbox/` | PublicAppendPrivateRead | ❌ No | ❌ No | ✅ Yes |
+| `/social/outbox/` | PublicReadOwnerWrite | ✅ Yes | ❌ No | ❌ No |
+| `/social/followers/` | PublicReadOwnerWrite | ✅ Yes | ❌ No | ❌ No |
+| `/social/following/` | PublicReadOwnerWrite | ✅ Yes | ❌ No | ❌ No |
+| `/profile/` | PublicReadOwnerWrite | ✅ Yes | ❌ No | ❌ No |
+| `/settings/` | PrivateOwnerOnly | ❌ No | ❌ No | ❌ No |
+
+**Why PublicAppendPrivateRead for Inbox?**
+- Remote ActivityPub servers need to POST activities (append)
+- Only the owner should read their inbox (privacy)
+- Prevents inbox snooping by third parties
+
+**ACL Example** (Turtle format):
+```turtle
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+<#public>
+  a acl:Authorization;
+  acl:accessTo <./>;
+  acl:default <./>;
+  acl:agentClass foaf:Agent;
+  acl:mode acl:Append.
+
+<#owner>
+  a acl:Authorization;
+  acl:accessTo <./>;
+  acl:default <./>;
+  acl:agent <https://alice.solidcommunity.net/profile/card#me>;
+  acl:mode acl:Read, acl:Write, acl:Control.
+```
+
+**Implementation**: See `server/utils/aclGenerator.ts`
+
+#### Get/Post to Pods
+
+**Library**: `@inrupt/solid-client` for LDP (Linked Data Platform) operations
+
+**Writing Data** (Save Activity):
+```typescript
+import { saveFileInContainer } from '@inrupt/solid-client'
+import { getAuthenticatedFetch } from '~/server/utils/solidSession'
+
+const authenticatedFetch = await getAuthenticatedFetch(webId)
+const activityBlob = new Blob([JSON.stringify(activity)], { 
+  type: 'application/ld+json' 
+})
+
+const savedFile = await saveFileInContainer(
+  containerUrl,
+  activityBlob,
+  { 
+    slug: 'my-activity.json',
+    fetch: authenticatedFetch 
+  }
+)
+```
+
+**Reading Data** (Fetch Activity):
+```typescript
+import { getFile } from '@inrupt/solid-client'
+
+const file = await getFile(activityUrl, { fetch: authenticatedFetch })
+const text = await file.text()
+const activity = JSON.parse(text)
+```
+
+**Listing Container Contents** (Inbox/Outbox pagination):
+```typescript
+import { getSolidDataset, getContainedResourceUrlAll } from '@inrupt/solid-client'
+
+const dataset = await getSolidDataset(containerUrl, { fetch: authenticatedFetch })
+const urls = getContainedResourceUrlAll(dataset)
+// Returns: ['https://pod.example/social/inbox/activity1.json', ...]
+```
+
+**Implementation**: See `server/utils/podStorage.ts`
+
+#### clientid.jsonld
+
+The `clientid.jsonld` file tells Solid providers how to configure OAuth for OdyFeed.
+
+**Auto-Generated from `BASE_URL`**:
+```json
+{
+  "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
+  "client_id": "https://odyfeed.example.com/clientid.jsonld",
+  "client_name": "OdyFeed",
+  "client_uri": "https://odyfeed.example.com",
+  "logo_uri": "https://odyfeed.example.com/favicon.ico",
+  "redirect_uris": ["https://odyfeed.example.com/api/auth/callback"],
+  "scope": "openid webid offline_access",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none"
+}
+```
+
+**Served at**: `/clientid.jsonld`
+
+**Why It's Important**:
+- Solid providers fetch this document during OAuth flow
+- `client_id` must be a publicly accessible URL
+- `redirect_uris` must exactly match callback URL
+- Changing `BASE_URL` requires regenerating this file (automatic on server start)
+
+**Implementation**: See `server/routes/clientid.jsonld.ts`
+
+---
+
+### Webmentions
+
+Webmentions are a W3C recommendation for notifications between websites. When someone links to your content, you receive a webmention.
+
+#### How It Works
+
+```
+1. Site A publishes content with link to Site B
+   <a href="https://odyfeed.example.com/post/123">Great post!</a>
+   ↓
+2. Site A sends webmention to Site B
+   POST /api/webmentions
+   Content-Type: application/x-www-form-urlencoded
+   
+   source=https://site-a.com/my-post
+   &target=https://odyfeed.example.com/post/123
+   ↓
+3. Site B (OdyFeed) validates the webmention
+   - Fetch source URL
+   - Verify it contains a link to target
+   - Parse microformats2 (h-entry)
+   ↓
+4. Store webmention
+   - Add to post's webmentions collection
+   - Include author info, content excerpt
+   ↓
+5. Display on target post
+   - Show as comment/like/mention
+```
+
+#### Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/webmentions` | POST | Receive webmention |
+| `/api/webmentions/site` | GET | List all site webmentions |
+| `/api/webmentions/posts/:username/:id` | GET | List webmentions for specific post |
+
+**Advertise Webmention Endpoint**:
+```html
+<!-- In <head> -->
+<link rel="webmention" href="https://odyfeed.example.com/api/webmentions">
+```
+
+**Implementation**: See `server/api/webmentions/index.post.ts`
+
+#### Microformats2 Parsing
+
+OdyFeed parses microformats2 markup to extract metadata from source pages:
+
+**h-entry** (Blog post/article):
+```html
+<article class="h-entry">
+  <h1 class="p-name">Article Title</h1>
+  <p class="p-summary">Short description</p>
+  <div class="e-content">Full article content...</div>
+  <a href="https://odyfeed.example.com/post/123" class="u-in-reply-to">Reply</a>
+  <a href="https://author.com" class="p-author h-card">
+    <img src="avatar.jpg" class="u-photo" alt="">
+    <span class="p-name">Author Name</span>
+  </a>
+  <time class="dt-published" datetime="2026-01-20">Jan 20, 2026</time>
+</article>
+```
+
+**Webmention Type Detection**:
+- `u-like-of` → Like
+- `u-repost-of` → Repost/Share
+- `u-in-reply-to` → Comment/Reply
+- Default → Mention
+
+**Implementation**: See `server/utils/microformats.ts`
+
+---
+
+### Linked Data (RDF)
+
+OdyFeed uses RDF (Resource Description Framework) to represent structured data about mythological actors, events, and posts.
+
+#### Events / Actors / Vocabulary
+
+**Actors** (`public/actors.ttl`):
+```turtle
+@prefix myth: <https://odyfeed.example.com/vocab#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+<actors/odysseus>
+    a myth:Actor ;
+    foaf:name "Odysseus" ;
+    myth:tone "slim, berekend, volhardend" ;
+    myth:avatar "https://api.dicebear.com/7.x/avataaars/svg?seed=odysseus" .
+
+<actors/poseidon>
+    a myth:Actor ;
+    foaf:name "Poseidon" ;
+    myth:tone "wraakzuchtig, almachtig" ;
+    myth:avatar "https://api.dicebear.com/7.x/avataaars/svg?seed=poseidon" .
+```
+
+**Events** (`public/events.ttl`):
+```turtle
+@prefix myth: <https://odyfeed.example.com/vocab#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+<events/01-trojan-horse>
+    a myth:Event ;
+    dct:title "De list van het paard" ;
+    myth:sequence 1 ;
+    myth:location "Troje" ;
+    myth:description "Met een houten paard mislukt Troje definitief." ;
+    myth:involvesActor <actors/odysseus>, <actors/athena> .
+
+<events/02-cyclops-cave>
+    a myth:Event ;
+    dct:title "In de grot van de Cyclopen" ;
+    myth:sequence 2 ;
+    myth:location "Eiland van de Cyclopen" ;
+    myth:description "Polyphemus, de eenogige reus, verslindt enkele mannen..." ;
+    myth:involvesActor <actors/odysseus>, <actors/poseidon> .
+```
+
+**Vocabulary** (`public/vocab.ttl`):
+```turtle
+@prefix myth: <https://odyfeed.example.com/vocab#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+myth:Actor
+    a rdfs:Class ;
+    rdfs:comment "An actor in the mythological world." .
+
+myth:Event
+    a rdfs:Class ;
+    rdfs:comment "A mythological event." .
+
+myth:tone
+    a rdfs:Property ;
+    rdfs:label "tone" ;
+    rdfs:comment "The personality tone of an actor." .
+
+myth:sequence
+    a rdfs:Property ;
+    rdfs:label "sequence" ;
+    rdfs:comment "The sequence number of an event." .
+```
+
+**Access**:
+- `/actors` → Serves `actors.ttl`
+- `/events` → Serves `events.ttl`
+- `/vocab` → Serves `vocab.ttl`
+
+#### Data Generation
+
+**Post Generation with OpenAI**:
+
+When a user registers and matches a mythological actor (e.g., username "odysseus" → Odysseus), OdyFeed generates 3 sample posts using OpenAI:
+
+```typescript
+// server/utils/postGenerator.ts
+
+const prompt = `
+You are ${actor.name}, the Greek god/hero.
+Your personality: ${actor.tone}
+
+Write a social media post about this event:
+Event: ${event.title}
+Description: ${event.description}
+
+Requirements:
+- Write in first person
+- Match the character's tone
+- Keep it under 280 characters
+- Be engaging and dramatic
+`
+
+const response = await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [{ role: "user", content: prompt }],
+  max_tokens: 150
+})
+
+const postContent = response.choices[0].message.content
+```
+
+Posts are stored as:
+1. **ActivityPub Note** in local storage (`data/posts/{username}/{id}.jsonld`)
+2. **Activity in User's Pod** (`/social/outbox/{activityId}.json`)
+
+**Timeline Aggregation**:
+
+The timeline groups posts by narrative events:
+
+```typescript
+// server/api/timeline.get.ts
+
+const events = parseEvents() // From events.ttl
+const actors = parseActors() // From actors.ttl
+const posts = await fetchAllUserPosts() // From Solid Pods
+
+const groupedByEvent = events.map(event => ({
+  event,
+  posts: posts.filter(post => post.aboutEvent === event.id)
+}))
+
+return { groupedByEvent, mythActors: actors }
+```
+
+**Implementation**: See `server/utils/postGenerator.ts` and `server/utils/rdf.ts`
+
+---
+
+## Common Pitfalls & Troubleshooting
 
 ### 1. "accountId mismatch" Error During OAuth Callback
 
@@ -1011,22 +918,19 @@ This file is served at `/clientid.json` and tells Solid providers how to configu
 # 1. Check server time
 Get-Date
 
-# 2. Enable debug logging
-# In .env:
-LOG_LEVEL=debug
+# 2. Check logs (logs/activitypub.log)
+Get-Content logs/activitypub.log -Tail 50
 
-# 3. Check signature generation
-# Logs will show: "Signing string: ..."
-```
-
-**Test Signature Locally**:
-```powershell
-# Send activity to yourself
-curl -X POST http://localhost:3000/api/actors/alice/inbox `
+# 3. Test signature locally
+curl -X POST http://localhost:3000/api/actors/testuser/inbox `
   -H "Content-Type: application/ld+json" `
-  -H "Signature: keyId=\"http://localhost:3000/api/actors/alice#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"...\"" `
-  -d '{"type":"Follow","actor":"http://localhost:3000/api/actors/bob"}'
+  -d '{"type":"Follow","actor":"http://localhost:3000/api/actors/sender"}'
 ```
+
+**Fix**:
+- Sync server clock: `w32tm /resync` (Windows)
+- Verify key format in Pod: `/settings/keys.json`
+- Check `Digest` calculation in `server/utils/crypto.ts`
 
 ---
 
@@ -1045,7 +949,6 @@ curl -X POST http://localhost:3000/api/actors/alice/inbox `
 const authenticatedFetch = await getAuthenticatedFetch(webId)
 if (!authenticatedFetch) {
   console.error('❌ No authenticated fetch for', webId)
-  // Check if session exists in activeSessions map
 }
 ```
 
@@ -1065,7 +968,7 @@ if (!authenticatedFetch) {
 
 **Check Mapping**:
 ```powershell
-Get-Content data/users/webid-mappings.json | ConvertFrom-Json | ConvertTo-Json -Depth 10
+Get-Content data/users/webid-mappings.json | ConvertFrom-Json
 ```
 
 **Fix - Reset Registration**:
@@ -1084,23 +987,14 @@ Remove-Item data/users/webid-mappings.json
 
 ### 5. CORS Errors with Solid Provider
 
-**Symptom**: Browser console shows "CORS policy blocked" when authenticating.
+**Symptom**: Login fails with CORS error in browser console.
 
-**Cause**: Solid provider doesn't allow your domain (common with ngrok).
+**Cause**: Some Solid providers have strict CORS policies.
 
-**Solutions**:
-1. **Use Inrupt PodSpaces**: They whitelist most tunnel services
-2. **Use localhost**: No CORS issues, but can't federate with remote servers
-3. **Deploy to real domain**: Even a free subdomain works
-4. **Local Solid Server**: Run Community Solid Server locally
-
-**Local CSS Setup**:
-```powershell
-npx @solid/community-server -p 3001
-
-# Update .env
-POD_PROVIDER=http://localhost:3001
-```
+**Workaround**:
+- Use `solidcommunity.net` (most permissive)
+- Ensure `BASE_URL` matches your deployment domain exactly
+- Check `nuxt.config.ts` → `vite.server.allowedHosts` includes your domain
 
 ---
 
@@ -1121,11 +1015,6 @@ curl https://your-domain.com/api/actors/yourname `
   -H "Accept: application/ld+json"
 
 # Should return JSON with "publicKey" field
-
-# Test inbox delivery
-curl -X POST https://remote-server.com/api/actors/remoteuser/inbox `
-  -H "Content-Type: application/ld+json" `
-  -d '{"type":"Follow","actor":"https://your-domain.com/api/actors/yourname","object":"https://remote-server.com/api/actors/remoteuser"}'
 ```
 
 ---
@@ -1137,19 +1026,12 @@ curl -X POST https://remote-server.com/api/actors/remoteuser/inbox `
 2. **Pod access failed**: Server can't read outbox containers
 3. **No posts created**: Users haven't posted yet
 
-**Quick Fix - Generate Sample Posts**:
-```typescript
-// In server/api/auth/register.post.ts (already implemented)
-// Generates 3 sample posts for new users
-const posts = generatePostsForActor(username, matchingActor, mythEvents)
-```
-
-**Manual Timeline Test**:
+**Quick Fix - Verify Timeline Endpoint**:
 ```powershell
 curl http://localhost:3000/api/timeline
 ```
 
-Expected response: Array of `EnrichedPost` objects with `actor` data.
+Expected response: Array of `groupedByEvent` objects with posts.
 
 ---
 
@@ -1175,45 +1057,95 @@ pnpm dev
 
 ---
 
+### 9. Webmentions Not Appearing
+
+**Causes**:
+1. **Source page doesn't link to target**: Webmention validation fails
+2. **Microformat parsing error**: No h-entry found on source page
+3. **Storage path incorrect**: Post not found in `data/posts/`
+
+**Debug**:
+```powershell
+# Test webmention endpoint
+curl -X POST http://localhost:3000/api/webmentions `
+  -H "Content-Type: application/x-www-form-urlencoded" `
+  -d "source=https://example.com/post&target=http://localhost:3000/post/123"
+
+# Check logs
+Get-Content logs/activitypub.log -Tail 20
+```
+
+---
+
+### 10. OpenAI Posts Not Generating
+
+**Symptom**: New users don't get sample posts during registration.
+
+**Cause**: `OPENAI_API_KEY` not set or invalid.
+
+**Check**:
+```powershell
+$env:OPENAI_API_KEY
+```
+
+**Fix**:
+1. Get API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Add to `.env`: `OPENAI_API_KEY=sk-...`
+3. Restart server
+
+**Fallback**: If no API key, posts use generic content (see `server/utils/postGenerator.ts`)
+
+---
+
 ## Testing & Verification
 
 ### Manual Testing Checklist
 
-#### Authentication Flow
-- [ ] Login button opens modal with provider list
-- [ ] Selecting provider redirects to Solid IdP
-- [ ] After authorization, redirects to `/register`
-- [ ] Registration form accepts valid usernames
-- [ ] After registration, user is logged in and sees timeline
+#### Authentication
+- [ ] Login with Solid Pod redirects to provider
+- [ ] OAuth callback returns to app successfully
+- [ ] Session persists across page reloads
+- [ ] Logout clears session
 
-#### Post Creation
-- [ ] "Create Post" button visible when logged in
-- [ ] Post form accepts text content
-- [ ] After posting, activity appears in outbox
-- [ ] Post visible on timeline
-- [ ] Post visible on user's profile page
-
-#### Federation
-- [ ] Actor profile is accessible at `/api/actors/:username`
-- [ ] Profile includes `publicKey` field
-- [ ] Inbox endpoint is publicly accessible (but rejects unsigned requests)
-- [ ] Outbox endpoint shows posted activities
-- [ ] Sending activity to remote inbox succeeds (check logs)
+#### Registration
+- [ ] Username validation works (lowercase, no spaces)
+- [ ] Pod containers created during registration
+- [ ] ActivityPub profile saved to Pod
+- [ ] Sample posts generated (if OpenAI configured)
 
 #### Solid Pod Integration
 - [ ] Pod containers created during registration
 - [ ] Activities saved as JSON files in Pod
 - [ ] ACLs set correctly (inbox is append-only, outbox is readable)
 - [ ] Private key stored in `/settings/keys.json`
-- [ ] Profile visible at `/profile/activitypub` in Pod
 
----
+#### ActivityPub Federation
+- [ ] Actor profile accessible at `/api/actors/:username`
+- [ ] WebFinger works for `@username@domain`
+- [ ] Outbox serves paginated activities
+- [ ] HTTP Signatures valid on sent activities
+- [ ] Remote activities received in inbox
 
-### Automated Testing (Recommended for Production)
+#### Webmentions
+- [ ] Endpoint advertised in `<link rel="webmention">`
+- [ ] Receives webmentions via POST
+- [ ] Validates source links to target
+- [ ] Parses microformats2 correctly
+- [ ] Displays on post pages
 
-**Unit Tests** (not currently implemented):
+#### UI/UX
+- [ ] Timeline loads and groups by events
+- [ ] Posts display with actor info
+- [ ] Like button works (optimistic update)
+- [ ] Reply modal opens and submits
+- [ ] Dark mode toggle works
+- [ ] Responsive on mobile
+
+### Automated Testing
+
+**Unit Tests** (example, not currently implemented):
 ```typescript
-// Example: tests/unit/crypto.test.ts
+// tests/unit/crypto.test.ts
 import { generateActorKeyPair, signRequest } from '@/server/utils/crypto'
 
 describe('Crypto Utils', () => {
@@ -1222,12 +1154,25 @@ describe('Crypto Utils', () => {
     expect(publicKey).toContain('BEGIN PUBLIC KEY')
     expect(privateKey).toContain('BEGIN PRIVATE KEY')
   })
+
+  test('signs request correctly', () => {
+    const { privateKey } = generateActorKeyPair()
+    const headers = signRequest({
+      privateKey,
+      keyId: 'https://example.com/actor#key',
+      url: 'https://remote.com/inbox',
+      method: 'POST',
+      body: '{"type":"Follow"}'
+    })
+    expect(headers.Signature).toBeDefined()
+    expect(headers.Digest).toContain('SHA-256=')
+  })
 })
 ```
 
-**Integration Tests**:
+**Integration Tests** (example):
 ```typescript
-// Example: tests/integration/activitypub.test.ts
+// tests/integration/activitypub.test.ts
 describe('ActivityPub Endpoints', () => {
   test('GET /api/actors/:username returns Actor object', async () => {
     const response = await fetch('http://localhost:3000/api/actors/testuser')
@@ -1235,179 +1180,163 @@ describe('ActivityPub Endpoints', () => {
     expect(actor.type).toBe('Person')
     expect(actor.inbox).toBeDefined()
   })
+
+  test('POST to inbox with valid signature succeeds', async () => {
+    // ... implementation
+  })
 })
 ```
 
 ---
 
-## Advanced Topics
+## Deployment Considerations
 
-### Extending the Ontology
+### Production Checklist
 
-To add custom properties to actor profiles:
+- [ ] **HTTPS Required**: ActivityPub federation requires HTTPS (Mastodon won't federate with HTTP)
+- [ ] **BASE_URL**: Set to your production domain (e.g., `https://odyfeed.example.com`)
+- [ ] **Sessions**: Persist sessions to database (currently filesystem-based)
+- [ ] **Rate Limiting**: Add rate limiting to API endpoints
+- [ ] **Monitoring**: Set up logging aggregation (e.g., LogDNA, Papertrail)
+- [ ] **Backups**: Regular backups of `data/` directory
+- [ ] **Scaling**: Consider Redis for session storage if scaling horizontally
 
-1. **Update Actor Type** (`shared/types/activitypub.ts`):
-```typescript
-export interface MythActor extends ASActor {
-  "myth:tone"?: string;  // Custom property
-  "myth:deity"?: string;
-}
+### Environment-Specific Config
+
+**Development**:
+```bash
+BASE_URL=http://localhost:3000
+OPENAI_API_KEY=sk-dev-key
 ```
 
-2. **Update Context** (`shared/constants.ts`):
-```typescript
-export const ACTIVITYPUB_CONTEXT = [
-  "https://www.w3.org/ns/activitystreams",
-  {
-    "myth": "https://odyfeed.example.com/vocab#",
-    "tone": "myth:tone",
-    "deity": "myth:deity"
-  }
-]
+**Production**:
+```bash
+BASE_URL=https://odyfeed.example.com
+OPENAI_API_KEY=sk-prod-key
+ACTIVITYPUB_PAGE_SIZE=50
 ```
 
-3. **Update Profile Generation** (`server/utils/actorHelpers.ts`):
-```typescript
-const profile: MythActor = {
-  // ...existing fields
-  "myth:tone": matchingActor.tone,
-  "myth:deity": matchingActor.deity
-}
+### Hosting Recommendations
+
+- **Vercel**: Works well for Nuxt apps (set `ssr: false`)
+- **Netlify**: Similar to Vercel
+- **Self-Hosted VPS**: Full control, install Node.js + Nginx
+- **Docker**: Containerize for consistent deployments
+
+**Docker Example** (not included, but recommended):
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm build
+CMD ["node", ".output/server/index.mjs"]
 ```
-
----
-
-### Implementing Additional ActivityPub Types
-
-**Example**: Adding `Announce` (boost/reblog) support:
-
-1. **Define Activity Creator** (`app/api/activities.ts`):
-```typescript
-export const createAnnounceActivity = function (
-  actorId: string,
-  outboxUrl: string,
-  post: EnrichedPost
-): ASActivity {
-  return {
-    '@context': NAMESPACES.ACTIVITYSTREAMS,
-    type: ACTIVITY_TYPES.ANNOUNCE,
-    id: `${outboxUrl}/${Date.now()}-announce`,
-    actor: actorId,
-    object: post.id,
-    to: [NAMESPACES.PUBLIC],
-    published: new Date().toISOString()
-  }
-}
-```
-
-2. **Handle in Inbox** (`server/api/actors/[username]/inbox.post.ts`):
-```typescript
-if (activity.type === ACTIVITY_TYPES.ANNOUNCE) {
-  logInfo(`Received Announce from ${activity.actor}`)
-  // Save to inbox
-  await saveActivityToPod(webId, inboxContainer, activity, slug)
-  // Optionally: increment boost count in post metadata
-}
-```
-
-3. **Add UI Component** (`app/components/Post/PostActions.vue`):
-```vue
-<template>
-  <button @click="handleAnnounce">
-    <Icon name="i-heroicons-arrow-path" />
-    Boost
-  </button>
-</template>
-
-<script setup lang="ts">
-const handleAnnounce = async function () {
-  const activity = createAnnounceActivity(actorId, outbox, post)
-  await sendActivityToOutbox(outbox, activity)
-}
-</script>
-```
-
----
-
-## Performance Optimization
-
-### Caching Strategies
-
-1. **Actor Profile Caching**: Cache remote actor profiles for 1 hour to reduce dereferencing calls
-2. **Timeline Pagination**: Load 20 posts at a time (configurable via `ACTIVITYPUB_PAGE_SIZE`)
-3. **Pinia Colada Stale Time**: Queries cached for 2-5 minutes (see `app/queries/`)
-
-### Scaling Considerations
-
-**Current Bottlenecks**:
-- Pod access latency (network round-trips)
-- Synchronous federation (blocking POST requests)
-
-**Future Improvements**:
-1. **Job Queue**: Move federation to background jobs (BullMQ, Celery)
-2. **Caching Layer**: Redis for actor profiles, inbox metadata
-3. **CDN**: Serve public profiles via CDN (Cloudflare, AWS CloudFront)
-
----
-
-## Security Best Practices
-
-1. **Private Keys**: Never log or expose private keys in responses
-2. **HTTP Signatures**: Always verify signatures on incoming activities
-3. **Input Validation**: Sanitize all user inputs (usernames, post content)
-4. **CORS**: Restrict CORS to necessary origins
-5. **Rate Limiting**: Implement rate limits on authentication and posting endpoints (not currently implemented)
-6. **Content Security Policy**: Set CSP headers to prevent XSS
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Follow the coding guidelines (see `global-copilot-instructions`)
-4. Write tests for new features
-5. Submit a pull request
+Contributions are welcome! This project is primarily educational, but improvements are encouraged.
+
+### How to Contribute
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit your changes**: `git commit -m 'Add amazing feature'`
+4. **Push to the branch**: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**
+
+### Code Style
+
+- Follow the coding instructions in `global-copilot-instructions`
+- Use TypeScript for all new code
+- Write self-documenting code (avoid unnecessary comments)
+- Use function expressions: `const myFunc = function () {}`
+- Test locally before submitting PR
+
+### Areas for Improvement
+
+- [ ] Add automated tests (unit + integration)
+- [ ] Implement database for sessions (replace filesystem)
+- [ ] Add rate limiting middleware
+- [ ] Improve error handling and user feedback
+- [ ] Add admin dashboard for managing users
+- [ ] Support for more ActivityPub activities (Block, Remove, Update)
+- [ ] Better mobile responsiveness
+- [ ] Accessibility improvements (ARIA labels, keyboard navigation)
+- [ ] Performance optimizations (lazy loading, code splitting)
+- [ ] Add more mythological actors and events
+
+---
+
+## Resources & Further Reading
+
+### Official Specifications
+
+- **[ActivityPub W3C Recommendation](https://www.w3.org/TR/activitypub/)**: The official specification
+- **[ActivityStreams 2.0](https://www.w3.org/TR/activitystreams-core/)**: Vocabulary for social data
+- **[Solid Protocol](https://solidproject.org/TR/protocol)**: Specification for decentralized data storage
+- **[HTTP Signatures (draft-cavage-http-signatures-12)](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)**: Authentication for HTTP requests
+- **[Webmention W3C Recommendation](https://www.w3.org/TR/webmention/)**: Decentralized notifications
+
+### Implementation Guides
+
+- **[Mastodon ActivityPub Guide](https://docs.joinmastodon.org/spec/activitypub/)**: Practical guide with Mastodon-specific extensions
+- **[Solid Developer Resources](https://solidproject.org/developers)**: Getting started with Solid development
+- **[Inrupt JavaScript Client Libraries](https://docs.inrupt.com/developer-tools/javascript/client-libraries/)**: Official Solid client library docs
+- **[ActivityPub Rocks!](https://activitypub.rocks/)**: Test suite and validator
+
+### Community & Tools
+
+- **[Fediverse Developer Network](https://fediverse.party/en/developers)**: Resources for building federated apps
+- **[SocialHub](https://socialhub.activitypub.rocks/)**: ActivityPub community forum
+- **[Solid Forum](https://forum.solidproject.org/)**: Community support for Solid development
+- **[WebMention.io](https://webmention.io/)**: Hosted webmention service (alternative approach)
+
+### Interesting Projects
+
+- **[Mastodon](https://github.com/mastodon/mastodon)**: Ruby-based fediverse platform
+- **[Pleroma](https://pleroma.social/)**: Lightweight fediverse server
+- **[PeerTube](https://joinpeertube.org/)**: Federated video platform (ActivityPub)
+- **[Pixelfed](https://pixelfed.org/)**: Federated photo sharing (ActivityPub)
+- **[Inrupt PodSpaces](https://signup.pod.inrupt.com/)**: Commercial Solid Pod provider
+
+### Learning Resources
+
+- **[How to implement ActivityPub in your project](https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/)**: Mastodon blog post
+- **[Understanding Solid Pods](https://solidproject.org/faqs)**: FAQ and beginner guides
+- **[RDF Primer](https://www.w3.org/TR/rdf11-primer/)**: Introduction to RDF concepts
+- **[Microformats2 Spec](https://microformats.org/wiki/microformats2)**: Parsing semantic HTML
 
 ---
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
 ## Acknowledgments
 
-- **W3C ActivityPub Community** for the federation protocol
-- **Solid Project** for decentralized data storage standards
-- **Inrupt** for Solid client libraries
-- **Mastodon** for HTTP signature implementation reference
-- **Nuxt Team** for the excellent full-stack framework
+- **Homer**: For the original Odyssey (circa 8th century BCE)
+- **Tim Berners-Lee**: For inventing the Web and championing Solid
+- **W3C Social Web Working Group**: For ActivityPub and related standards
+- **Inrupt**: For Solid client libraries and developer tools
+- **Mastodon Community**: For federation best practices and interoperability
+- **OpenAI**: For GPT models used in post generation
 
 ---
 
-## Further Reading
+## Contact & Support
 
-### Specifications
-- [ActivityPub W3C Recommendation](https://www.w3.org/TR/activitypub/)
-- [ActivityStreams 2.0](https://www.w3.org/TR/activitystreams-core/)
-- [Solid Protocol](https://solidproject.org/TR/protocol)
-- [HTTP Signatures (draft-cavage-http-signatures-12)](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
-
-### Helpful Resources
-- [Mastodon ActivityPub Guide](https://docs.joinmastodon.org/spec/activitypub/)
-- [Solid Developer Resources](https://solidproject.org/developers)
-- [Inrupt JavaScript Client Libraries](https://docs.inrupt.com/developer-tools/javascript/client-libraries/)
-
-### Related Projects
-- [Mastodon](https://joinmastodon.org) - Popular ActivityPub implementation
-- [Pleroma](https://pleroma.social) - Lightweight ActivityPub server
-- [PixelFed](https://pixelfed.org) - Federated image sharing
-- [PeerTube](https://joinpeertube.org) - Federated video platform
-- [Community Solid Server](https://github.com/CommunitySolidServer/CommunitySolidServer) - Solid Pod server implementation
+- **Issues**: [GitHub Issues](https://github.com/yourusername/OdyFeed/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/OdyFeed/discussions)
+- **Author**: Your Name ([@yourhandle@mastodon.social](https://mastodon.social/@yourhandle))
 
 ---
 
-**Questions?** Open an issue on GitHub or contact the maintainer.
+**Built with ❤️ and a passion for the decentralized web**
+
+*"Tell me, Muse, of the man of many ways, who was driven far journeys..."* — Homer, The Odyssey

@@ -4,6 +4,7 @@ import type { EnrichedPost } from '~~/shared/types/activitypub'
 import type { TimelineResponse } from '~~/shared/types/api'
 import { queryKeys } from '~/utils/queryKeys'
 import { validateAuth } from '~/utils/authHelper'
+import { extractUsernameAndStatusIdFromPostUrl } from '~/utils/postHelpers'
 
 export const useLikeMutation = defineMutation(() => {
 	const queryCache = useQueryCache()
@@ -68,8 +69,13 @@ export const useLikeMutation = defineMutation(() => {
 				queryCache.setQueryData(queryKeys.timeline(), context.previousTimeline)
 			}
 		},
-		onSuccess: async () => {
+		onSuccess: async (_data, post) => {
 			await queryCache.invalidateQueries({ key: queryKeys.timeline() })
+
+			const { username, statusId } = extractUsernameAndStatusIdFromPostUrl(post.id)
+			if (username && statusId) {
+				await queryCache.invalidateQueries({ key: queryKeys.post(username, statusId) })
+			}
 		},
 	})
 })
@@ -137,8 +143,13 @@ export const useUndoLikeMutation = defineMutation(() => {
 				queryCache.setQueryData(queryKeys.timeline(), context.previousTimeline)
 			}
 		},
-		onSuccess: async () => {
+		onSuccess: async (_data, post) => {
 			await queryCache.invalidateQueries({ key: queryKeys.timeline() })
+
+			const { username, statusId } = extractUsernameAndStatusIdFromPostUrl(post.id)
+			if (username && statusId) {
+				await queryCache.invalidateQueries({ key: queryKeys.post(username, statusId) })
+			}
 		},
 	})
 })

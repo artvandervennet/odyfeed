@@ -5,6 +5,7 @@ import type { TimelineResponse } from '~~/shared/types/api'
 import type { ReplyMutationPayload } from '~~/shared/types/mutations'
 import { queryKeys } from '~/utils/queryKeys'
 import { validateAuth } from '~/utils/authHelper'
+import { extractUsernameAndStatusIdFromPostUrl } from '~/utils/postHelpers'
 
 export const useReplyMutation = defineMutation(() => {
 	const queryCache = useQueryCache()
@@ -81,9 +82,14 @@ export const useReplyMutation = defineMutation(() => {
 				queryCache.setQueryData(queryKeys.timeline(), context.previousTimeline)
 			}
 		},
-		onSuccess: async () => {
+		onSuccess: async (_data, { post }) => {
 			await queryCache.invalidateQueries({ key: queryKeys.timeline() })
 			await queryCache.invalidateQueries({ key: ['replies'] })
+
+			const { username, statusId } = extractUsernameAndStatusIdFromPostUrl(post.id)
+			if (username && statusId) {
+				await queryCache.invalidateQueries({ key: queryKeys.post(username, statusId) })
+			}
 		},
 	})
 })
