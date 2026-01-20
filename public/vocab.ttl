@@ -49,3 +49,8 @@ myth:aboutEvent
     rdfs:label "about event" ;
     rdfs:comment "References an event that a post is about." .
 
+myth:location
+    a rdfs:Property ;
+    rdfs:label "location" ;
+    rdfs:comment "The location where an event takes place." .
+

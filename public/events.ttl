@@ -7,33 +7,120 @@
     a myth:Event ;
     dct:title "De list van het paard" ;
     myth:sequence 1 ;
+    myth:location "Troje" ;
     myth:description "Met een houten paard mislukt Troje definitief." ;
     myth:involvesActor <actors/odysseus>, <actors/athena> .
 
-<events/02-poseidon-storm>
+<events/02-cyclops-cave>
     a myth:Event ;
-    dct:title "De toorn van de zee" ;
+    dct:title "In de grot van de Cyclopen" ;
     myth:sequence 2 ;
-    myth:description "Poseidon ontketent een storm die Odysseus van koers doet raken." ;
+    myth:location "Eiland van de Cyclopen" ;
+    myth:description "Polyphemus, de eenogige reus, verslindt enkele mannen totdat Odysseus hem verblind." ;
+    myth:involvesActor <actors/odysseus>, <actors/poseidon> .
+
+<events/03-poseidon-curse>
+    a myth:Event ;
+    dct:title "De vloek van Poseidon" ;
+    myth:sequence 3 ;
+    myth:location "Zee nabij het Cyclopeneiland" ;
+    myth:description "Poseidon vervloekt Odysseus voor het verblinden van zijn zoon Polyphemus." ;
     myth:involvesActor <actors/poseidon>, <actors/odysseus> .
 
-<events/03-circe>
+<events/04-circe-transformation>
     a myth:Event ;
     dct:title "De betovering van Circe" ;
-    myth:sequence 3 ;
-    myth:description "Circe verandert mannen in dieren; Odysseus weerstaat haar magie." ;
+    myth:sequence 4 ;
+    myth:location "Eiland Aeaea" ;
+    myth:description "Circe verandert mannen in varkens; Odysseus weerstaat haar magie met hulp van Hermes." ;
     myth:involvesActor <actors/odysseus>, <actors/athena> .
 
-<events/04-underworld>
+<events/05-underworld>
     a myth:Event ;
     dct:title "De afdaling in Hades" ;
-    myth:sequence 4 ;
-    myth:description "Odysseus daalt af naar de onderwereld om raad te zoeken." ;
+    myth:sequence 5 ;
+    myth:location "De Onderwereld" ;
+    myth:description "Odysseus daalt af naar de onderwereld om de ziener Tiresias te raadplegen." ;
     myth:involvesActor <actors/odysseus> .
 
-<events/05-ithaca>
+<events/06-sirens-song>
     a myth:Event ;
-    dct:title "De terugkeer naar Ithaka" ;
-    myth:sequence 5 ;
-    myth:description "Odysseus keert terug en herwint zijn troon." ;
+    dct:title "Het lied van de Sirenen" ;
+    myth:sequence 6 ;
+    myth:location "Zee van de Sirenen" ;
+    myth:description "Vastgebonden aan de mast hoort Odysseus het dodelijke lied van de Sirenen." ;
+    myth:involvesActor <actors/odysseus> .
+
+<events/07-scylla-charybdis>
+    a myth:Event ;
+    dct:title "Tussen Scylla en Charybdis" ;
+    myth:sequence 7 ;
+    myth:location "Straat van Messina" ;
+    myth:description "Odysseus moet kiezen tussen het zeemonster Scylla en de wervelpool Charybdis. Zes mannen sterven." ;
+    myth:involvesActor <actors/odysseus> .
+
+<events/08-zeus-storm>
+    a myth:Event ;
+    dct:title "De toorn van Zeus" ;
+    myth:sequence 8 ;
+    myth:location "Open zee" ;
+    myth:description "Zeus vernietigt het schip met een bliksem na het slachten van Helios' runderen. Alleen Odysseus overleeft." ;
+    myth:involvesActor <actors/odysseus>, <actors/poseidon> .
+
+<events/09-calypso-island>
+    a myth:Event ;
+    dct:title "Gevangen op Ogygia" ;
+    myth:sequence 9 ;
+    myth:location "Eiland Ogygia" ;
+    myth:description "Odysseus spoelt aan op het eiland van nimf Calypso en blijft zeven jaar gevangen in haar liefde." ;
+    myth:involvesActor <actors/odysseus> .
+
+<events/10-phaeacians-shore>
+    a myth:Event ;
+    dct:title "Gestrand op Scheria" ;
+    myth:sequence 10 ;
+    myth:location "Scheria, land van de Phaeaciërs" ;
+    myth:description "Odysseus spoelt naakt en uitgeput aan op het strand, waar prinses Nausicaa hem helpt." ;
+    myth:involvesActor <actors/odysseus> .
+
+<events/11-return-ithaca>
+    a myth:Event ;
+    dct:title "Terugkeer naar Ithaka" ;
+    myth:sequence 11 ;
+    myth:location "Ithaka" ;
+    myth:description "Athena verandert Odysseus in een oude bedelaar om onopgemerkt terug te keren naar zijn paleis." ;
     myth:involvesActor <actors/odysseus>, <actors/athena> .
+
+<events/12-father-son-reunion>
+    a myth:Event ;
+    dct:title "Vader en zoon herenigd" ;
+    myth:sequence 12 ;
+    myth:location "Hut van Eumaeus, Ithaka" ;
+    myth:description "Odysseus onthult zijn identiteit aan Telemachus en samen bereiden ze hun wraak." ;
+    myth:involvesActor <actors/odysseus> .
+
+<events/13-bow-contest>
+    a myth:Event ;
+    dct:title "De wedstrijd van de boog" ;
+    myth:sequence 13 ;
+    myth:location "Grote hal, Paleis van Ithaka" ;
+    myth:description "Alleen de vermomde Odysseus slaagt erin zijn eigen boog te spannen en door de assen te schieten." ;
+    myth:involvesActor <actors/odysseus>, <actors/athena> .
+
+<events/14-suitors-slaughter>
+    a myth:Event ;
+    dct:title "De slachting van de vrijers" ;
+    myth:sequence 14 ;
+    myth:location "Grote hal, Paleis van Ithaka" ;
+    myth:description "Odysseus onthult zich en doodt samen met Telemachus alle vrijers die zijn huis bezetten." ;
+    myth:involvesActor <actors/odysseus>, <actors/athena> .
+
+<events/15-penelope-reunion>
+    a myth:Event ;
+    dct:title "Hereniging met Penelope" ;
+    myth:sequence 15 ;
+    myth:location "Paleis van Ithaka" ;
+    myth:description "Odysseus bewijst zijn identiteit door uit te leggen hoe hun bed gebouwd is uit een levende olijfboom." ;
+    myth:involvesActor <actors/odysseus> .
+
+
