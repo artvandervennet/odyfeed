@@ -27,19 +27,20 @@ const groupedActivities = computed(() => {
   }, { likes: [] as ASActivity[], follows: [] as ASActivity[], creates: [] as ASActivity[], others: [] as ASActivity[] })
 })
 
-const activeTab = ref('all')
+const activeTab = ref(0)
 const tabs = [
-  { key: 'all', label: 'All', count: computed(() => activities.value?.length || 0) },
-  { key: 'likes', label: 'Likes', count: computed(() => groupedActivities.value.likes.length) },
-  { key: 'follows', label: 'Follows', count: computed(() => groupedActivities.value.follows.length) },
-  { key: 'replies', label: 'Replies', count: computed(() => groupedActivities.value.creates.length) },
+  { key: 'all', label: 'All', value: 0, count: computed(() => activities.value?.length || 0) },
+  { key: 'likes', label: 'Likes', value: 1, count: computed(() => groupedActivities.value.likes.length) },
+  { key: 'follows', label: 'Follows', value: 2, count: computed(() => groupedActivities.value.follows.length) },
+  { key: 'replies', label: 'Replies', value: 3, count: computed(() => groupedActivities.value.creates.length) },
 ]
 
 const displayedActivities = computed(() => {
-  if (activeTab.value === 'all') return activities.value || []
-  if (activeTab.value === 'likes') return groupedActivities.value.likes
-  if (activeTab.value === 'follows') return groupedActivities.value.follows
-  if (activeTab.value === 'replies') return groupedActivities.value.creates
+  const tabKey = tabs[activeTab.value]?.key
+  if (tabKey === 'all') return activities.value || []
+  if (tabKey === 'likes') return groupedActivities.value.likes
+  if (tabKey === 'follows') return groupedActivities.value.follows
+  if (tabKey === 'replies') return groupedActivities.value.creates
   return []
 })
 

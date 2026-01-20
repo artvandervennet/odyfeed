@@ -26,7 +26,22 @@ export const useInboxQuery = defineQuery(() => {
 
 			const inboxCollection = response as ASCollection<ASActivity | string>
 
-			const items = extractCollectionItems(inboxCollection)
+			let items = extractCollectionItems(inboxCollection)
+
+			if (items.length === 0 && inboxCollection.first) {
+				const firstPageUrl = inboxCollection.first ?? ""
+
+				const firstPageResponse = await $fetch(firstPageUrl, {
+					headers: {
+						'Accept': 'application/ld+json, application/json',
+					},
+				})
+
+				if (firstPageResponse && typeof firstPageResponse === 'object') {
+					const firstPageCollection = firstPageResponse as ASCollection<ASActivity | string>
+					items = extractCollectionItems(firstPageCollection)
+				}
+			}
 
 			const activities: ASActivity[] = []
 			for (const item of items) {
