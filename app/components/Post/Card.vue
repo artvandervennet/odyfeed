@@ -87,7 +87,7 @@ const toggleReplyForm = function () {
           :is-liked="liked"
           @like="handleLike"
           @reply="toggleReplyForm"
-          :disabled="!auth.isLoggedIn"
+          :disabled="false"
       />
     </div>
   </article>

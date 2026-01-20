@@ -19,7 +19,6 @@ export default defineEventHandler(async (event) => {
 		if (activityUrls.length === 0) {
 			logInfo(`[Posts] No activities found for ${username}`)
 			setHeader(event, 'Content-Type', 'application/json')
-			setHeader(event, 'Cache-Control', 'public, max-age=60')
 			return []
 		}
 
@@ -64,7 +63,6 @@ export default defineEventHandler(async (event) => {
 		logInfo(`[Posts] Returning ${posts.length} posts for ${username}`)
 
 		setHeader(event, 'Content-Type', 'application/json')
-		setHeader(event, 'Cache-Control', 'public, max-age=60')
 
 		return posts
 	} catch (error) {

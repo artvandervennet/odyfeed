@@ -17,7 +17,6 @@ export default defineEventHandler((event): WebmentionCollection => {
     const items = data.items || []
 
     setHeader(event, 'Content-Type', 'application/json')
-    setHeader(event, 'Cache-Control', 'public, max-age=60')
 
     return {
       total: items.length,
@@ -70,7 +69,6 @@ export default defineEventHandler((event): WebmentionCollection => {
     }))
 
     setHeader(event, 'Content-Type', 'application/json')
-    setHeader(event, 'Cache-Control', 'public, max-age=60')
 
     return {
       total: items.length,
