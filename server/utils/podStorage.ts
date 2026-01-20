@@ -125,19 +125,37 @@ export const getActivityFromPod = async function (
 	activityUrl: string
 ): Promise<any | null> {
 	const authenticatedFetch = await getAuthenticatedFetch(webId)
-	if (!authenticatedFetch) {
-		logError(`[Pod Storage] Cannot authenticate for WebID: ${webId} - session may be expired`)
-		return null
-	}
+
+	// Use authenticated fetch if available, otherwise try public access
+	const fetchToUse = authenticatedFetch || fetch
 
 	try {
-		const file = await getFile(activityUrl, { fetch: authenticatedFetch })
+		const file = await getFile(activityUrl, { fetch: fetchToUse })
 		const text = await file.text()
+
+		if (!authenticatedFetch) {
+			logDebug(`[Pod Storage] Fetched activity via public access: ${activityUrl}`)
+		}
+
 		return JSON.parse(text)
 	} catch (error: any) {
-		// Log more details about authentication failures
+		// If we used authentication and it failed, try public access as fallback
+		if (authenticatedFetch && (error.statusCode === 401 || error.statusCode === 403)) {
+			logInfo(`[Pod Storage] Authenticated fetch failed (${error.statusCode}), trying public access: ${activityUrl}`)
+			try {
+				const file = await getFile(activityUrl, { fetch })
+				const text = await file.text()
+				logInfo(`[Pod Storage] Public access successful for: ${activityUrl}`)
+				return JSON.parse(text)
+			} catch (publicError: any) {
+				logError(`[Pod Storage] Public access also failed for ${activityUrl}:`, publicError)
+				return null
+			}
+		}
+
+		// Log the original error
 		if (error.statusCode === 401 || error.statusCode === 403) {
-			logError(`[Pod Storage] Authentication failed (${error.statusCode}) fetching activity from Pod: ${activityUrl} for webId: ${webId}`)
+			logError(`[Pod Storage] Access denied (${error.statusCode}) fetching: ${activityUrl}`)
 		} else {
 			logError(`Failed to get activity from Pod: ${activityUrl}`, error)
 		}
@@ -169,19 +187,39 @@ export const listActivitiesFromPod = async function (
 	containerUrl: string
 ): Promise<string[]> {
 	const authenticatedFetch = await getAuthenticatedFetch(webId)
-	if (!authenticatedFetch) {
-		logError(`[Pod Storage] Cannot authenticate for WebID: ${webId} - session may be expired`)
-		return []
-	}
+
+	// Use authenticated fetch if available, otherwise try public access
+	const fetchToUse = authenticatedFetch || fetch
 
 	try {
-		const dataset = await getSolidDataset(containerUrl, { fetch: authenticatedFetch })
+		const dataset = await getSolidDataset(containerUrl, { fetch: fetchToUse })
 		const urls = getContainedResourceUrlAll(dataset)
-		return urls.filter(url => !url.endsWith('/'))
+		const filtered = urls.filter(url => !url.endsWith('/'))
+
+		if (!authenticatedFetch) {
+			logDebug(`[Pod Storage] Listed ${filtered.length} activities via public access from: ${containerUrl}`)
+		}
+
+		return filtered
 	} catch (error: any) {
-		// Log more details about authentication failures
+		// If we used authentication and it failed, try public access as fallback
+		if (authenticatedFetch && (error.statusCode === 401 || error.statusCode === 403)) {
+			logInfo(`[Pod Storage] Authenticated listing failed (${error.statusCode}), trying public access: ${containerUrl}`)
+			try {
+				const dataset = await getSolidDataset(containerUrl, { fetch })
+				const urls = getContainedResourceUrlAll(dataset)
+				const filtered = urls.filter(url => !url.endsWith('/'))
+				logInfo(`[Pod Storage] Public access successful: listed ${filtered.length} activities`)
+				return filtered
+			} catch (publicError: any) {
+				logError(`[Pod Storage] Public access also failed for ${containerUrl}:`, publicError)
+				return []
+			}
+		}
+
+		// Log the original error
 		if (error.statusCode === 401 || error.statusCode === 403) {
-			logError(`[Pod Storage] Authentication failed (${error.statusCode}) listing activities from Pod: ${containerUrl} for webId: ${webId}`)
+			logError(`[Pod Storage] Access denied (${error.statusCode}) listing: ${containerUrl}`)
 		} else {
 			logError(`Failed to list activities from Pod: ${containerUrl}`, error)
 		}
