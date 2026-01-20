@@ -2,6 +2,7 @@ import type { AuthSession } from '~/types/oidc'
 
 export const apiHeaders = {
 	'Accept': 'application/activity+json, application/ld+json',
+	'Cache-Control': 'no-cache',
 }
 
 export const createAuthHeaders = function (session: AuthSession): Record<string, string> {
