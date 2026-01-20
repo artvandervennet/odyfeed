@@ -1,13 +1,11 @@
 <script setup lang="ts">
-
 useSeoMeta({
   title: 'About OdyFeed',
   description: 'A decentralized social network that brings Greek mythology to the modern web through ActivityPub federation, Solid Pod storage, and Webmentions.',
 })
 
-const baseUrl = import.meta.baseURL
+const baseUrl = "https://odyfeed.artvandervennet.ikdoeict.be/about"
 </script>
-
 <template>
   <div>
     <UContainer>
@@ -154,7 +152,7 @@ const baseUrl = import.meta.baseURL
 
                 <div class="p-author h-card hidden">
                   <a href="https://artvdv.solidcommunity.net/profile/card#me" class="u-url u-uid p-name">Art Van der Vennet</a>
-                  <a href="https://odyfeed.artvdv.ikdoeict.be/" class="u-url">OdyFeed</a>
+                  <a href="https://odyfeed.artvandervennet.ikdoeict.be" class="u-url">OdyFeed</a>
                   <data class="p-note" value="OdyFeed - A decentralized social network exploring Greek mythology through ActivityPub, Solid, and Webmentions" />
                 </div>
               </div>
