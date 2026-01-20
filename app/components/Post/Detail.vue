@@ -32,7 +32,6 @@ const {data: webmentions, isLoading: webmentionsLoading} = usePostWebmentionsQue
     statusId,
 )
 
-const postUrl = computed(() => props.post.id)
 
 const submitReply = function () {
   if (!replyContent.value.trim()) return
@@ -125,9 +124,5 @@ const toggleReplyForm = function () {
         :webmentions="webmentions?.items || []"
         :is-loading="webmentionsLoading"
     />
-
-    <div class="border-t border-gray-200 dark:border-gray-800 p-4">
-      <WebmentionForm :target-url="postUrl"/>
-    </div>
   </div>
 </template>

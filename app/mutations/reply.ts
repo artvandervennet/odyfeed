@@ -1,5 +1,6 @@
 import { defineMutation, useMutation, useQueryCache } from '@pinia/colada'
 import { createReplyActivity, sendReplyActivity } from '~/api/activities'
+import type { EnrichedPost } from '~~/shared/types/activitypub'
 import type { TimelineResponse } from '~~/shared/types/api'
 import type { ReplyMutationPayload } from '~~/shared/types/mutations'
 import { queryKeys } from '~/utils/queryKeys'
@@ -19,27 +20,33 @@ export const useReplyMutation = defineMutation(() => {
 			const optimisticReplyId = `${actorId}/outbox/${crypto.randomUUID()}`
 
 			if (previousTimeline) {
+				const updatePost = (item: EnrichedPost) => {
+					if (item.id !== post.id) return item
+
+					const currentReplies = item.replies || {
+						id: `${item.id}/replies`,
+						type: 'OrderedCollection' as const,
+						totalItems: 0,
+						orderedItems: []
+					}
+
+					return {
+						...item,
+						replies: {
+							...currentReplies,
+							totalItems: (currentReplies.totalItems || 0) + 1,
+							orderedItems: [...(currentReplies.orderedItems || []), optimisticReplyId]
+						}
+					}
+				}
+
 				const updatedTimeline: TimelineResponse = {
 					...previousTimeline,
-					orderedItems: previousTimeline.orderedItems.map(item => {
-						if (item.id !== post.id) return item
-
-						const currentReplies = item.replies || {
-							id: `${item.id}/replies`,
-							type: 'OrderedCollection' as const,
-							totalItems: 0,
-							orderedItems: []
-						}
-
-						return {
-							...item,
-							replies: {
-								...currentReplies,
-								totalItems: (currentReplies.totalItems || 0) + 1,
-								orderedItems: [...(currentReplies.orderedItems || []), optimisticReplyId]
-							}
-						}
-					})
+					orderedItems: previousTimeline.orderedItems.map(updatePost),
+					groupedByEvent: previousTimeline.groupedByEvent?.map(group => ({
+						...group,
+						posts: group.posts.map(updatePost)
+					}))
 				}
 
 				queryCache.setQueryData(queryKeys.timeline(), updatedTimeline)
