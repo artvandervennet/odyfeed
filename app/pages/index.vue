@@ -4,10 +4,14 @@ import LoadingCard from "~/components/atoms/LoadingCard.vue"
 import EmptyState from "~/components/atoms/EmptyState.vue"
 import ScrollProgressBar from "~/components/atoms/ScrollProgressBar.vue"
 import { useEventProgress } from "~/composables/useEventProgress"
+import { useWebmentions } from "~/composables/useWebmentions"
 
 const { data: timeline, isLoading } = useTimelineQuery()
 
 const { currentEventIndex, totalEvents, registerEventElement } = useEventProgress(timeline)
+
+const { webmentionCount } = useWebmentions()
+
 
 const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.origin : '')
 </script>
@@ -17,6 +21,7 @@ const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.o
     <ScrollProgressBar
       :total-events="totalEvents"
       :current-event-index="currentEventIndex"
+      :webmention-count="webmentionCount"
     />
     <UContainer>
       <div class="max-w-2xl mx-auto">

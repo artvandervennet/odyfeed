@@ -4,6 +4,7 @@ import p5 from 'p5'
 const props = defineProps<{
   totalEvents: number
   currentEventIndex: number
+  webmentionCount?: number
 }>()
 
 const colorMode = useColorMode()
@@ -52,9 +53,8 @@ onMounted(() => {
       const baseFreq = 0.01
 
       // Colors
-      const cBack = isDark ? p.color(30, 41, 59, 40) : p.color(219, 234, 254, 40) // slate-800 / blue-100
-      const cFront = isDark ? p.color(30, 58, 138, 180) : p.color(59, 130, 246, 180) // blue-900 / blue-500
-      const cLine = isDark ? p.color(96, 165, 250) : p.color(37, 99, 235) // blue-400 / blue-600
+      const cBack = isDark ? p.color(30, 41, 59, 40) : p.color(219, 234, 254, 40)
+      const cFront = isDark ? p.color(30, 58, 138, 180) : p.color(59, 130, 246, 180)
 
       // Draw background waves
       p.noStroke()
@@ -174,6 +174,25 @@ onMounted(() => {
       p.triangle(0, -18, 0, -4, 14, -8)
 
       p.pop()
+
+      // Draw Sharks (one per webmention)
+      const numSharks = props.webmentionCount || 0
+      for (let i = 0; i < numSharks; i++) {
+        const sharkOffset = (i * 200) + (time * 80)
+        const sharkX = (sharkOffset % (p.width + 100)) - 50
+        const sharkDepth = 15 + (i % 3) * 5
+        const sharkY = p.height / 2 + sharkDepth + p.sin(sharkX * 0.02 + time * 1.5 + i) * 3
+
+        p.push()
+        p.translate(sharkX, sharkY)
+
+        const finColor = isDark ? p.color(50, 60, 70) : p.color(80, 90, 100)
+        // Dorsal fin (visible above water sometimes)
+        p.fill(finColor)
+       p.triangle(4, 0, 10, -16, 16, 0)
+
+        p.pop()
+      }
     }
 
     p.windowResized = function () {
