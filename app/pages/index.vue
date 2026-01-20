@@ -29,7 +29,7 @@ const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.o
       :webmention-count="webmentionCount"
     />
     <UContainer>
-      <div class="max-w-2xl mx-auto">
+      <div class="max-w-3xl mx-auto">
         <div class="mb-8 h-card">
           <h1 class="p-name text-3xl font-bold mb-2">Timeline</h1>
           <p class="p-note text-gray-500 dark:text-gray-400">The story of the Odysee, told through the eyes of its actors.</p>

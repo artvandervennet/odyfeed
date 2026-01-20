@@ -13,7 +13,9 @@
       </UContainer>
     </main>
     <footer class="border-t border-gray-200 dark:border-gray-800 py-8 mt-12">
-      <AppFooter/>
+      <UContainer>
+        <AppFooter/>
+      </UContainer>
     </footer>
   </div>
 </template>
