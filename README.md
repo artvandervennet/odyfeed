@@ -1333,7 +1333,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 - **Issues**: [GitHub Issues](https://github.com/yourusername/OdyFeed/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/OdyFeed/discussions)
-- **Author**: Your Name ([@yourhandle@mastodon.social](https://mastodon.social/@yourhandle))
+- **Author**: Art Van der Vennet ([@artvandervennet@mastodon.social](https://mastodon.social/@artvandervennet))
 
 ---
 
