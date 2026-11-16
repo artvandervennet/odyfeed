@@ -54,88 +54,74 @@ onMounted(async () => {
 
 <template>
   <div>
-    <UContainer>
-      <div class="max-w-lg mx-auto py-12">
-        <UAlert
-            v-if="validationError"
-            icon="i-heroicons-exclamation-triangle"
-            color="error"
-            variant="soft"
-            :title="validationError"
-            :description="validationError.includes('not supported') ? 'This application requires an ActivityPods provider with ActivityStreams support. Generic Solid Pods are not supported.' : ''"
-            class="mb-6"
-            :actions="[{
-						label: 'Try Again',
-						color: 'error',
-						variant: 'soft',
-						onClick: () => { validationError = null; showLoginModal = true; }
-					}]"
-        />
+    <div class="band page-head" data-paint="deep">
+      <div class="inner">
+        <h1>Set up your Pod</h1>
+      </div>
+      <art-drip class="band-drip" pigment="--surface" seed="setup" count="9" stagger flush/>
+    </div>
+
+    <div class="band" data-paint="1">
+      <div class="inner narrow stack">
+        <div v-if="validationError" class="card setup-error">
+          <p class="form-message" role="alert">{{ validationError }}</p>
+          <p v-if="validationError.includes('not supported')">
+            This application requires an ActivityPods provider with ActivityStreams support. Generic Solid Pods are not supported.
+          </p>
+          <art-button variant="secondary">
+            <button type="button" @click="validationError = null; showLoginModal = true">Try Again</button>
+          </art-button>
+        </div>
 
         <!-- Loading state -->
-        <UCard v-if="isCheckingAuth">
-          <div class="text-center py-8">
-            <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 mx-auto text-gray-400 mb-4 animate-spin"/>
-            <h2 class="text-xl font-semibold mb-2">Checking authentication...</h2>
-            <p class="text-gray-500 dark:text-gray-400">
-              Please wait while we verify your session.
-            </p>
-          </div>
-        </UCard>
+        <div v-if="isCheckingAuth" class="card empty" role="status">
+          <h2>Checking authentication...</h2>
+          <p>Please wait while we verify your session.</p>
+        </div>
 
         <!-- Login prompt -->
-        <UCard v-else-if="showLoginPrompt">
-          <div class="text-center py-8">
-            <UIcon name="i-heroicons-lock-closed" class="w-12 h-12 mx-auto text-gray-400 mb-4"/>
-            <h2 class="text-xl font-semibold mb-2">Login Required</h2>
-            <p class="text-gray-500 dark:text-gray-400 mb-4">
-              You need to be logged in to continue.
-            </p>
-            <div class="flex gap-3 justify-center">
-              <UButton to="/" variant="ghost" color="neutral">
-                Go Back
-              </UButton>
-              <UButton icon="i-heroicons-arrow-right-on-rectangle" @click="showLoginModal = true">
-                Login with Solid Pod
-              </UButton>
-            </div>
+        <div v-else-if="showLoginPrompt" class="card empty">
+          <h2>Login Required</h2>
+          <p>You need to be logged in to continue.</p>
+          <div class="actions">
+            <art-button variant="quiet">
+              <NuxtLink to="/">Go Back</NuxtLink>
+            </art-button>
+            <art-button>
+              <button type="button" @click="showLoginModal = true">Log in with Solid Pod</button>
+            </art-button>
           </div>
-        </UCard>
+        </div>
 
         <!-- Success - already registered -->
-        <UCard v-else-if="showSuccessMessage">
-          <div class="text-center py-8">
-            <UIcon name="i-heroicons-check-circle" class="w-12 h-12 mx-auto text-green-500 mb-4"/>
-            <h2 class="text-xl font-semibold mb-2">You're all set!</h2>
-            <p class="text-gray-500 dark:text-gray-400 mb-4">
-              Your account is connected and ready to use.
-            </p>
-            <div class="space-y-2 text-sm text-left mb-6 max-w-sm mx-auto">
-              <div class="flex items-center gap-2">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500"/>
-                <span>Username: <code class="text-xs">{{ auth.username }}</code></span>
-              </div>
-              <div class="flex items-center gap-2">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500"/>
-                <span>WebID: <code class="text-xs">{{ auth.webId }}</code></span>
-              </div>
-              <div v-if="auth.inbox" class="flex items-center gap-2">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500"/>
-                <span>Inbox configured</span>
-              </div>
-              <div v-if="auth.outbox" class="flex items-center gap-2">
-                <UIcon name="i-heroicons-check" class="w-5 h-5 text-green-500"/>
-                <span>Outbox configured</span>
-              </div>
-            </div>
-            <UButton to="/" color="primary">
-              Go to Timeline
-            </UButton>
-          </div>
-        </UCard>
+        <div v-else-if="showSuccessMessage" class="card setup-done">
+          <h2>You're all set!</h2>
+          <p>Your account is connected and ready to use.</p>
+          <ul class="checks">
+            <li>
+              <Icon name="i-heroicons-check" aria-hidden="true"/>
+              <span>Username: <code>{{ auth.username }}</code></span>
+            </li>
+            <li>
+              <Icon name="i-heroicons-check" aria-hidden="true"/>
+              <span>WebID: <code>{{ auth.webId }}</code></span>
+            </li>
+            <li v-if="auth.inbox">
+              <Icon name="i-heroicons-check" aria-hidden="true"/>
+              <span>Inbox configured</span>
+            </li>
+            <li v-if="auth.outbox">
+              <Icon name="i-heroicons-check" aria-hidden="true"/>
+              <span>Outbox configured</span>
+            </li>
+          </ul>
+          <art-button>
+            <NuxtLink to="/">Go to Timeline</NuxtLink>
+          </art-button>
+        </div>
       </div>
-    </UContainer>
+    </div>
 
-    <LoginModal v-model="showLoginModal"/>
+    <LoginModal v-model="showLoginModal" :trigger="false"/>
   </div>
 </template>

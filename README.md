@@ -88,8 +88,8 @@ This project was created as a learning resource and proof-of-concept for:
 ✅ **Modern Web UI**
 - Vue 3 Composition API with `<script setup>`
 - Nuxt 4 with SSR disabled (client-side rendering)
-- Nuxt UI components with Tailwind CSS
-- Dark mode support
+- [Gesso](https://github.com/artvandervennet/gesso) design system with the "Aegean" theme, on native HTML elements
+- Light and dark schemes, or follow the system
 - Responsive design
 
 ---
@@ -346,9 +346,10 @@ OdyFeed/
 - **Pinia Colada**: Query caching with automatic invalidation
 
 **Styling**:
-- **Nuxt UI**: Pre-built components with Tailwind CSS
-- **Modern CSS**: Native nesting, CSS variables, logical properties
-- **Dark Mode**: Full theme support
+- **Gesso**: Design system: tokens, base styles, page anatomy and `art-*` custom elements. The colours are the "Aegean" theme, generated from `theme.json` with `pnpm theme`
+- **Native HTML**: `<dialog>` for the login dialog, the popover API for the account menu, real radio buttons and form fields
+- **Modern CSS**: Native nesting, CSS variables, logical properties (`app/assets/css/main.css`)
+- **Light and dark**: Every theme colour is contrast-checked in both schemes; `<art-scheme>` switches between light, dark and system
 
 ### Backend Architecture
 
@@ -1138,7 +1139,7 @@ $env:OPENAI_API_KEY
 - [ ] Posts display with actor info
 - [ ] Like button works (optimistic update)
 - [ ] Reply modal opens and submits
-- [ ] Dark mode toggle works
+- [ ] Colour scheme switch (light, dark, system) works
 - [ ] Responsive on mobile
 
 ### Automated Testing
@@ -1215,6 +1216,10 @@ BASE_URL=https://odyfeed.example.com
 OPENAI_API_KEY=sk-prod-key
 ACTIVITYPUB_PAGE_SIZE=50
 ```
+
+### How odyfeed.vandervennet.art is deployed
+
+The live site runs on a Raspberry Pi under pm2, behind a Cloudflare Tunnel. A systemd timer on the Pi runs `deploy/deploy.sh` every minute: when `main` has a new commit it pulls, installs, builds and reloads the site. Nothing reaches into the Pi from outside. The settings live in `~/.config/odyfeed.env` (see `deploy/env.example`); `data/` and `logs/` are ignored by git, so a deploy leaves them alone. What each deploy did is in `~/.local/share/odyfeed/deploy.log`.
 
 ### Hosting Recommendations
 

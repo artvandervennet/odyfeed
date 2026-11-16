@@ -1,21 +1,15 @@
 <script setup lang="ts">
 </script>
 <template>
-  <div class="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-    <header>
-      <UContainer>
-        <AppHeader/>
-      </UContainer>
-    </header>
+  <!-- Every page is a stack of painted bands (Gesso's page anatomy). The header is sticky and
+       wears the paint of the band above the one being read. -->
+  <div class="page">
+    <AppHeader/>
     <main>
-      <UContainer>
-        <slot/>
-      </UContainer>
+      <slot/>
     </main>
-    <footer class="border-t border-gray-200 dark:border-gray-800 py-8 mt-12">
-      <UContainer>
-        <AppFooter/>
-      </UContainer>
+    <footer class="band page-footer site-footer" data-paint="deep">
+      <AppFooter/>
     </footer>
   </div>
 </template>

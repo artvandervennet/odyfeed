@@ -5,6 +5,7 @@ import type {EnrichedPost} from '~~/shared/types/activitypub'
 import {useAuthStore} from '~/stores/authStore'
 import {extractUsernameAndStatusIdFromPostUrl} from '~/utils/postHelpers'
 import {usePostActions} from '~/composables/usePostActions'
+import ActionButton from '~/components/atoms/ActionButton.vue'
 
 const props = defineProps<{
   post: EnrichedPost
@@ -50,75 +51,56 @@ const toggleReplyForm = function () {
 </script>
 
 <template>
-  <div>
-    <article class="h-entry p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+  <div class="stack post-detail">
+    <article class="h-entry card post">
       <div v-if="props.post.actor" class="p-author h-card">
         <ActorInfo
             :actor="props.post.actor"
             :show-tone="true"
-            :clickable="true"
         />
       </div>
 
-      <div class="mt-5">
-        <PostContent
-            :content="props.post.content"
-            :published="props.post.published!"
-        />
-      </div>
+      <PostContent
+          :content="props.post.content"
+          :published="props.post.published!"
+      />
 
-      <div class="flex items-center gap-6 py-4 border-y border-gray-200 dark:border-gray-800 mt-4">
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-lg">{{ likesCount }}</span>
-          <span class="text-gray-500 dark:text-gray-400 text-sm">{{ likesCount === 1 ? 'Like' : 'Likes' }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-lg">{{ repliesCount }}</span>
-          <span class="text-gray-500 dark:text-gray-400 text-sm">{{ repliesCount === 1 ? 'Reply' : 'Replies' }}</span>
-        </div>
-      </div>
+      <p class="counts">
+        <span><strong>{{ likesCount }}</strong> {{ likesCount === 1 ? 'Like' : 'Likes' }}</span>
+        <span><strong>{{ repliesCount }}</strong> {{ repliesCount === 1 ? 'Reply' : 'Replies' }}</span>
+      </p>
 
-      <div class="flex items-center justify-around py-3 border-b border-gray-200 dark:border-gray-800">
-        <UButton
+      <div class="post-actions">
+        <ActionButton
             :icon="liked ? 'i-heroicons-heart-20-solid' : 'i-heroicons-heart'"
-            size="md"
-            :color="liked ? 'error' : 'neutral'"
-            variant="ghost"
-            @click.stop="handleLike"
-            class="flex-1"
+            :label="liked ? 'Unlike' : 'Like'"
+            label-visible
+            :pressed="liked"
             :disabled="!isLoggedIn"
-        >
-          {{ liked ? 'Unlike' : 'Like' }}
-        </UButton>
-        <UButton
+            @click="handleLike"
+        />
+        <ActionButton
             icon="i-heroicons-chat-bubble-left"
-            size="md"
-            color="neutral"
-            variant="ghost"
-            @click.stop="toggleReplyForm"
-            class="flex-1"
+            label="Reply"
+            label-visible
             :disabled="!isLoggedIn"
-        >
-          Reply
-        </UButton>
+            @click="toggleReplyForm"
+        />
       </div>
-    </article>
 
-    <div v-if="showReplyForm" class="p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
       <PostForm
+          v-if="showReplyForm"
           v-model="replyContent"
+          :disabled="!isLoggedIn"
           @submit="submitReply"
           @cancel="toggleReplyForm"
-          :disabled="!isLoggedIn"
       />
-    </div>
+    </article>
 
-    <div v-if="!showReplyForm && (replies && replies.length > 0)"
-         class="px-4 py-3 bg-gray-50 dark:bg-gray-900/20 border-b border-gray-200 dark:border-gray-800">
-      <h2 class="text-base font-bold text-gray-900 dark:text-gray-100">Replies</h2>
-    </div>
-
-    <PostList :posts="replies || []" :is-loading="repliesLoading" empty="No replies yet. Be the first to reply!"/>
+    <section aria-labelledby="replies-h">
+      <h2 id="replies-h">Replies</h2>
+      <PostList :posts="replies || []" :is-loading="repliesLoading" empty="No replies yet. Be the first to reply!"/>
+    </section>
 
     <WebmentionList
         :webmentions="webmentions?.items || []"

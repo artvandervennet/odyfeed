@@ -2,6 +2,7 @@
 import type { ASActor, ASNote, EnrichedPost } from '~~/shared/types/activitypub'
 import { useAuthStore } from '~/stores/authStore'
 import {fetchActor} from "~/api/actors";
+import LoadingCard from '~/components/atoms/LoadingCard.vue'
 
 const route = useRoute()
 const username = route.params.username as string
@@ -52,48 +53,59 @@ useHead(() => ({
 </script>
 
 <template>
-  <UContainer>
-    <div class="max-w-4xl mx-auto">
-      <template v-if="actorError || actor === null">
-        <div class="text-center py-20">
-          <UIcon name="i-heroicons-face-frown" class="w-20 h-20 mx-auto text-gray-400 mb-6" />
-          <h2 class="text-3xl font-bold mb-4">Actor Not Found</h2>
-          <p class="text-gray-500 dark:text-gray-400 mb-6">
-            The profile you're looking for doesn't exist or has been removed.
-          </p>
-          <UButton to="/" color="primary" size="lg">
-            <UIcon name="i-heroicons-arrow-left" class="mr-2" />
-            Back to Timeline
-          </UButton>
+  <div>
+    <template v-if="actorError || actor === null">
+      <div class="band page-head" data-paint="deep">
+        <div class="inner">
+          <h1>Actor Not Found</h1>
         </div>
-      </template>
-
-      <template v-else-if="actorLoading">
-        <div class="space-y-6">
-          <USkeleton class="h-48 w-full rounded-xl" />
-          <div class="max-w-2xl mx-auto space-y-4">
-            <USkeleton v-for="i in 3" :key="i" class="h-40 w-full rounded-lg" />
+        <art-drip class="band-drip" pigment="--surface" seed="actor" count="9" stagger flush/>
+      </div>
+      <div class="band" data-paint="1">
+        <div class="inner narrow">
+          <div class="card empty">
+            <art-splatter size="6rem" seed="actor"/>
+            <p>The profile you're looking for doesn't exist or has been removed.</p>
+            <art-button>
+              <NuxtLink to="/">Back to Timeline</NuxtLink>
+            </art-button>
           </div>
         </div>
-      </template>
+      </div>
+    </template>
 
-      <template v-else-if="actor">
-        <UCard class="mb-8 overflow-hidden">
-          <ActorProfileHeader :actor="actor" :is-own-profile="isOwnProfile">
-            <template #stats>
-              <ActorProfileStats :posts-count="postsCount" />
-            </template>
-          </ActorProfileHeader>
-        </UCard>
+    <template v-else-if="actorLoading">
+      <div class="band page-head" data-paint="deep">
+        <div class="inner" aria-busy="true">
+          <span class="visually-hidden" role="status">Loading profile…</span>
+          <span class="skeleton skeleton-title"/>
+        </div>
+      </div>
+      <div class="band" data-paint="1">
+        <div class="inner narrow">
+          <LoadingCard/>
+        </div>
+      </div>
+    </template>
 
-        <PostList
+    <template v-else-if="actor">
+      <ActorProfileHeader :actor="actor" :is-own-profile="isOwnProfile">
+        <template #stats>
+          <ActorProfileStats :posts-count="postsCount" />
+        </template>
+      </ActorProfileHeader>
+
+      <section class="band" data-paint="1" aria-labelledby="actor-posts-h">
+        <div class="inner narrow">
+          <h2 id="actor-posts-h" class="visually-hidden">Posts</h2>
+          <PostList
             small
-          :posts="enrichedPosts"
-          :is-loading="postsLoading"
-          :empty="isOwnProfile ? `You haven't posted anything yet.` : `${username} hasn't posted anything yet.`"
-        />
-      </template>
-    </div>
-  </UContainer>
+            :posts="enrichedPosts"
+            :is-loading="postsLoading"
+            :empty="isOwnProfile ? `You haven't posted anything yet.` : `${username} hasn't posted anything yet.`"
+          />
+        </div>
+      </section>
+    </template>
+  </div>
 </template>
-

@@ -7,6 +7,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "theme": "gesso-theme theme.json --out app/assets/css/theme.css",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -17,12 +18,13 @@
     "@inrupt/solid-client-authn-node": "^3.1.1",
     "@kiliankil/solid-vcard-card": "^1.2.2",
     "@nuxt/eslint": "1.12.1",
-    "@nuxt/ui": "^4.3.0",
+    "@nuxt/icon": "^2.1.1",
     "@pinia/colada": "^0.20.0",
     "@pinia/colada-nuxt": "^0.3.0",
     "@pinia/nuxt": "^0.11.3",
     "@semapps/semantic-data-provider": "1.1.0-patch.1",
     "@types/n3": "^1.26.1",
+    "@vandervennet/gesso": "github:artvandervennet/gesso#v1.2.4",
     "@vueuse/core": "^14.1.0",
     "eslint": "^9.39.2",
     "fs-extra": "^11.3.3",
@@ -32,16 +34,15 @@
     "openai": "^6.15.0",
     "p5": "^2.2.0",
     "pinia": "^3.0.4",
-    "tailwindcss": "^4.1.18",
     "vue": "^3.5.26",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@iconify-json/heroicons": "^1.2.3",
-    "@iconify-json/lucide": "^1.2.82",
     "@types/localtunnel": "^2.0.4",
     "@types/p5": "^1.7.7",
     "localtunnel": "^2.0.2",
     "nitropack": "^2.12.9"
-  }
+  },
+  "packageManager": "pnpm@10.34.5"
 }

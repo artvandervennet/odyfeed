@@ -21,13 +21,8 @@ const formattedDate = computed(() => {
 </script>
 
 <template>
-  <div>
-    <div class="prose prose-sm max-w-none dark:prose-invert mb-3">
-      {{ content }}
-    </div>
-    <time class="text-xs text-gray-400">
-      {{ formattedDate }}
-    </time>
+  <div class="post-content">
+    <p class="e-content">{{ content }}</p>
+    <time :datetime="published">{{ formattedDate }}</time>
   </div>
 </template>
-

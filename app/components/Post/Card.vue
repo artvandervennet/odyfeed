@@ -25,6 +25,8 @@ const {
   postDetailUrl,
 } = usePostActions(postComputed)
 
+const authorName = computed(() => currentPost.value.actor?.name || 'someone')
+
 const submitReply = function () {
   if (!replyContent.value.trim()) return
 
@@ -47,48 +49,36 @@ const toggleReplyForm = function () {
 </script>
 
 <template>
-  <article
-      class="relative border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors cursor-pointer p-4"
-      :class="{ 'pl-12 ml-4 border-l-2 border-gray-200 dark:border-gray-700': props.level && props.level > 0 }">
-    <NuxtLink
-        :to="postDetailUrl"
-        class="absolute inset-0 z-0"
-        aria-label="View post details"
+  <!-- The whole card opens the post: one link stretched over it. The author, the buttons and
+       the reply form sit above that link. -->
+  <article class="card post" :class="{ nested: props.level && props.level > 0 }">
+    <NuxtLink :to="postDetailUrl" class="post-link" :aria-label="`View post by ${authorName}`"/>
+
+    <ActorInfo
+        v-if="currentPost.actor"
+        :actor="currentPost.actor"
+        :show-tone="true"
     />
 
-    <div class="relative z-10">
-      <ActorInfo
-          v-if="currentPost.actor"
-          :actor="currentPost.actor"
-          :show-tone="true"
-          :clickable="true"
-      />
-    </div>
+    <PostContent
+        :content="currentPost.content"
+        :published="currentPost.published!"
+    />
 
-    <div class="mt-3">
-      <PostContent
-          :content="currentPost.content"
-          :published="currentPost.published!"
-      />
-    </div>
+    <PostForm
+        v-if="showReplyForm"
+        v-model="replyContent"
+        @submit="submitReply"
+        @cancel="() => toggleReplyForm()"
+    />
 
-    <div v-if="showReplyForm" class="relative z-10 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-      <PostForm
-          v-model="replyContent"
-          @submit="submitReply"
-          @cancel="() => toggleReplyForm()"
-      />
-    </div>
-
-    <div class="relative z-10 mt-3">
-      <PostStats
-          :likes-count="likesCount"
-          :replies-count="repliesCount"
-          :is-liked="liked"
-          @like="handleLike"
-          @reply="toggleReplyForm"
-          :disabled="!auth.isLoggedIn"
-      />
-    </div>
+    <PostStats
+        :likes-count="likesCount"
+        :replies-count="repliesCount"
+        :is-liked="liked"
+        :disabled="!auth.isLoggedIn"
+        @like="handleLike"
+        @reply="toggleReplyForm"
+    />
   </article>
 </template>

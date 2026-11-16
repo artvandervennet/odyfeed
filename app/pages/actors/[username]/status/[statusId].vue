@@ -55,39 +55,43 @@ useHead({
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto border-x border-gray-200 dark:border-gray-800 min-h-screen">
-    <div
-        class="top-14 z-10 bg-white/95 dark:bg-gray-950/95 backdrop-blur border-b border-gray-200 dark:border-gray-800 px-4 py-3">
-      <UButton
-          icon="i-heroicons-arrow-left"
-          color="secondary"
-          variant="ghost"
-          size="sm"
-          @click="$router.back()"
-      >
-        Back
-      </UButton>
+  <div>
+    <div class="band page-head compact" data-paint="deep">
+      <div class="inner narrow">
+        <h1>Post</h1>
+        <art-button variant="secondary" size="s">
+          <button type="button" @click="$router.back()">
+            <Icon name="i-heroicons-arrow-left" aria-hidden="true"/>
+            Back
+          </button>
+        </art-button>
+      </div>
+      <art-drip class="band-drip" pigment="--surface" seed="post" count="9" stagger flush/>
     </div>
 
-    <div v-if="isLoading" class="p-4 space-y-4">
-      <div class="flex gap-3">
-        <USkeleton class="w-12 h-12 rounded-full"/>
-        <div class="flex-1 space-y-3">
-          <USkeleton class="h-4 w-32"/>
-          <USkeleton class="h-20 w-full"/>
-          <USkeleton class="h-4 w-3/4"/>
+    <div class="band" data-paint="1">
+      <div class="inner narrow">
+        <div v-if="isLoading" class="stack" aria-busy="true">
+          <span class="visually-hidden" role="status">Loading post…</span>
+          <div class="card post-skeleton">
+            <span class="skeleton avatar"/>
+            <span class="skeleton"/>
+            <span class="skeleton"/>
+            <span class="skeleton"/>
+          </div>
         </div>
+
+        <div v-else-if="error" class="card empty" role="alert">
+          <art-splatter size="6rem" seed="post"/>
+          <h2>Post not found</h2>
+          <p>The post you're looking for doesn't exist or has been removed.</p>
+          <art-button>
+            <NuxtLink to="/">Go to Timeline</NuxtLink>
+          </art-button>
+        </div>
+
+        <PostDetail v-else-if="enrichedPost" :post="enrichedPost" />
       </div>
     </div>
-
-    <div v-else-if="error" class="text-center py-20 px-4">
-      <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 mx-auto text-red-500 mb-4"/>
-      <h2 class="text-2xl font-bold mb-2">Post not found</h2>
-      <p class="text-gray-500 mb-4">The post you're looking for doesn't exist or has been removed.</p>
-      <UButton @click="$router.push('/')">Go to Timeline</UButton>
-    </div>
-
-    <PostDetail v-else-if="enrichedPost" :post="enrichedPost" />
   </div>
 </template>
-

@@ -11,12 +11,21 @@ export default defineNuxtConfig({
 	},
 	modules: [
 		'@nuxt/eslint',
-		'@nuxt/ui',
 		'@pinia/nuxt',
 		'@nuxt/icon',
 		'@pinia/colada-nuxt',
 	],
-	css: ['~/assets/css/main.css'],
+	// The look comes from Gesso (https://github.com/artvandervennet/gesso): its fonts, tokens,
+	// base styles and page anatomy, then OdyFeed's own theme ("Aegean", generated from
+	// theme.json with `pnpm theme`) and the styles that are specific to this app.
+	css: [
+		'@vandervennet/gesso/fonts.css',
+		'@vandervennet/gesso/core.css',
+		'@vandervennet/gesso/base.css',
+		'@vandervennet/gesso/layout.css',
+		'~/assets/css/theme.css',
+		'~/assets/css/main.css',
+	],
 	ssr: false,
 
 	vite: {
@@ -41,7 +50,8 @@ export default defineNuxtConfig({
 	},
 	vue: {
 		compilerOptions: {
-			isCustomElement: (tag) => tag === 'solid-vcard-card',
+			// Gesso's elements (art-header, art-button, …) and the Solid vCard are native custom elements
+			isCustomElement: (tag) => tag.startsWith('art-') || tag === 'solid-vcard-card',
 		},
 	},
 	app: {
@@ -49,6 +59,8 @@ export default defineNuxtConfig({
 			title: 'OdyFeed',
 			htmlAttrs: {
 				lang: 'en',
+				// light, dark, or "auto" to follow the visitor's system. <art-scheme> changes it.
+				'data-scheme': 'auto',
 			},
 			meta: [
 				{charset: 'utf-8'},
@@ -59,7 +71,12 @@ export default defineNuxtConfig({
 				{rel: 'me', href: 'https://github.com/artvandervennet'},
 				{rel: 'webmention', href: '/api/webmentions'},
 			],
-
+			script: [
+				{
+					// the visitor's remembered choice, applied before the first paint
+					innerHTML: 'try { const s = localStorage.getItem(\'gesso-scheme\'); if (s) document.documentElement.dataset.scheme = s; } catch {}',
+				},
+			],
 		},
 	},
 })

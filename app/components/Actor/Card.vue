@@ -9,7 +9,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'sm',
+  size: 'md',
 })
 
 const {getAvatarUrl} = useActorAvatar()
@@ -26,24 +26,19 @@ const handle = computed(() => props.actor.preferredUsername || 'unknown')
 </script>
 
 <template>
-  <div class="flex items-center gap-3 min-w-0">
-    <NuxtLink :to="actorProfileUrl">
+  <div class="byline">
+    <!-- the name next to it is the link people use; this one is the same link again, so it
+         stays out of the tab order and out of the accessibility tree -->
+    <NuxtLink :to="actorProfileUrl" tabindex="-1" aria-hidden="true">
       <ActorAvatar :avatar-url="avatarUrl" :username="displayName" :size="size"/>
     </NuxtLink>
 
-    <div class="flex flex-col min-w-0 flex-1">
-      <div class="flex items-center gap-2">
-        <NuxtLink
-            :to="actorProfileUrl"
-            class="font-bold truncate hover:underline"
-        >
-          {{ displayName }}
-        </NuxtLink>
-        <span v-if="showTone && actorTone" class="text-xs italic text-gray-400 shrink-0">
-					{{ actorTone }}
-				</span>
-      </div>
-      <span class="text-sm text-gray-500 truncate"> @{{ handle }} </span>
+    <div class="byline-text">
+      <p>
+        <NuxtLink :to="actorProfileUrl" class="byline-name">{{ displayName }}</NuxtLink>
+        <span v-if="showTone && actorTone" class="byline-tone">{{ actorTone }}</span>
+      </p>
+      <p class="byline-handle">@{{ handle }}</p>
     </div>
   </div>
 </template>

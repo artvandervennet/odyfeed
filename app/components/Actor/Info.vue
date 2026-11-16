@@ -10,8 +10,5 @@ defineProps<Props>()
 </script>
 
 <template>
-  <div class="flex items-start justify-between w-full gap-2">
-    <ActorCard :actor="actor" :show-tone="showTone"/>
-  </div>
+  <ActorCard :actor="actor" :show-tone="showTone"/>
 </template>
-

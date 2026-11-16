@@ -22,66 +22,63 @@ const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.o
 </script>
 
 <template>
-  <div class="pb-20">
+  <div>
     <ScrollProgressBar
       :total-events="totalEvents"
       :current-event-index="currentEventIndex"
       :webmention-count="webmentionCount"
     />
-    <UContainer>
-      <div class="max-w-3xl mx-auto">
-        <div class="mb-8 h-card">
-          <h1 class="p-name text-3xl font-bold mb-2">Timeline</h1>
-          <p class="p-note text-gray-500 dark:text-gray-400">The story of the Odysee, told through the eyes of its actors.</p>
-          <a :href="baseUrl" class="u-url hidden" rel="me">OdyFeed</a>
-        </div>
 
-        <LoadingCard v-if="isLoading && !timeline" />
+    <div id="top" class="band hero h-card" data-paint="deep">
+      <div class="inner">
+        <h1 class="p-name">
+          <art-stroke pigment="stroke" seed="odyssey" animate>Timeline</art-stroke>
+        </h1>
+        <p class="lead p-note">The story of the Odyssey, told through the eyes of its actors.</p>
+        <a :href="baseUrl" class="u-url" rel="me" hidden>OdyFeed</a>
+      </div>
+      <art-drip class="band-drip" pigment="--surface" seed="odyssey" count="9" stagger flush/>
+    </div>
 
-        <div v-else-if="timeline?.groupedByEvent && timeline.groupedByEvent.length > 0" class="space-y-8">
-          <div
-            v-for="group in timeline.groupedByEvent"
-            :key="group.event.id"
-            :ref="(el) => registerEventElement(group.event.id, el)"
-            class="space-y-3"
-          >
-            <div class="flex items-center gap-3 px-2">
-              <div class="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-              <h2 class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {{ group.event.title }}
-              </h2>
-              <div class="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-            </div>
+    <div v-if="isLoading && !timeline" class="band" data-paint="1">
+      <div class="inner">
+        <LoadingCard />
+      </div>
+    </div>
 
-            <div v-if="group.posts && group.posts.length > 0">
-              <PostList
-                  :posts="group.posts"
-                  :empty="'No posts yet.'"
-              />
-            </div>
-
-            <div v-else class="border border-gray-200 dark:border-gray-800 rounded-lg p-8">
-              <p class="text-gray-500 dark:text-gray-400 text-center mb-4">{{ group.event.description }}</p>
-              <div class="bg-gray-100 dark:bg-gray-900 rounded p-6 space-y-4">
-                <div class="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
-                <div class="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full"></div>
-                <div class="h-4 bg-gray-200 dark:bg-gray-800 rounded w-5/6"></div>
-                <div class="h-4 bg-gray-200 dark:bg-gray-800 rounded w-2/3"></div>
-                <div class="h-4 bg-gray-200 dark:bg-gray-800 rounded w-4/5"></div>
-                <div class="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full"></div>
-                <div class="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
-              </div>
-            </div>
+    <template v-else-if="timeline?.groupedByEvent && timeline.groupedByEvent.length > 0">
+      <!-- One painted band per event of the story, its title pinned beside its posts.
+           The paints walk the colour wheel and start again after the eighth. -->
+      <section
+        v-for="(group, index) in timeline.groupedByEvent"
+        :key="group.event.id"
+        :ref="(el) => registerEventElement(group.event.id, el)"
+        class="band section"
+        :data-paint="(index % 8) + 1"
+        :aria-labelledby="`event-${index}`"
+      >
+        <div class="inner">
+          <div class="section-head">
+            <h2 :id="`event-${index}`" class="section-title">{{ group.event.title }}</h2>
+            <p class="intro">{{ group.event.description }}</p>
+          </div>
+          <div class="section-body">
+            <PostList
+              :posts="group.posts"
+              :empty="'No posts yet.'"
+            />
           </div>
         </div>
+      </section>
+    </template>
 
+    <div v-else-if="timeline" class="band" data-paint="1">
+      <div class="inner">
         <EmptyState
-          v-else-if="timeline"
-          icon="i-heroicons-information-circle"
           title="No posts yet"
           description="The timeline is empty. Check back later!"
         />
       </div>
-    </UContainer>
+    </div>
   </div>
 </template>

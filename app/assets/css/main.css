@@ -1,19 +1,716 @@
-@import "tailwindcss";
-@import "@nuxt/ui";
+/* OdyFeed's own styles.
 
-@theme {
+   The look is Gesso's (https://github.com/artvandervennet/gesso): its tokens, base styles and
+   page anatomy are loaded before this file (see nuxt.config.ts), and the colours come from the
+   "Aegean" theme in theme.css. What is here is only what this app has that Gesso doesn't:
+   posts, bylines, profiles, the inbox. Native CSS with nesting, Gesso's custom properties, no
+   raw colours or sizes. */
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
 
-
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
+/* an icon sits on the text's baseline and takes its size */
+.iconify {
+  flex: none;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+}
 
+/* what sits in the header's actions stays on one line */
+art-header > [slot="actions"] :is(a, button) {
+  white-space: nowrap;
+}
 
-
-
-.prose {
-  & p {
-    margin-block: 0.5rem;
+/* A narrow header keeps the dab of the colour-scheme switch and drops its word (the button's
+   accessible name still says it), and moves what doesn't fit into the menu. */
+@media (width < 48rem) {
+  art-header > art-scheme::part(name) {
+    display: none;
   }
+
+  art-header > .wide-only {
+    display: none;
+  }
+}
+
+@media (width >= 48rem) {
+  art-header > .narrow-only {
+    display: none;
+  }
+}
+
+/* ── Page head ───────────────────────────────────────────────────────────── */
+
+/* The deep band an app screen starts with: its title, smaller than a hero's. */
+.page-head {
+  & .inner {
+    padding-block: var(--space-12) var(--space-8);
+  }
+
+  & h1 {
+    font-size: var(--step-5);
+  }
+
+  & .lead {
+    margin-block-start: var(--space-4);
+  }
+
+  /* a title with one button beside it */
+  &.compact .inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+}
+
+/* Event titles are long words ("Charybdis"): the title column gets a little more room than
+   Gesso gives it. */
+@media (width >= 60rem) {
+  .section > .inner {
+    grid-template-columns: minmax(12rem, 20rem) minmax(0, 1fr);
+  }
+}
+
+/* A column of content that reads better narrow: a thread, a form, an inbox. */
+.inner.narrow {
+  max-inline-size: calc(44rem + 2 * var(--gutter));
+}
+
+/* ── Bylines ─────────────────────────────────────────────────────────────── */
+
+/* Who posted: avatar, name, tone of voice, handle. */
+.byline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+
+  & > a {
+    display: flex;
+  }
+}
+
+.byline-text {
+  min-inline-size: 0;
+  line-height: var(--leading-snug);
+}
+
+.byline-name {
+  font-weight: var(--weight-bold);
+  color: var(--ink);
+  text-decoration-line: none;
+
+  &:hover {
+    text-decoration-line: underline;
+  }
+}
+
+.byline-tone {
+  margin-inline-start: var(--space-2);
+  font-size: var(--step--1);
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+.byline-handle {
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+/* ── Posts ───────────────────────────────────────────────────────────────── */
+
+.post {
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+
+  /* what a person can use on its own (the author, the buttons, the reply form) sits above the
+     link that covers the card; the text stays under it, so pressing the text opens the post */
+  & > :is(.byline, .post-actions, .post-form, .p-author) {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* a reply to a reply: set in from the left, with a rule to follow upwards */
+  &.nested {
+    margin-inline-start: var(--space-8);
+    border-inline-start: 3px solid var(--rule);
+  }
+}
+
+/* The link that makes the whole card open the post. The card grows a little under the
+   pointer, in place: nothing around it moves. */
+.post-link {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+.post:has(> .post-link) {
+  transition: scale var(--dur-wash) var(--ease-brush);
+
+  &:hover {
+    scale: 1.015;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.post-content {
+  display: grid;
+  gap: var(--space-2);
+
+  & p {
+    font-size: var(--step-1);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  & time {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+}
+
+.post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  /* the buttons have padding of their own: line their icons up with the post's text */
+  margin-inline-start: calc(-1 * var(--space-3));
+}
+
+/* A small button under a post: reply, like. A 44px target that takes a wash on hover and
+   stays where it is. Pressed (liked) is bold with a filled icon, never colour alone. */
+.action {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-dab);
+  font: var(--weight-medium) var(--step--1) / 1 var(--font-body);
+  color: var(--ink-muted);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-wash);
+    color: var(--ink);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  &[aria-pressed="true"] {
+    font-weight: var(--weight-bold);
+    color: var(--ink);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.post-form {
+  display: grid;
+  gap: var(--space-3);
+
+  & .actions {
+    justify-content: flex-end;
+  }
+}
+
+/* how many likes, replies, posts */
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  max-inline-size: none;
+  color: var(--ink-muted);
+
+  & strong {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: var(--weight-regular);
+    color: var(--ink);
+  }
+}
+
+.post-detail {
+  gap: var(--space-12);
+
+  & > section {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  & h2 {
+    font-size: var(--step-3);
+  }
+
+  & h3 {
+    font-size: var(--step-1);
+    margin-block-start: var(--space-4);
+  }
+}
+
+/* ── Waiting ─────────────────────────────────────────────────────────────── */
+
+.skeleton-card {
+  block-size: 10rem;
+  border-radius: var(--radius-canvas);
+}
+
+.skeleton-row {
+  block-size: 4rem;
+}
+
+.skeleton-title {
+  inline-size: 16rem;
+  block-size: var(--step-5);
+}
+
+/* the shape of a post that is on its way */
+.post-skeleton {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3) var(--space-4);
+
+  & .avatar {
+    grid-row: span 3;
+    box-shadow: none;
+  }
+
+  & .skeleton:nth-child(2) {
+    inline-size: 8rem;
+  }
+
+  & .skeleton:last-child {
+    inline-size: 66%;
+  }
+}
+
+/* ── Empty states ────────────────────────────────────────────────────────── */
+
+.empty {
+  & > * {
+    max-inline-size: 34rem;
+  }
+
+  & h2 {
+    font-size: var(--step-2);
+    color: var(--ink);
+  }
+
+  & .actions {
+    justify-content: center;
+  }
+}
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+
+.form {
+  display: grid;
+  gap: var(--space-6);
+
+  & .actions {
+    justify-content: space-between;
+  }
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+
+  & :is(input, textarea) {
+    min-block-size: 2.75rem;
+  }
+
+  & textarea {
+    resize: vertical;
+  }
+}
+
+.hint {
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+.required {
+  font-weight: var(--weight-regular);
+  color: var(--ink-muted);
+}
+
+/* an empty live region takes no room until it has something to say */
+.form-message:empty {
+  display: none;
+}
+
+/* a short explanation above a form */
+.note {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-chip);
+  background: var(--accent-wash);
+
+  & strong {
+    display: block;
+  }
+}
+
+/* ── Login dialog ────────────────────────────────────────────────────────── */
+
+.login {
+  & form {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  & h2 {
+    font-size: var(--step-3);
+  }
+
+  & .actions {
+    justify-content: flex-end;
+  }
+}
+
+/* A set of radio buttons shown as rows to pick from. The chosen row is ruled in the accent
+   and its radio is filled: never colour alone. */
+.choices {
+  display: grid;
+  gap: var(--space-2);
+  border: 0;
+  padding: 0;
+  margin: 0;
+
+  & legend {
+    padding: 0;
+    margin-block-end: var(--space-2);
+    font-weight: var(--weight-medium);
+  }
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: 2.75rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--rule-strong);
+  border-radius: var(--radius-chip);
+  font-weight: var(--weight-regular);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent-wash);
+  }
+
+  &:has(input:checked) {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    background: var(--accent-wash);
+  }
+
+  & span {
+    display: grid;
+  }
+
+  & small {
+    color: var(--ink-muted);
+  }
+}
+
+/* ── Account menu ────────────────────────────────────────────────────────── */
+
+/* the avatar in the header that opens the menu */
+.avatar-button {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-dab);
+  background: none;
+  cursor: pointer;
+}
+
+.menu-label {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--step--1);
+  font-weight: var(--weight-bold);
+}
+
+/* ── Profiles ────────────────────────────────────────────────────────────── */
+
+.profile-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-6);
+
+  & .avatar {
+    box-shadow: 0 0 0 3px var(--ink);
+  }
+
+  & art-tape {
+    margin-block-start: var(--space-2);
+  }
+}
+
+.profile-edit {
+  margin-inline-start: auto;
+}
+
+.profile-handle {
+  color: var(--ink-muted);
+}
+
+.profile-head {
+  & .inner {
+    padding-block-end: var(--space-24);
+  }
+
+  & .counts {
+    margin-block-start: var(--space-6);
+  }
+}
+
+/* a list of name and value pairs */
+.facts {
+  display: grid;
+  padding-block: var(--space-2);
+
+  & > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-6);
+    padding-block: var(--space-3);
+  }
+
+  & > div + div {
+    border-block-start: 1px solid var(--rule);
+  }
+
+  & dt {
+    font-weight: var(--weight-medium);
+    color: var(--ink-muted);
+  }
+
+  & dd {
+    margin: 0;
+    max-inline-size: none;
+    text-align: end;
+  }
+}
+
+/* a URL: monospaced, allowed to break anywhere */
+.address {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  overflow-wrap: anywhere;
+}
+
+/* ── Inbox ───────────────────────────────────────────────────────────────── */
+
+.tab-count {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-round);
+  background: var(--accent-wash);
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+}
+
+.tab-panel {
+  margin-block-start: var(--space-6);
+}
+
+.activity,
+.mention {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.activity-text,
+.mention-text {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+
+  & blockquote {
+    margin: 0;
+    padding-inline-start: var(--space-3);
+    border-inline-start: 3px solid var(--rule);
+    color: var(--ink-muted);
+    overflow-wrap: anywhere;
+  }
+}
+
+.activity-date,
+.mention-date {
+  margin-inline-start: var(--space-2);
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.mention-comment {
+  overflow-wrap: anywhere;
+}
+
+/* ── Webmentions ─────────────────────────────────────────────────────────── */
+
+.webmentions {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.webmention-form {
+  display: grid;
+  gap: var(--space-3);
+
+  & h3 {
+    font-size: var(--step-1);
+  }
+}
+
+/* ── About ───────────────────────────────────────────────────────────────── */
+
+.card-grid .card,
+.related {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  justify-items: start;
+}
+
+.card-grid .card p {
+  color: var(--ink-muted);
+}
+
+.related .e-content {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* a list that reads as lines, not bullets */
+.plain-list {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+}
+
+.tapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+}
+
+/* ── Setup ───────────────────────────────────────────────────────────────── */
+
+.setup-done,
+.setup-error {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+}
+
+.checks {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+
+  & li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ── Callback and error screens ──────────────────────────────────────────── */
+
+.callback .inner,
+.error-page .inner {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--space-4);
+  min-block-size: 60svh;
+  text-align: center;
+}
+
+.error-page h1 {
+  font-size: var(--step-5);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+/* The footer is a band of its own here (the page above it ends in a different paint), so it
+   gets room at the top, and its webmentions sit between the name and the signature. */
+.site-footer .inner {
+  align-items: flex-start;
+  gap: var(--space-8) var(--space-16);
+  padding-block-start: var(--space-16);
+
+  & h2 {
+    font-size: var(--step-2);
+    color: var(--ink);
+  }
+}
+
+.footer-mentions {
+  flex: 1 1 24rem;
+  display: grid;
+  gap: var(--space-4);
+  max-inline-size: 36rem;
+  color: var(--ink);
+}
+
+.footer-legal {
+  flex: 1 1 100%;
+  align-self: flex-end;
+}
+
+.site-footer art-signature {
+  align-self: flex-end;
+}
+
+/* ── The boat ────────────────────────────────────────────────────────────── */
+
+/* The p5 canvas along the bottom of the timeline: islands for the events, a boat for where
+   you are. It lies over the page, so the footer keeps clear of it. */
+.progress-bar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+body:has(.progress-bar) .site-footer .inner {
+  padding-block-end: var(--space-24);
 }

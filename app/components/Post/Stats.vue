@@ -17,20 +17,22 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="flex items-center gap-2">
+  <div class="post-actions">
     <ActionButton
         icon="i-heroicons-chat-bubble-left"
+        label="Reply"
         :count="repliesCount"
-        color="secondary"
-        @click="emit('reply', $event)"
         :disabled="disabled"
+        @click="emit('reply', $event)"
     />
+    <!-- liked or not is said by aria-pressed and shown by the filled heart, not by colour -->
     <ActionButton
         :icon="isLiked ? 'i-heroicons-heart-20-solid' : 'i-heroicons-heart'"
+        label="Like"
         :count="likesCount"
-        :color="isLiked ? 'primary' : 'secondary'"
-        @click="emit('like', $event)"
+        :pressed="isLiked"
         :disabled="disabled"
+        @click="emit('like', $event)"
     />
   </div>
 </template>

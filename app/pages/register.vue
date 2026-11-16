@@ -63,118 +63,85 @@ const handleRegister = async function () {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center p-4">
-    <UContainer>
-      <div class="max-w-xl mx-auto">
-        <UCard>
-          <template #header>
-            <div class="text-center">
-              <div class="flex items-center justify-center gap-2 mb-2">
-                <UIcon name="i-heroicons-sparkles" class="text-primary-500 w-8 h-8"/>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Complete Your Profile</h1>
-              </div>
-              <p class="text-gray-500 dark:text-gray-400">Create a username to start using OdyFeed</p>
-            </div>
-          </template>
-
-          <div class="space-y-5">
-            <UAlert
-                icon="i-heroicons-information-circle"
-                color="primary"
-                variant="soft"
-                title="One more step!"
-                description="Choose a username for your ActivityPub profile on this server."
-            />
-
-            <div class="space-y-4">
-              <div class="space-y-2">
-                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Username <span class="text-red-500">*</span>
-                </label>
-                <UInput
-                    id="username"
-                    v-model="username"
-                    placeholder="odysseus"
-                    icon="i-heroicons-at-symbol"
-                    :disabled="isRegistering"
-                    :color="!isValidUsername && username.length > 0 ? 'error' : 'primary'"
-                    size="md"
-                    @keyup.enter="handleRegister"
-                />
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  Only lowercase letters, numbers, hyphens, and underscores
-                </p>
-                <p v-if="!isValidUsername && username.length > 0" class="text-xs text-red-500">
-                  Invalid username format
-                </p>
-              </div>
-
-              <div class="space-y-2">
-                <label for="displayName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Display Name
-                </label>
-                <UInput
-                    id="displayName"
-                    v-model="name"
-                    placeholder="Odysseus of Ithaca"
-                    icon="i-heroicons-user"
-                    :disabled="isRegistering"
-                    size="md"
-                />
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  Optional: How your name appears to others
-                </p>
-              </div>
-
-              <div class="space-y-2">
-                <label for="bio" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Bio
-                </label>
-                <UTextarea
-                    id="bio"
-                    v-model="summary"
-                    placeholder="King of Ithaca, wanderer, storyteller..."
-                    :disabled="isRegistering"
-                    :rows="3"
-                    size="md"
-                />
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  Optional: Tell others about yourself
-                </p>
-              </div>
-            </div>
-
-            <UAlert
-                v-if="errorMessage"
-                icon="i-heroicons-exclamation-triangle"
-                color="error"
-                variant="soft"
-                :title="errorMessage"
-                :close="{ color: 'error', variant: 'link' }"
-                @close="errorMessage = ''"
-            />
-
-            <div class="flex items-center justify-between gap-3 pt-2">
-              <UButton
-                  label="Back to Home"
-                  icon="i-heroicons-arrow-left"
-                  color="neutral"
-                  variant="ghost"
-                  :disabled="isRegistering"
-                  @click="navigateTo('/')"
-              />
-              <UButton
-                  label="Create Profile"
-                  icon="i-heroicons-check"
-                  trailing
-                  :loading="isRegistering"
-                  :disabled="!username || !isValidUsername || isRegistering"
-                  @click="handleRegister"
-              />
-            </div>
-          </div>
-        </UCard>
+  <div>
+    <div class="band page-head" data-paint="deep">
+      <div class="inner">
+        <h1>Complete Your Profile</h1>
+        <p class="lead">Create a username to start using OdyFeed</p>
       </div>
-    </UContainer>
+      <art-drip class="band-drip" pigment="--surface" seed="register" count="9" stagger flush/>
+    </div>
+
+    <div class="band" data-paint="1">
+      <div class="inner narrow">
+        <form class="card form" novalidate @submit.prevent="handleRegister">
+          <p class="note">
+            <strong>One more step!</strong>
+            Choose a username for your ActivityPub profile on this server.
+          </p>
+
+          <div class="field">
+            <label for="username">Username <span class="required">(required)</span></label>
+            <input
+                id="username"
+                v-model="username"
+                type="text"
+                placeholder="odysseus"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                required
+                aria-describedby="username-hint username-error"
+                :aria-invalid="!isValidUsername && username.length > 0"
+                :disabled="isRegistering"
+            >
+            <p id="username-hint" class="hint">Only lowercase letters, numbers, hyphens, and underscores</p>
+            <p id="username-error" class="form-message" role="alert">
+              <template v-if="!isValidUsername && username.length > 0">Invalid username format</template>
+            </p>
+          </div>
+
+          <div class="field">
+            <label for="displayName">Display Name</label>
+            <input
+                id="displayName"
+                v-model="name"
+                type="text"
+                placeholder="Odysseus of Ithaca"
+                autocomplete="name"
+                aria-describedby="displayName-hint"
+                :disabled="isRegistering"
+            >
+            <p id="displayName-hint" class="hint">Optional: How your name appears to others</p>
+          </div>
+
+          <div class="field">
+            <label for="bio">Bio</label>
+            <textarea
+                id="bio"
+                v-model="summary"
+                placeholder="King of Ithaca, wanderer, storyteller..."
+                rows="3"
+                aria-describedby="bio-hint"
+                :disabled="isRegistering"
+            />
+            <p id="bio-hint" class="hint">Optional: Tell others about yourself</p>
+          </div>
+
+          <p v-if="errorMessage" class="form-message" role="alert">{{ errorMessage }}</p>
+
+          <div class="actions">
+            <art-button variant="quiet">
+              <button type="button" :disabled="isRegistering" @click="navigateTo('/')">Back to Home</button>
+            </art-button>
+            <art-button>
+              <button type="submit" :disabled="!username || !isValidUsername || isRegistering">
+                {{ isRegistering ? 'Creating profile…' : 'Create Profile' }}
+              </button>
+            </art-button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>

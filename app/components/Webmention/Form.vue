@@ -49,47 +49,32 @@ const isValidUrl = function (url: string): boolean {
 </script>
 
 <template>
-  <UCard>
-      <form @submit.prevent="handleSubmit" class="space-y-2" target-url="">
-        <div class="flex items-center gap-1.5">
-          <h3 class="text-sm font-semibold">Send a Webmention</h3>
-        </div>
+  <form class="card webmention-form" @submit.prevent="handleSubmit">
+    <h3>Send a Webmention</h3>
 
-        <div class="space-y-1.5">
-          <div>
-            <label for="webmention-source" class="block text-xs font-medium text-gray-700 dark:text-gray-300">
-              Your post URL
-            </label>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Enter the URL of your post that mentions this content
-            </p>
-          </div>
-          <div class="flex gap-2">
-            <input
-              id="webmention-source"
-              v-model="sourceUrl"
-              type="url"
-              placeholder="https://yoursite.com/your-post"
-              :disabled="webmentionMutation.isLoading.value"
-              class="flex-1 px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-              required
-            />
-            <UButton
-              type="submit"
-              size="xs"
-              :loading="webmentionMutation.isLoading.value"
-              :disabled="!sourceUrl || webmentionMutation.isLoading.value"
-            >
-              Send
-            </UButton>
-          </div>
-          <p v-if="errorMessage" class="text-xs text-red-600 dark:text-red-400">
-            {{ errorMessage }}
-          </p>
-          <p v-if="successMessage" class="text-xs text-green-600 dark:text-green-400">
-            {{ successMessage }}
-          </p>
-        </div>
-      </form>
-  </UCard>
+    <div class="field">
+      <label for="webmention-source">Your post URL</label>
+      <p id="webmention-hint" class="hint">Enter the URL of your post that mentions this content</p>
+      <div class="field-row">
+        <input
+          id="webmention-source"
+          v-model="sourceUrl"
+          type="url"
+          inputmode="url"
+          placeholder="https://yoursite.com/your-post"
+          aria-describedby="webmention-hint"
+          :disabled="webmentionMutation.isLoading.value"
+          required
+        >
+        <art-button>
+          <button type="submit" :disabled="!sourceUrl || webmentionMutation.isLoading.value">
+            {{ webmentionMutation.isLoading.value ? 'Sending…' : 'Send' }}
+          </button>
+        </art-button>
+      </div>
+    </div>
+
+    <p v-if="errorMessage" class="form-message" role="alert">{{ errorMessage }}</p>
+    <p v-if="successMessage" class="form-message" role="status">{{ successMessage }}</p>
+  </form>
 </template>

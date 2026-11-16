@@ -6,53 +6,32 @@ const year = new Date().getFullYear()
 </script>
 
 <template>
-  <div class="max-w-3xl pb-2 mx-auto flex flex-col gap-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-      <div>
-        <h3 class="text-lg font-semibold mb-2">OdyFeed</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          The Odyssey, told through ActivityPub
-        </p>
-      </div>
-
-      <div v-if="hasWebmentions" class="w-full md:w-auto">
-        <div class="flex items-center gap-2 mb-2">
-          <UIcon name="i-heroicons-chat-bubble-left-right" class="w-4 h-4 text-gray-500"/>
-          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {{ webmentionCount }} Webmention{{ webmentionCount !== 1 ? 's' : '' }}
-          </span>
-        </div>
-        <div v-if="recentWebmentions.length > 0" class="text-xs text-gray-500 dark:text-gray-400">
-          Recent mentions from external sites
-        </div>
-      </div>
-
-      <div v-else-if="!isLoading" class="text-sm text-gray-500 dark:text-gray-400">
-        <UIcon name="i-heroicons-chat-bubble-left-right" class="w-4 h-4 inline mr-1"/>
-        No webmentions yet
-      </div>
+  <div class="inner">
+    <div class="footer-about">
+      <h2>OdyFeed</h2>
+      <p>The Odyssey, told through ActivityPub</p>
     </div>
 
-    <div
-      v-if="hasWebmentions && recentWebmentions.length > 0"
-      class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800"
-    >
-      <div class="space-y-3">
-        <WebmentionCard
-          v-for="webmention in recentWebmentions"
-          :key="webmention.id"
-          :webmention="webmention"
-        />
-      </div>
-    </div>
+    <section class="footer-mentions" aria-labelledby="footer-mentions-h">
+      <h2 id="footer-mentions-h">
+        <template v-if="hasWebmentions">
+          {{ webmentionCount }} Webmention{{ webmentionCount !== 1 ? 's' : '' }}
+        </template>
+        <template v-else>Webmentions</template>
+      </h2>
+      <p v-if="hasWebmentions && recentWebmentions.length > 0">Recent mentions from external sites</p>
+      <p v-else-if="!isLoading && !hasWebmentions">No webmentions yet</p>
 
-    <WebmentionForm :target-url="useRoute().fullPath"/>
+      <ul v-if="hasWebmentions && recentWebmentions.length > 0" class="stack">
+        <li v-for="webmention in recentWebmentions" :key="webmention.id">
+          <WebmentionCard :webmention="webmention"/>
+        </li>
+      </ul>
 
-    <div class="pt-6 border-t border-gray-200 dark:border-gray-800">
-      <p class="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <UIcon name="i-heroicons-copyright" class="w-4 h-4"/>
-        <span>{{ year }} OdyFeed. All rights reserved.</span>
-      </p>
-    </div>
+      <WebmentionForm :target-url="useRoute().fullPath"/>
+    </section>
+
+    <p class="footer-legal">© {{ year }} OdyFeed. All rights reserved.</p>
+    <art-signature :year="year">Art Van der Vennet</art-signature>
   </div>
 </template>

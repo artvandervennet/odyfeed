@@ -1,20 +1,16 @@
 <script setup lang="ts">
+// A small button on a post: an icon, a word for what it does, and optionally a count.
+// The word is always there for screen readers; `label-visible` shows it as well.
 interface Props {
   icon: string
-  loading?: boolean
-  disabled?: boolean
+  label: string
   count?: number
-  variant?: 'ghost' | 'solid' | 'outline' | 'soft' | 'link'
-  color?: 'primary' | 'secondary' | 'neutral' | 'success' | 'warning' | 'error'
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-  ariaLabel?: string
+  pressed?: boolean
+  disabled?: boolean
+  labelVisible?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'ghost',
-  color: 'secondary',
-  size: 'xs',
-})
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   click: [event: Event]
@@ -22,16 +18,15 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <UButton
-      :variant="variant"
-      :color="color"
-      :size="size"
-      :icon="icon"
-      :loading="loading"
-      :disabled="disabled || loading"
-      :aria-label="ariaLabel"
+  <button
+      type="button"
+      class="action"
+      :disabled="disabled"
+      :aria-pressed="pressed === undefined ? undefined : pressed"
       @click="emit('click', $event)"
   >
+    <Icon :name="icon" aria-hidden="true"/>
+    <span :class="{ 'visually-hidden': !labelVisible }">{{ label }}</span>
     <span v-if="count !== undefined">{{ count }}</span>
-  </UButton>
+  </button>
 </template>

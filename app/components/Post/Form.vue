@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/authStore'
-
 const replyContent = defineModel<string>({ required: true })
 
 defineProps<{
@@ -13,42 +11,33 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const auth = useAuthStore()
+const fieldId = useId()
+
+// the form appears because someone pressed Reply: put them in the field
+const field = ref<HTMLTextAreaElement | null>(null)
+onMounted(() => field.value?.focus())
 </script>
 
 <template>
-  <div class="space-y-3">
-    <div class="flex gap-3">
-      <div class="flex-1">
-        <UTextarea
-          v-model="replyContent"
-          :placeholder="placeholder || 'Write your reply...'"
-          :rows="3"
-          autofocus
-          :disabled="disabled"
-          class="w-full"
-        />
-      </div>
+  <form class="post-form" @submit.prevent="emit('submit')">
+    <div class="field">
+      <label :for="fieldId">Your reply</label>
+      <textarea
+        :id="fieldId"
+        ref="field"
+        v-model="replyContent"
+        :placeholder="placeholder || 'Write your reply...'"
+        rows="3"
+        :disabled="disabled"
+      />
     </div>
-    <div class="flex justify-end gap-2">
-      <UButton
-        size="sm"
-        color="neutral"
-        variant="ghost"
-        @click="emit('cancel')"
-      >
-        Cancel
-      </UButton>
-      <UButton
-        size="sm"
-        color="primary"
-        icon="i-heroicons-paper-airplane"
-        :disabled="!replyContent.trim() || disabled"
-        @click="emit('submit')"
-      >
-        Reply
-      </UButton>
+    <div class="actions">
+      <art-button variant="quiet" size="s">
+        <button type="button" @click="emit('cancel')">Cancel</button>
+      </art-button>
+      <art-button size="s">
+        <button type="submit" :disabled="!replyContent.trim() || disabled">Reply</button>
+      </art-button>
     </div>
-  </div>
+  </form>
 </template>
-

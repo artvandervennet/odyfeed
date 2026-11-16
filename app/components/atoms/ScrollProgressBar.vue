@@ -7,16 +7,57 @@ const props = defineProps<{
   webmentionCount?: number
 }>()
 
-const colorMode = useColorMode()
 const canvasContainer = ref<HTMLDivElement | null>(null)
 let p5Instance: p5 | null = null
+
+// The colours are the theme's. Custom properties are OKLCH; a 1px canvas lets the browser turn
+// them into the RGB that p5 wants. Read again whenever the colour scheme changes.
+type Rgb = [number, number, number]
+const TOKENS = {
+  // the sea is the brand itself, day and night, like Gesso's deep paint
+  seaFar: '--neutral-300',
+  seaNear: '--neutral-600',
+  sand: '--pigment-partner',
+  sandAhead: '--rule',
+  palm: '--ink',
+  palmAhead: '--rule-strong',
+  coconut: '--pigment-complement',
+  hull: '--pigment-complement',
+  mast: '--ink',
+  sail: '--surface-raised',
+  shark: '--ink-muted',
+} as const
+const palette = {} as Record<keyof typeof TOKENS, Rgb>
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+const darkSystem = window.matchMedia('(prefers-color-scheme: dark)')
+
+const readPalette = function () {
+  const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+  if (!ctx) return
+  const style = getComputedStyle(document.documentElement)
+  for (const [name, token] of Object.entries(TOKENS) as [keyof typeof TOKENS, string][]) {
+    ctx.clearRect(0, 0, 1, 1)
+    ctx.fillStyle = style.getPropertyValue(token).trim() || '#000'
+    ctx.fillRect(0, 0, 1, 1)
+    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
+    palette[name] = [r ?? 0, g ?? 0, b ?? 0]
+  }
+  p5Instance?.redraw()
+}
 
 const targetEventIndex = ref(0)
 const animatedEventIndex = ref(0)
 
 watch(() => props.currentEventIndex, (newIndex) => {
   targetEventIndex.value = newIndex
+  // with reduced motion nothing animates: the boat is simply at the new island
+  if (reducedMotion.matches) {
+    animatedEventIndex.value = newIndex
+    p5Instance?.redraw()
+  }
 }, { immediate: true })
+
+watch(() => [props.totalEvents, props.webmentionCount], () => p5Instance?.redraw())
 
 onMounted(() => {
   if (!canvasContainer.value) return
@@ -24,11 +65,17 @@ onMounted(() => {
   targetEventIndex.value = props.currentEventIndex
   animatedEventIndex.value = props.currentEventIndex
 
+  readPalette()
+  document.addEventListener('gesso:schemechange', readPalette)
+  darkSystem.addEventListener('change', readPalette)
+
   const sketch = (p: p5) => {
     p.setup = function () {
       const width = canvasContainer.value?.offsetWidth || p.windowWidth
       const canvas = p.createCanvas(width, 60)
       canvas.parent(canvasContainer.value!)
+      // the waves never stop; people who ask for less motion get a still picture
+      if (reducedMotion.matches) p.noLoop()
     }
 
     p.draw = function () {
@@ -36,15 +83,15 @@ onMounted(() => {
       const target = targetEventIndex.value
       animatedEventIndex.value = p.lerp(current, target, 0.12)
 
-      const isDark = colorMode.value === 'dark'
-
       p.clear()
 
       if (props.totalEvents <= 1) return
 
-      const margin = 60
+      // on a narrow screen the islands move closer together and get smaller, so they never overlap
+      const margin = Math.min(60, p.width * 0.08)
       const lineWidth = p.width - margin * 2
       const pointSpacing = lineWidth / (props.totalEvents - 1)
+      const islandScale = Math.min(1, pointSpacing / 40)
       const time = p.frameCount * 0.02
 
       // Wave parameters
@@ -53,8 +100,8 @@ onMounted(() => {
       const baseFreq = 0.01
 
       // Colors
-      const cBack = isDark ? p.color(30, 41, 59, 40) : p.color(219, 234, 254, 40)
-      const cFront = isDark ? p.color(30, 58, 138, 180) : p.color(59, 130, 246, 180)
+      const cBack = p.color(...palette.seaFar, 40)
+      const cFront = p.color(...palette.seaNear, 180)
 
       // Draw background waves
       p.noStroke()
@@ -97,21 +144,17 @@ onMounted(() => {
 
         p.push()
         p.translate(x, y)
+        p.scale(islandScale)
 
         // Island Base (Sand)
         p.noStroke()
-        if (isPassed) {
-             p.fill(isDark ? p.color(194, 178, 128) : p.color(238, 214, 175))
-        } else {
-             p.fill(isDark ? p.color(100, 90, 70) : p.color(200, 190, 170))
-        }
+        p.fill(...(isPassed ? palette.sand : palette.sandAhead))
         p.arc(0, 4, 32, 18, p.PI, p.TWO_PI)
 
-        // Tree Colors
-        const trunkColor = isDark ? p.color(101, 67, 33) : p.color(139, 69, 19)
-        const leafColor = isPassed
-            ? (isDark ? p.color(34, 139, 34) : p.color(50, 205, 50))
-            : (isDark ? p.color(20, 60, 20) : p.color(100, 150, 100))
+        // The palm is a silhouette in ink: full for an island the boat has reached, faint
+        // for one still ahead. Reached islands also have coconuts, so it isn't colour alone.
+        const trunkColor = p.color(...(isPassed ? palette.palm : palette.palmAhead))
+        const leafColor = trunkColor
 
         // Trunk
         p.fill(trunkColor)
@@ -136,7 +179,7 @@ onMounted(() => {
 
         // Coconuts (only if passed/active)
         if (isPassed) {
-            p.fill(isDark ? p.color(60, 40, 20) : p.color(100, 70, 40))
+            p.fill(...palette.coconut)
             p.circle(0, 2, 3)
             p.circle(-2, 1, 3)
             p.circle(2, 1, 3)
@@ -157,19 +200,19 @@ onMounted(() => {
       p.rotate(p.atan(slope))
 
       // Hull
-      p.fill(isDark ? p.color(139, 69, 19) : p.color(160, 82, 45))
-      p.stroke(isDark ? 255 : 0)
+      p.fill(...palette.hull)
+      p.stroke(...palette.mast)
       p.strokeWeight(1)
       p.arc(0, 0, 24, 16, 0, p.PI)
 
       // Mast
-      p.stroke(isDark ? 150 : 80)
+      p.stroke(...palette.mast)
       p.strokeWeight(2)
       p.line(0, 0, 0, -18)
 
       // Sail
-      p.fill(isDark ? 220 : 255)
-      p.stroke(isDark ? 255 : 0)
+      p.fill(...palette.sail)
+      p.stroke(...palette.mast)
       p.strokeWeight(1)
       p.triangle(0, -18, 0, -4, 14, -8)
 
@@ -186,9 +229,8 @@ onMounted(() => {
         p.push()
         p.translate(sharkX, sharkY)
 
-        const finColor = isDark ? p.color(50, 60, 70) : p.color(80, 90, 100)
         // Dorsal fin (visible above water sometimes)
-        p.fill(finColor)
+        p.fill(...palette.shark)
        p.triangle(4, 0, 10, -16, 16, 0)
 
         p.pop()
@@ -205,6 +247,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  document.removeEventListener('gesso:schemechange', readPalette)
+  darkSystem.removeEventListener('change', readPalette)
   if (p5Instance) {
     p5Instance.remove()
     p5Instance = null
@@ -213,8 +257,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-      ref="canvasContainer"
-      class="fixed bottom-0 left-0 right-0 z-40 pointer-events-none"
-  />
+  <!-- decoration: where you are in the story is in the page itself -->
+  <div ref="canvasContainer" class="progress-bar" aria-hidden="true"/>
 </template>

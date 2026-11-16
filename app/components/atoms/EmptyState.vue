@@ -16,26 +16,17 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <UCard class="text-center py-10">
-    <UIcon
-        :name="icon || 'i-heroicons-information-circle'"
-        class="w-12 h-12 mx-auto text-gray-400 mb-4"
-    />
+  <!-- Gesso's .empty: a splatter, one plain sentence, one way forward -->
+  <div class="card empty">
+    <art-splatter size="6rem" :seed="title"/>
 
-    <h2 class="text-xl font-bold mb-2">{{ title }}</h2>
+    <h2>{{ title }}</h2>
 
-    <p v-if="description" class="text-gray-500 dark:text-gray-400 mb-4">
-      {{ description }}
-    </p>
+    <p v-if="description">{{ description }}</p>
 
-    <UButton
-        v-if="actionLabel"
-        :to="actionTo"
-        :icon="actionIcon"
-        color="primary"
-        @click="!actionTo && emit('action')"
-    >
-      {{ actionLabel }}
-    </UButton>
-  </UCard>
+    <art-button v-if="actionLabel">
+      <NuxtLink v-if="actionTo" :to="actionTo">{{ actionLabel }}</NuxtLink>
+      <button v-else type="button" @click="emit('action')">{{ actionLabel }}</button>
+    </art-button>
+  </div>
 </template>

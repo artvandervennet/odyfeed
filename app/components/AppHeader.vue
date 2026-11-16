@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {useAuthStore} from '~/stores/authStore'
-import ThemeToggle from "~/components/atoms/ThemeToggle.vue";
 
 const auth = useAuthStore()
 
@@ -16,41 +15,24 @@ const logout = async function () {
 </script>
 
 <template>
-  <header
-      class="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md">
-    <UContainer>
-      <div class="flex h-16 items-center justify-between gap-3">
-        <div class="flex items-center gap-6">
-          <NuxtLink to="/" class="flex items-center gap-2.5 font-semibold text-lg hover:opacity-80 transition-opacity">
-            <UIcon name="i-heroicons-sparkles" class="text-primary-500 w-5 h-5"/>
-            <span class="text-gray-900 dark:text-white">OdyFeed</span>
-          </NuxtLink>
+  <!-- eslint-disable vue/no-deprecated-slot-attribute -- these are a custom element's native slots, not Vue 2 slots -->
+  <!-- Gesso's sticky header. Links are places to go; what you can do sits in the actions slot.
+       Everything slotted has to be a direct child of <art-header>. -->
+  <art-header role="banner" label="Main" data-paint="deep">
+    <NuxtLink slot="wordmark" to="/">OdyFeed</NuxtLink>
+    <NuxtLink to="/about">About</NuxtLink>
+    <NuxtLink v-if="auth.isLoggedIn" to="/inbox">Inbox</NuxtLink>
+    <!-- on a narrow screen there is no room for the button below: the same link, in the menu -->
+    <NuxtLink v-if="needsRegistration" to="/register" class="narrow-only">Complete profile</NuxtLink>
 
-          <nav class="hidden sm:flex items-center gap-4">
-            <NuxtLink
-                to="/about"
-                class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              About
-            </NuxtLink>
-          </nav>
-        </div>
+    <art-scheme slot="actions" remember/>
 
-        <div class="flex items-center gap-3">
-          <ThemeToggle />
+    <ActorMenu v-if="auth.isLoggedIn" slot="actions" :user-profile="auth.userProfile" @logout="logout"/>
 
-          <ActorActions :is-logged-in="auth.isLoggedIn" :needs-registration="needsRegistration">
-            <template #user-menu>
-              <ActorMenu :user-profile="auth.userProfile" @logout="logout" />
-            </template>
-            <template #login-button>
-              <LoginModal />
-            </template>
-          </ActorActions>
-        </div>
-      </div>
-    </UContainer>
-  </header>
+    <art-button v-else-if="needsRegistration" slot="actions" size="s" class="wide-only">
+      <NuxtLink to="/register">Complete profile</NuxtLink>
+    </art-button>
 
-
+    <LoginModal v-else slot="actions"/>
+  </art-header>
 </template>

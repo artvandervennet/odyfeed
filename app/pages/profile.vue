@@ -19,91 +19,89 @@ const extractUsernameFromWebId = function (webId: string): string {
 </script>
 
 <template>
-  <UContainer>
-    <div class="max-w-2xl mx-auto py-8">
-      <EmptyState
-        v-if="!isLoggedIn"
-        icon="i-heroicons-lock-closed"
-        title="Authentication Required"
-        description="Please log in to view your profile."
-        action-label="Go to Home"
-        action-to="/"
-      />
-
-      <template v-else>
-        <UCard class="mb-8">
-          <div class="flex items-start gap-6">
+  <div>
+    <div class="band page-head" data-paint="deep">
+      <div class="inner">
+        <template v-if="isLoggedIn">
+          <div class="profile-id">
             <ActorAvatar :avatar-url="userProfile?.avatar" :username="username" size="lg" />
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-2">
-                <h1 class="text-2xl font-bold">{{ displayName }}</h1>
-                <UBadge color="primary" variant="subtle"> Your Profile </UBadge>
-              </div>
-              <p class="text-gray-500 mb-4">@{{ username }}</p>
-              <p v-if="userProfile?.summary" class="text-sm dark:text-gray-300 mb-4">
-                {{ userProfile.summary }}
-              </p>
-
-              <div class="mt-4 space-y-2">
-                <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
-                  <p class="text-gray-600 dark:text-gray-400 break-all">
-                    <strong>WebID:</strong> {{ webId }}
-                  </p>
-                </div>
-                <div v-if="inbox" class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
-                  <p class="text-gray-600 dark:text-gray-400 break-all">
-                    <strong>Inbox:</strong> {{ inbox }}
-                  </p>
-                </div>
-                <div v-if="outbox" class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs">
-                  <p class="text-gray-600 dark:text-gray-400 break-all">
-                    <strong>Outbox:</strong> {{ outbox }}
-                  </p>
-                </div>
-              </div>
+            <div>
+              <h1>{{ displayName }}</h1>
+              <p class="profile-handle">@{{ username }}</p>
+              <art-tape>Your profile</art-tape>
             </div>
           </div>
-        </UCard>
-
-        <UCard>
-          <h2 class="text-xl font-bold mb-4">Profile Information</h2>
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-              <span class="font-medium text-gray-600 dark:text-gray-400">Display Name</span>
-              <span class="text-gray-900 dark:text-white">{{ userProfile?.name || 'Not set' }}</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-              <span class="font-medium text-gray-600 dark:text-gray-400">Username</span>
-              <span class="text-gray-900 dark:text-white">{{ username }}</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-              <span class="font-medium text-gray-600 dark:text-gray-400">Preferred Username</span>
-              <span class="text-gray-900 dark:text-white">{{
-                userProfile?.preferredUsername || 'Not set'
-              }}</span>
-            </div>
-            <div class="flex justify-between py-2">
-              <span class="font-medium text-gray-600 dark:text-gray-400">Actor ID</span>
-              <span class="text-gray-900 dark:text-white text-xs break-all text-right max-w-xs">{{
-                actorId || 'Not set'
-              }}</span>
-            </div>
-          </div>
-        </UCard>
-
-        <UCard class="mt-4">
-          <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Account Actions</h2>
-          <UButton
-            color="error"
-            variant="soft"
-            icon="i-heroicons-arrow-right-on-rectangle"
-            block
-            @click="logout"
-          >
-            Logout
-          </UButton>
-        </UCard>
-      </template>
+          <p v-if="userProfile?.summary" class="lead">{{ userProfile.summary }}</p>
+        </template>
+        <h1 v-else>Your profile</h1>
+      </div>
+      <art-drip class="band-drip" pigment="--surface" seed="profile" count="9" stagger flush/>
     </div>
-  </UContainer>
+
+    <div v-if="!isLoggedIn" class="band" data-paint="1">
+      <div class="inner narrow">
+        <EmptyState
+          title="Authentication Required"
+          description="Please log in to view your profile."
+          action-label="Go to Home"
+          action-to="/"
+        />
+      </div>
+    </div>
+
+    <template v-else>
+      <section class="band section" data-paint="1" aria-labelledby="profile-info-h">
+        <div class="inner">
+          <div class="section-head">
+            <h2 id="profile-info-h" class="section-title">Profile Information</h2>
+          </div>
+          <div class="section-body">
+            <dl class="card facts">
+              <div>
+                <dt>Display Name</dt>
+                <dd>{{ userProfile?.name || 'Not set' }}</dd>
+              </div>
+              <div>
+                <dt>Username</dt>
+                <dd>{{ username }}</dd>
+              </div>
+              <div>
+                <dt>Preferred Username</dt>
+                <dd>{{ userProfile?.preferredUsername || 'Not set' }}</dd>
+              </div>
+              <div>
+                <dt>Actor ID</dt>
+                <dd class="address">{{ actorId || 'Not set' }}</dd>
+              </div>
+              <div>
+                <dt>WebID</dt>
+                <dd class="address">{{ webId }}</dd>
+              </div>
+              <div v-if="inbox">
+                <dt>Inbox</dt>
+                <dd class="address">{{ inbox }}</dd>
+              </div>
+              <div v-if="outbox">
+                <dt>Outbox</dt>
+                <dd class="address">{{ outbox }}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section class="band section" data-paint="2" aria-labelledby="account-h">
+        <div class="inner">
+          <div class="section-head">
+            <h2 id="account-h" class="section-title">Account Actions</h2>
+          </div>
+          <div class="section-body">
+            <art-button variant="secondary">
+              <button type="button" @click="logout">Log out</button>
+            </art-button>
+          </div>
+        </div>
+      </section>
+    </template>
+  </div>
 </template>

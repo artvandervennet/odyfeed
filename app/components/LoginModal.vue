@@ -3,8 +3,20 @@ import {useAuth} from '~/composables/useAuth'
 import {useAuthProviders} from '~/composables/useAuthProviders'
 import {useFormValidation} from '~/composables/useFormValidation'
 
+// two root nodes (the button and the teleported dialog): attributes such as slot="actions" go on the button
+defineOptions({inheritAttrs: false})
+
+withDefaults(defineProps<{
+  /** Show the "Log in" button that opens the dialog. Off when a page opens it itself, with v-model. */
+  trigger?: boolean
+}>(), {
+  trigger: true,
+})
+
+const open = defineModel<boolean>({default: false})
+
 const {login} = useAuth()
-const {providers, getProviderByUrl} = useAuthProviders()
+const {providers} = useAuthProviders()
 const {validateRequired} = useFormValidation()
 
 const issuer = ref('https://login.inrupt.com')
@@ -13,8 +25,15 @@ const useCustom = ref(false)
 const isLoggingIn = ref(false)
 const errorMessage = ref('')
 
-const selectedProvider = computed(() => getProviderByUrl(issuer.value))
+// A native <dialog>: the browser traps focus in it, closes it on Escape, and puts focus back
+// on the button that opened it.
+const dialog = ref<HTMLDialogElement | null>(null)
 
+watch([open, dialog], ([isOpen, el]) => {
+  if (!el) return
+  if (isOpen && !el.open) el.showModal()
+  if (!isOpen && el.open) el.close()
+})
 
 const handleLogin = async function () {
   isLoggingIn.value = true
@@ -40,117 +59,68 @@ const handleLogin = async function () {
 </script>
 
 <template>
-  <UModal
-      :close="{
-      color: 'primary',
-      variant: 'outline',
-      class: 'rounded-full'
-    }"
-      title="Welcome to OdyFeed"
-      description="Login to your Solid Pod to get started">
-    <UButton
-        label="Login"
-        icon="i-heroicons-arrow-right-on-rectangle"
-        size="sm"
-        color="neutral"
-        variant="ghost"
-    />
+  <art-button v-if="trigger" variant="quiet" size="s" v-bind="$attrs">
+    <button type="button" @click="open = true">
+      <Icon name="i-heroicons-arrow-right-on-rectangle" aria-hidden="true"/>
+      Log in
+    </button>
+  </art-button>
 
-    <template #body>
+  <!-- on <body>, so it takes the page's colours and not the header's paint -->
+  <Teleport to="body">
+    <dialog ref="dialog" class="dialog login" aria-labelledby="login-title" @close="open = false">
+      <h2 id="login-title">Welcome to OdyFeed</h2>
+      <p class="intro">Log in to your Solid Pod to get started</p>
 
-      <div class="space-y-5">
-        <div v-if="!useCustom" class="space-y-3">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Choose your Pod provider
+      <form @submit.prevent="handleLogin">
+        <fieldset v-if="!useCustom" class="choices">
+          <legend>Choose your Pod provider</legend>
+          <label v-for="provider in providers" :key="provider.url" class="choice">
+            <input v-model="issuer" type="radio" name="provider" :value="provider.url">
+            <Icon :name="provider.icon" aria-hidden="true"/>
+            <span>
+              <strong>{{ provider.name }}</strong>
+              <small>{{ provider.description }}</small>
+            </span>
           </label>
-          <div class="space-y-2">
-            <button
-                v-for="provider in providers"
-                :key="provider.url"
-                type="button"
-                class="w-full p-3.5 text-left border rounded-lg transition-all"
-                :class="issuer === provider.url
-                ? 'border-primary-500 bg-primary-50 dark:bg-primary-950/30 shadow-sm'
-                : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50'"
-                @click="issuer = provider.url"
-            >
-              <div class="flex items-center gap-3">
-                <div
-                    class="flex items-center justify-center w-9 h-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                  <UIcon :name="provider.icon" class="w-4 h-4 text-gray-600 dark:text-gray-400"/>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span class="font-medium text-gray-900 dark:text-white">{{ provider.name }}</span>
-                    </div>
-                    <UIcon
-                        v-if="issuer === provider.url"
-                        name="i-heroicons-check-circle-solid"
-                        class="w-5 h-5 text-primary-500"
-                    />
-                  </div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {{ provider.description }}
-                  </p>
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
+        </fieldset>
 
-        <div v-else class="space-y-3">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Custom Pod provider URL
-          </label>
-          <UInput
+        <div v-else class="field">
+          <label for="custom-issuer">Custom Pod provider URL</label>
+          <input
+              id="custom-issuer"
               v-model="customIssuer"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
               placeholder="https://vandervennet.art"
-              icon="i-heroicons-link"
-              size="md"
-          />
+          >
         </div>
 
-        <div class="pt-2">
-          <UButton
-              :label="useCustom ? '← Back to providers' : 'Use custom provider'"
-              variant="ghost"
-              color="neutral"
-              size="sm"
-              @click="useCustom = !useCustom"
-          />
-        </div>
-      </div>
-    </template>
+        <art-button variant="quiet" size="s">
+          <button type="button" @click="useCustom = !useCustom">
+            {{ useCustom ? 'Back to providers' : 'Use custom provider' }}
+          </button>
+        </art-button>
 
-    <template #footer>
-      <div class="space-y-3">
-        <UAlert
-            v-if="errorMessage"
-            color="error"
-            variant="soft"
-            :title="errorMessage"
-            :close="{ color: 'error', variant: 'link' }"
-            @close="errorMessage = ''"
-        />
-        <div class="flex items-center justify-between gap-3">
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            New to Solid? <a
-href="https://solidproject.org/users/get-a-pod" target="_blank"
-                             class="text-primary-500 hover:text-primary-600 underline">Get a Pod</a>
-          </p>
-          <UButton
-              label="Continue"
-              icon="i-heroicons-arrow-right"
-              trailing
-              :loading="isLoggingIn"
-              :disabled="isLoggingIn || (useCustom && !customIssuer)"
-              @click="handleLogin"
-          />
-        </div>
-      </div>
-    </template>
+        <p v-if="errorMessage" class="form-message" role="alert">{{ errorMessage }}</p>
 
-  </UModal>
+        <p class="hint">
+          New to Solid?
+          <a href="https://solidproject.org/users/get-a-pod" target="_blank" rel="noopener">Get a Pod</a>
+        </p>
+
+        <div class="actions">
+          <art-button variant="quiet">
+            <button type="button" @click="open = false">Cancel</button>
+          </art-button>
+          <art-button>
+            <button type="submit" :disabled="isLoggingIn || (useCustom && !customIssuer)">
+              {{ isLoggingIn ? 'Logging in…' : 'Continue' }}
+            </button>
+          </art-button>
+        </div>
+      </form>
+    </dialog>
+  </Teleport>
 </template>
-
