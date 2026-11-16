@@ -1,0 +1,11 @@
+# One run of the deploy script. Started by odyfeed-deploy.timer.
+#   ~/.config/systemd/user/odyfeed-deploy.service
+[Unit]
+Description=Deploy OdyFeed when main has changed
+
+[Service]
+Type=oneshot
+ExecStart=%h/odyfeed/deploy/deploy.sh
+# what each deploy did, newest at the bottom
+StandardOutput=append:%h/.local/share/odyfeed/deploy.log
+StandardError=append:%h/.local/share/odyfeed/deploy.log

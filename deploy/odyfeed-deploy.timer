@@ -1,0 +1,11 @@
+# Checks GitHub for a new commit every minute.
+#   ~/.config/systemd/user/odyfeed-deploy.timer
+[Unit]
+Description=Check for a new version of OdyFeed every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+
+[Install]
+WantedBy=timers.target
