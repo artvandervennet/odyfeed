@@ -15,6 +15,17 @@ interface WebIdMappings {
 	}
 }
 
+// The last part of a resource's address: "08-zeus-storm" for ".../events/08-zeus-storm".
+// Posts in the Pods name their event by the address this site had when they were written.
+// Comparing only this part keeps them with their event now that the site has another domain.
+const getResourceKey = function (resourceUrl: string): string {
+	try {
+		const pathname = new URL(resourceUrl).pathname.replace(/\/+$/, '')
+		return pathname.split('/').pop() || resourceUrl
+	} catch {
+		return resourceUrl
+	}
+}
 
 export default defineEventHandler(async (event) => {
 	try {
@@ -135,7 +146,7 @@ export default defineEventHandler(async (event) => {
 		const groupedByEvent = mythEvents.map(event => {
 			const eventPosts = allPosts.filter(post => {
 				const postEventUrl = (post as any)['myth:aboutEvent']
-				return postEventUrl === event.id
+				return typeof postEventUrl === 'string' && getResourceKey(postEventUrl) === getResourceKey(event.id)
 			})
 
 			return {

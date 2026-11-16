@@ -1,7 +1,7 @@
 export const NAMESPACES = {
   ACTIVITYSTREAMS: "https://www.w3.org/ns/activitystreams",
   SECURITY: "https://w3id.org/security/v1",
-  MYTH: "https://odyfeed.artvandervennet.ikdoeict.be/vocab#",
+  MYTH: "https://odyfeed.vandervennet.art/vocab#",
   FOAF: "http://xmlns.com/foaf/0.1/",
   RDFS: "http://www.w3.org/2000/01/rdf-schema#",
   DCT: "http://purl.org/dc/terms/",

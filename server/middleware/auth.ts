@@ -11,8 +11,9 @@ export default defineEventHandler(async (event) => {
 		if (sessionData) {
 			const hasValidToken = !!sessionData.refreshToken && sessionData.refreshToken !== 'mock-refresh-token'
 
-			// Check if session data looks valid
-			if (!sessionData.webId || !sessionData.username) {
+			// Check if session data looks valid. A session has no username yet between logging
+			// in with a Pod and choosing one on /register, so only the WebID is required.
+			if (!sessionData.webId) {
 				logInfo(`[Auth Middleware] Invalid session data for sessionId ${sessionId}, clearing session`)
 				await deleteSessionById(sessionId)
 				clearSessionCookie(event)

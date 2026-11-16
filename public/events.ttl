@@ -1,7 +1,7 @@
-@prefix myth: <https://odyfeed.artvandervennet.ikdoeict.be/vocab#> .
+@prefix myth: <https://odyfeed.vandervennet.art/vocab#> .
 @prefix dct: <http://purl.org/dc/terms/> .
 @prefix as: <https://www.w3.org/ns/activitystreams#> .
-@base <https://odyfeed.artvandervennet.ikdoeict.be/> .
+@base <https://odyfeed.vandervennet.art/> .
 
 <events/01-trojan-horse>
     a myth:Event ;

@@ -1,7 +1,7 @@
-@prefix myth: <https://odyfeed.artvandervennet.ikdoeict.be/vocab#> .
+@prefix myth: <https://odyfeed.vandervennet.art/vocab#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix as: <https://www.w3.org/ns/activitystreams#> .
-@base <https://odyfeed.artvandervennet.ikdoeict.be/vocab> .
+@base <https://odyfeed.vandervennet.art/vocab> .
 
 <#>
     a rdfs:Class ;
