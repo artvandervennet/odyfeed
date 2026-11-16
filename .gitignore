@@ -30,3 +30,6 @@ logs
 .firebase/
 .firebaserc
 /data/
+
+# Auto-deploy on the Pi
+.deploy.lock
