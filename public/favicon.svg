@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="odyfeed-logo-title">
+  <title id="odyfeed-logo-title">OdyFeed</title>
+  <!-- OdyFeed: Odysseus's ship, with a post's speech bubble for a sail. The tile is the Aegean
+       theme's ultramarine, the ship its gold ochre. -->
+  <rect width="512" height="512" rx="116" fill="#15338a"/>
+  <!-- The mast -->
+  <path fill="#e7b551" d="M243 270H269V366H243Z"/>
+  <!-- The sail: a speech bubble, its tail where the sheet is tied down -->
+  <path fill="#fee1ac" d="M176 74H360A44 44 0 0 1 404 118V236A44 44 0 0 1 360 280H232L158 338 172 280A44 44 0 0 1 132 236V118A44 44 0 0 1 176 74Z"/>
+  <!-- Two lines of a post -->
+  <path fill="none" stroke="#15338a" stroke-width="28" stroke-linecap="round" d="M190 146H346M190 208H292"/>
+  <!-- The hull: the stern curls up on the left, the prow points right -->
+  <path fill="#e7b551" d="M96 226C62 232 44 262 48 302 56 382 110 430 196 430H326C394 430 444 388 466 314 436 346 400 360 352 360H200C146 360 110 336 104 294 100 270 104 248 96 226Z"/>
+</svg>

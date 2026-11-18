@@ -67,7 +67,11 @@ export default defineNuxtConfig({
 				{name: 'viewport', content: 'width=device-width, initial-scale=1'},
 			],
 			link: [
-				{rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'},
+				// The logo (public/logo.svg): Odysseus's ship with a post's speech bubble for a sail.
+				// The .ico is for browsers without SVG icons.
+				{rel: 'icon', href: '/favicon.ico', sizes: '32x32 48x48'},
+				{rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg'},
+				{rel: 'apple-touch-icon', href: '/apple-touch-icon.png'},
 				{rel: 'me', href: 'https://github.com/artvandervennet'},
 				{rel: 'webmention', href: '/api/webmentions'},
 			],
