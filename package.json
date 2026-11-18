@@ -24,7 +24,7 @@
     "@pinia/nuxt": "^0.11.3",
     "@semapps/semantic-data-provider": "1.1.0-patch.1",
     "@types/n3": "^1.26.1",
-    "@vandervennet/gesso": "github:artvandervennet/gesso#v1.2.4",
+    "@vandervennet/gesso": "github:artvandervennet/gesso#v1.4.0",
     "@vueuse/core": "^14.1.0",
     "eslint": "^9.39.2",
     "fs-extra": "^11.3.3",
