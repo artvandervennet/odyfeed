@@ -31,8 +31,9 @@ const baseUrl = computed(() => typeof window !== 'undefined' ? window.location.o
 
     <div id="top" class="band hero h-card" data-paint="deep">
       <div class="inner">
-        <h1 class="p-name">
-          <art-stroke pigment="stroke" seed="odyssey" animate>Timeline</art-stroke>
+        <!-- The site's name, and the wordmark: <art-header> flies it up into its place as you scroll. -->
+        <h1 class="p-name" data-wordmark>
+          <art-stroke pigment="stroke" seed="odyssey" animate>OdyFeed</art-stroke>
         </h1>
         <p class="lead p-note">The story of the Odyssey, told through the eyes of its actors.</p>
         <a :href="baseUrl" class="u-url" rel="me" hidden>OdyFeed</a>
