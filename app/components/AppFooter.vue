@@ -31,7 +31,14 @@ const year = new Date().getFullYear()
       <WebmentionForm :target-url="useRoute().fullPath"/>
     </section>
 
-    <p class="footer-legal">© {{ year }} OdyFeed. All rights reserved.</p>
+    <div class="footer-legal">
+      <!-- Gesso's footer note: the same words on every site, with this site's repo. -->
+      <p class="footer-note">
+        Something not quite right, or something missing?
+        <a href="https://github.com/artvandervennet/odyfeed/issues/new/choose">Open an issue on GitHub</a>.
+      </p>
+      <p>© {{ year }} OdyFeed. All rights reserved.</p>
+    </div>
     <art-signature :year="year">Art Van der Vennet</art-signature>
   </div>
 </template>
