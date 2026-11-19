@@ -19,7 +19,9 @@ const logout = async function () {
   <!-- Gesso's sticky header. Links are places to go; what you can do sits in the actions slot.
        Everything slotted has to be a direct child of <art-header>. -->
   <art-header role="banner" label="Main" data-paint="deep">
-    <NuxtLink slot="wordmark" to="/">OdyFeed</NuxtLink>
+    <!-- The logo stands before the name, inside the same link. The name names the link, so the
+         picture has an empty alt. Gesso's layout.css sizes it. -->
+    <NuxtLink slot="wordmark" to="/"><img src="/logo.svg" alt="" width="28" height="28">OdyFeed</NuxtLink>
     <NuxtLink to="/about">About</NuxtLink>
     <NuxtLink v-if="auth.isLoggedIn" to="/inbox">Inbox</NuxtLink>
     <!-- on a narrow screen there is no room for the button below: the same link, in the menu -->
