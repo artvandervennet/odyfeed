@@ -48,8 +48,8 @@ importers:
         specifier: ^1.26.1
         version: 1.26.1
       '@vandervennet/gesso':
-        specifier: github:artvandervennet/gesso#v1.8.0
-        version: https://codeload.github.com/artvandervennet/gesso/tar.gz/dec75f52c795a1057698ce4e16d947f0f337c229
+        specifier: github:artvandervennet/gesso#v1.9.0
+        version: https://codeload.github.com/artvandervennet/gesso/tar.gz/e8f69bcf20adc88029ac10c9fe5f805d6178c83f
       '@vueuse/core':
         specifier: ^14.1.0
         version: 14.1.0(vue@3.5.26(typescript@5.9.3))
@@ -1978,9 +1978,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vandervennet/gesso@https://codeload.github.com/artvandervennet/gesso/tar.gz/dec75f52c795a1057698ce4e16d947f0f337c229':
-    resolution: {gitHosted: true, integrity: sha512-SZR85hbnHcXJc1vYiJ0jk8R5udoXQP+1DKtz1hqO7vUm7ZFLuK8owZ7hQKgQWe48YVhzgyngCrjKTnU1lgRhgQ==, tarball: https://codeload.github.com/artvandervennet/gesso/tar.gz/dec75f52c795a1057698ce4e16d947f0f337c229}
-    version: 1.8.0
+  '@vandervennet/gesso@https://codeload.github.com/artvandervennet/gesso/tar.gz/e8f69bcf20adc88029ac10c9fe5f805d6178c83f':
+    resolution: {gitHosted: true, integrity: sha512-Jsrc0XrWycNnF9dt8LyqlibrTPdJaThL1Bz0YbsQocschJMnGtef3DM4oBULyMGmBp8cvPWoJqEqutJ3ETvEZA==, tarball: https://codeload.github.com/artvandervennet/gesso/tar.gz/e8f69bcf20adc88029ac10c9fe5f805d6178c83f}
+    version: 1.9.0
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7347,7 +7347,7 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@vandervennet/gesso@https://codeload.github.com/artvandervennet/gesso/tar.gz/dec75f52c795a1057698ce4e16d947f0f337c229': {}
+  '@vandervennet/gesso@https://codeload.github.com/artvandervennet/gesso/tar.gz/e8f69bcf20adc88029ac10c9fe5f805d6178c83f': {}
 
   '@vercel/nft@0.30.4(rollup@4.54.0)':
     dependencies:
