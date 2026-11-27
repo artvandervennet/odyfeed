@@ -1,7 +1,7 @@
 # One run of the deploy script. Started by odyfeed-deploy.timer.
 #   ~/.config/systemd/user/odyfeed-deploy.service
 [Unit]
-Description=Deploy OdyFeed when main has changed
+Description=Deploy OdyFeed when there is a new release
 
 [Service]
 Type=oneshot

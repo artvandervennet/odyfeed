@@ -1219,7 +1219,7 @@ ACTIVITYPUB_PAGE_SIZE=50
 
 ### How odyfeed.vandervennet.art is deployed
 
-The live site runs on a Raspberry Pi under pm2, behind a Cloudflare Tunnel. A systemd timer on the Pi runs `deploy/deploy.sh` every minute: when `main` has a new commit it pulls, installs, builds and reloads the site. Nothing reaches into the Pi from outside. The settings live in `~/.config/odyfeed.env` (see `deploy/env.example`); `data/` and `logs/` are ignored by git, so a deploy leaves them alone. What each deploy did is in `~/.local/share/odyfeed/deploy.log`.
+The live site runs on a Raspberry Pi under pm2, behind a Cloudflare Tunnel. Only releases go live: tags named `vMAJOR.MINOR.PATCH`, not `main` (the older tag `1.0.0` has no `v` and is never deployed). A systemd timer on the Pi runs `deploy/deploy.sh` every minute: when GitHub has a newer release than the live one, it checks it out, installs, builds and reloads the site. `deploy/release.sh patch`, `minor` or `major`, run on your own machine with `main` pushed, lists the commits since the last release, asks, then tags `main` with the next version and makes a release page on GitHub. To take a release back, delete it with its tag (`gh release delete v1.2.4 --cleanup-tag`): the Pi deploys the newest release that is left. Nothing reaches into the Pi from outside. The settings live in `~/.config/odyfeed.env` (see `deploy/env.example`); `data/` and `logs/` are ignored by git, so a deploy leaves them alone. What each deploy did is in `~/.local/share/odyfeed/deploy.log`.
 
 ### Hosting Recommendations
 

@@ -1,4 +1,4 @@
-# Checks GitHub for a new commit every minute.
+# Checks GitHub for a new release every minute.
 #   ~/.config/systemd/user/odyfeed-deploy.timer
 [Unit]
 Description=Check for a new version of OdyFeed every minute
